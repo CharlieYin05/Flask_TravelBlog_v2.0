@@ -3,15 +3,17 @@ from app.extensions import db
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    itineraries = db.relationship("Itinerary", back_populates="user")
 
 class Itinerary(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     country = db.Column(db.String(255), nullable=False)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     user = db.relationship("User", back_populates="itineraries")
 
     cover_image_url = db.Column(db.String(255), nullable=True)
@@ -32,7 +34,7 @@ class ItineraryDay(db.Model):
 
     itinerary_id = db.Column(
         db.Integer,
-        db.ForeignKey("itineraries.id"),
+        db.ForeignKey("itinerary.id"),
         nullable=False
     )
     
@@ -52,7 +54,7 @@ class ItineraryActivity(db.Model):
 
     day_id = db.Column(
         db.Integer,
-        db.ForeignKey("itinerary_days.id"),
+        db.ForeignKey("itinerary_day.id"),
         nullable=False
     )
     day = db.relationship("ItineraryDay", back_populates="activities")

@@ -1,4 +1,4 @@
-from flask import Blueprint, app, jsonify, render_template, request, redirect, session, url_for
+from flask import Blueprint, jsonify, render_template, request, redirect, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.extensions import db
@@ -19,12 +19,12 @@ def search():
 @main_bp.route("/signin", methods=["GET", "POST"])
 def signin():
     if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
+        username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-        error_message = "Incorrect email or password."
+        error_message = "Incorrect username or password."
         is_ajax_request = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(username=username).first()
         if user is None:
             if is_ajax_request:
                 return jsonify({"success": False, "error": error_message}), 401
@@ -35,7 +35,7 @@ def signin():
                 return jsonify({"success": False, "error": error_message}), 401
             return render_template("sign-in.html", error=error_message)
 
-        session["user"] = user.email
+        session["user"] = user.username
         redirect_url = url_for("main.index")
 
         if is_ajax_request:
@@ -48,6 +48,7 @@ def signin():
 @main_bp.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
+        username = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm-password", "")
@@ -58,13 +59,20 @@ def signup():
                 return jsonify({"success": False, "error": "Passwords do not match."}), 400
             return render_template("sign-up.html", error="Passwords do not match.")
 
-        existing_user = User.query.filter_by(email=email).first()
+        existing_user = User.query.filter_by(username=username).first()
         if existing_user is not None:
+            if is_ajax_request:
+                return jsonify({"success": False, "error": "This username is already taken."}), 400
+            return render_template("sign-up.html", error="This username is already taken.")
+
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email is not None:
             if is_ajax_request:
                 return jsonify({"success": False, "error": "This email is already registered."}), 400
             return render_template("sign-up.html", error="This email is already registered.")
 
         new_user = User(
+            username=username,
             email=email,
             password_hash=generate_password_hash(password)
         )
