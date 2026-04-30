@@ -1,5 +1,5 @@
 const form = document.querySelector("form");
-const username = document.querySelector('input[name="username"]');
+const email = document.querySelector('input[name="email"]');
 const password = document.getElementById("password");
 const confirmPassword = document.getElementById("confirm-password");
 const errorMessage = document.getElementById("signup-error");
@@ -19,8 +19,8 @@ if (form && password && confirmPassword) {
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        if (username) {
-            username.value = username.value.trim();
+        if (email) {
+            email.value = email.value.trim().toLowerCase();
         }
 
         if (errorMessage) {

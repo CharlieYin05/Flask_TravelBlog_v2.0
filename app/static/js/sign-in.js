@@ -1,11 +1,11 @@
 const form = document.querySelector("form");
-const usernameInput = document.querySelector('input[name="username"]');
+const emailInput = document.querySelector('input[name="email"]');
 const errorMessage = document.getElementById("signin-error");
 
-if (form && usernameInput) {
+if (form && emailInput) {
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
-        usernameInput.value = usernameInput.value.trim();
+        emailInput.value = emailInput.value.trim().toLowerCase();
 
         if (errorMessage) {
             errorMessage.textContent = "";
