@@ -1,4 +1,4 @@
-from flask import Blueprint, app, jsonify, render_template, request, redirect, session, url_for
+from flask import Blueprint, jsonify, render_template, request, redirect, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.extensions import db
@@ -49,6 +49,7 @@ def signin():
 def signup():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm-password", "")
         is_ajax_request = request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -64,8 +65,15 @@ def signup():
                 return jsonify({"success": False, "error": "This username is already taken."}), 400
             return render_template("sign-up.html", error="This username is already taken.")
 
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email is not None:
+            if is_ajax_request:
+                return jsonify({"success": False, "error": "This email is already registered."}), 400
+            return render_template("sign-up.html", error="This email is already registered.")
+
         new_user = User(
             username=username,
+            email=email,
             password_hash=generate_password_hash(password)
         )
         db.session.add(new_user)

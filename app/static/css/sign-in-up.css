@@ -97,6 +97,7 @@ form {
 }
 
 input[type="text"],
+input[type="email"],
 input[type="password"] {
     width: 100%;
     padding: 14px 20px;
@@ -109,11 +110,13 @@ input[type="password"] {
 }
 
 input[type="text"]::placeholder,
+input[type="email"]::placeholder,
 input[type="password"]::placeholder {
     color: #cccccc;
 }
 
 input[type="text"]:focus,
+input[type="email"]:focus,
 input[type="password"]:focus {
     border-color: #002FA7;
 }
