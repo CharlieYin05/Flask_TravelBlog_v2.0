@@ -1,3 +1,5 @@
+import re
+
 from flask import Blueprint, jsonify, render_template, request, redirect, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -101,13 +103,96 @@ def submit_itinerary():
         return redirect(url_for("main.signin"))
     
     if request.method == "POST":
-        trip_title = request.form.get("trip_title")
-        trip_country = request.form.get("trip_country")
-        total_days = request.form.get("total_days")
+        trip_title = request.form.get("trip_title", "").strip()
+        trip_country = request.form.get("trip_country", "").strip()
+        total_days_raw = request.form.get("total_days", "0").strip()
+        declared_total_days = int(total_days_raw) if total_days_raw.isdigit() else 0
 
-        print("Trip title:", trip_title)
-        print("Country:", trip_country)
-        print("Total days:", total_days)
+        cover_photo = request.files.get("cover_photo")
+        trip_types = request.form.getlist("trip_type")
+
+        day_numbers = set()
+        day_key_pattern = re.compile(r"day(\d+)")
+
+        for key in list(request.form.keys()) + list(request.files.keys()):
+            match = day_key_pattern.search(key)
+            if match:
+                day_numbers.add(int(match.group(1)))
+
+        inferred_total_days = max(day_numbers) if day_numbers else 0
+        total_days = max(declared_total_days, inferred_total_days)
+
+        itinerary_data = {
+            "user": session.get("user"),
+            "trip_title": trip_title,
+            "trip_country": trip_country,
+            "total_days": total_days,
+            "declared_total_days": declared_total_days,
+            "trip_types": trip_types,
+            "budget_level": request.form.get("budget_level", "").strip(),
+            "budget_range": request.form.get("budget_range", "").strip(),
+            "cover_photo": {
+                "filename": cover_photo.filename,
+                "content_type": cover_photo.content_type,
+            } if cover_photo and cover_photo.filename else None,
+            "days": [],
+        }
+
+        for day_number in range(1, total_days + 1):
+            day_data = {
+                "day_number": day_number,
+                "state": request.form.get(f"state_day{day_number}", "").strip(),
+                "city": request.form.get(f"city_day{day_number}", "").strip(),
+                "transport": request.form.getlist(f"transport_day{day_number}[]"),
+                "transport_other_text": request.form.get(
+                    f"transport_other_text_day{day_number}", ""
+                ).strip(),
+                "restaurants": request.form.getlist(f"restaurant_dropdown_day{day_number}"),
+                "restaurant_specific": request.form.get(
+                    f"restaurant_specific_day{day_number}", ""
+                ).strip(),
+                "accommodations": request.form.getlist(f"accommodation_dropdown_day{day_number}"),
+                "accommodation_specific": request.form.get(
+                    f"accommodation_specific_day{day_number}", ""
+                ).strip(),
+                "activities": [],
+            }
+
+            activity_number = 1
+            while True:
+                title_key = f"activity_title_day{day_number}_{activity_number}"
+                place_key = f"activity_place_day{day_number}_{activity_number}"
+                time_key = f"time_day{day_number}_{activity_number}"
+                description_key = f"activity_day{day_number}_{activity_number}"
+                photo_key = f"activity_photo_day{day_number}_{activity_number}"
+
+                has_activity_fields = any(
+                    key in request.form or key in request.files
+                    for key in (title_key, place_key, time_key, description_key, photo_key)
+                )
+
+                if not has_activity_fields:
+                    break
+
+                activity_photo = request.files.get(photo_key)
+                activity_data = {
+                    "activity_number": activity_number,
+                    "title": request.form.get(title_key, "").strip(),
+                    "place": request.form.get(place_key, "").strip(),
+                    "time": request.form.get(time_key, "").strip(),
+                    "description": request.form.get(description_key, "").strip(),
+                    "photo": {
+                        "filename": activity_photo.filename,
+                        "content_type": activity_photo.content_type,
+                    } if activity_photo and activity_photo.filename else None,
+                }
+                day_data["activities"].append(activity_data)
+                activity_number += 1
+
+            itinerary_data["days"].append(day_data)
+
+        print("Received itinerary data:")
+        print(itinerary_data)
 
         return redirect(url_for("main.index"))
 
