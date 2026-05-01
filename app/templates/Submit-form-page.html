@@ -1,27 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Itinerary - Travel Blog</title>   
+{% block title %}Submit Itinerary - Travel Blog{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.output.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/Submit-form-page.css') }}">
-</head>
+    <style>
+        body > nav > div > div > div.hidden {
+            display: none !important;
+        }
+    </style>
+{% endblock %}
 
-<body class="min-h-screen bg-gray-50 text-gray-900">
-    <header class="top-nav border-b border-gray-200 bg-white">
-        <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between gap-4">
-                <div class="go-back-to-home-page">
-                    <a href="{{ url_for('main.index') }}" class="inline-flex items-center text-xl/7 font-bold tracking-tight text-gray-900 transition-colors hover:text-indigo-600">Travel Blog</a>
-                </div>
-                <h1 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Create Your Itinerary</h1>
-            </div>
-        </div>
-    </header>
+{% block content %}
 
     <main class="py-10">
+        <div class="mx-auto max-w-6xl px-4 pb-8 sm:px-6 lg:px-8">
+            <h1 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Create Your Itinerary</h1>
+        </div>
+
         <form method="POST" action="{{ url_for('main.submit_itinerary') }}" enctype="multipart/form-data" class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div class="space-y-12">
 
@@ -547,9 +544,10 @@
         </form>
     </main>
 
+{% endblock %}
+
+{% block extra_js %}
     <script src="{{ url_for('static', filename='js/Submit-form-page.js') }}"></script>
     <script src="{{ url_for('static', filename='js/submitform-dropdown.js') }}"></script>
     <script src="{{ url_for('static', filename='js/submitform-upload-photos.js') }}"></script>
-</body>
-
-</html>
+{% endblock %}
