@@ -1,13 +1,32 @@
 import re
+from pathlib import Path
+from uuid import uuid4
 
 from flask import Blueprint, jsonify, render_template, request, redirect, session, url_for
+from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.extensions import db
-from app.models import User
+from app.models import Itinerary, ItineraryActivity, ItineraryDay, User
 
 
 main_bp = Blueprint("main", __name__)
+
+STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+COVER_UPLOAD_DIR = STATIC_DIR / "uploads" / "cover_photos"
+ACTIVITY_UPLOAD_DIR = STATIC_DIR / "uploads" / "activity_photos"
+
+
+def save_uploaded_file(file_storage, upload_dir):
+    if not file_storage or not file_storage.filename:
+        return None
+
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"{uuid4().hex}_{secure_filename(file_storage.filename)}"
+    save_path = upload_dir / filename
+    file_storage.save(save_path)
+
+    return str(save_path.relative_to(STATIC_DIR)).replace("\\", "/")
 
 @main_bp.route("/")
 def index():
@@ -103,6 +122,10 @@ def submit_itinerary():
         return redirect(url_for("main.signin"))
     
     if request.method == "POST":
+        current_user = User.query.filter_by(username=session.get("user")).first()
+        if current_user is None:
+            return redirect(url_for("main.signin"))
+
         trip_title = request.form.get("trip_title", "").strip()
         trip_country = request.form.get("trip_country", "").strip()
         total_days_raw = request.form.get("total_days", "0").strip()
@@ -122,6 +145,8 @@ def submit_itinerary():
         inferred_total_days = max(day_numbers) if day_numbers else 0
         total_days = max(declared_total_days, inferred_total_days)
 
+        cover_photo_path = save_uploaded_file(cover_photo, COVER_UPLOAD_DIR)
+
         itinerary_data = {
             "user": session.get("user"),
             "trip_title": trip_title,
@@ -131,10 +156,7 @@ def submit_itinerary():
             "trip_types": trip_types,
             "budget_level": request.form.get("budget_level", "").strip(),
             "budget_range": request.form.get("budget_range", "").strip(),
-            "cover_photo": {
-                "filename": cover_photo.filename,
-                "content_type": cover_photo.content_type,
-            } if cover_photo and cover_photo.filename else None,
+            "cover_photo_path": cover_photo_path,
             "days": [],
         }
 
@@ -175,24 +197,61 @@ def submit_itinerary():
                     break
 
                 activity_photo = request.files.get(photo_key)
+                activity_photo_path = save_uploaded_file(
+                    activity_photo,
+                    ACTIVITY_UPLOAD_DIR,
+                )
                 activity_data = {
                     "activity_number": activity_number,
                     "title": request.form.get(title_key, "").strip(),
                     "place": request.form.get(place_key, "").strip(),
                     "time": request.form.get(time_key, "").strip(),
                     "description": request.form.get(description_key, "").strip(),
-                    "photo": {
-                        "filename": activity_photo.filename,
-                        "content_type": activity_photo.content_type,
-                    } if activity_photo and activity_photo.filename else None,
+                    "photo_path": activity_photo_path,
                 }
                 day_data["activities"].append(activity_data)
                 activity_number += 1
 
             itinerary_data["days"].append(day_data)
 
-        print("Received itinerary data:")
-        print(itinerary_data)
+        itinerary = Itinerary(
+            title=itinerary_data["trip_title"],
+            country=itinerary_data["trip_country"],
+            trip_types=itinerary_data["trip_types"],
+            user_id=current_user.id,
+            cover_image_url=itinerary_data["cover_photo_path"],
+            total_days=itinerary_data["total_days"],
+            budget_level=itinerary_data["budget_level"],
+            budget_range=itinerary_data["budget_range"],
+        )
+
+        for day in itinerary_data["days"]:
+            itinerary_day = ItineraryDay(
+                day_number=day["day_number"],
+                state=day["state"] or None,
+                city=day["city"] or None,
+                transport=day["transport"],
+                transport_other_text=day["transport_other_text"] or None,
+                restaurants=day["restaurants"],
+                restaurant_specific=day["restaurant_specific"] or None,
+                accommodations=day["accommodations"],
+                accommodation_specific=day["accommodation_specific"] or None,
+            )
+
+            for activity in day["activities"]:
+                itinerary_activity = ItineraryActivity(
+                    activity_name=activity["title"],
+                    place=activity["place"] or None,
+                    time=activity["time"] or None,
+                    description=activity["description"] or None,
+                    photo_url=activity["photo_path"],
+                )
+                itinerary_day.activities.append(itinerary_activity)
+
+            itinerary.days.append(itinerary_day)
+
+        db.session.add(itinerary)
+        db.session.commit()
 
         return redirect(url_for("main.index"))
 
