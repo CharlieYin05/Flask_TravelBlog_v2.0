@@ -10,6 +10,7 @@
  */
 document.addEventListener("DOMContentLoaded", function () {
     const addDayBtn = document.querySelector(".add-day-btn");
+    const submitForm = document.querySelector('form[action$="/submit"]');
     const totalDaysInput = document.getElementById("total-days");
     const dailyPlanSection = document.querySelector(".daily-plan-section");
 
@@ -28,6 +29,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     initializeActivitySummaries();
     syncTotalDays();
+
+    if (submitForm) {
+        submitForm.addEventListener("submit", function (event) {
+            const confirmed = window.confirm("Are you sure you want to submit this itinerary?");
+            if (!confirmed) {
+                event.preventDefault();
+            }
+        });
+    }
 
     if (addDayBtn) {
         addDayBtn.addEventListener("click", function () {
