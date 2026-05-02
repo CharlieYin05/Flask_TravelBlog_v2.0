@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, render_template, request, redirect, sessio
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.extensions import db
-from app.models import User
+from app.models import Itinerary, ItineraryActivity, ItineraryDay, User
 
 
 main_bp = Blueprint("main", __name__)
@@ -103,6 +103,10 @@ def submit_itinerary():
         return redirect(url_for("main.signin"))
     
     if request.method == "POST":
+        current_user = User.query.filter_by(username=session.get("user")).first()
+        if current_user is None:
+            return redirect(url_for("main.signin"))
+
         trip_title = request.form.get("trip_title", "").strip()
         trip_country = request.form.get("trip_country", "").strip()
         total_days_raw = request.form.get("total_days", "0").strip()
@@ -191,8 +195,52 @@ def submit_itinerary():
 
             itinerary_data["days"].append(day_data)
 
-        print("Received itinerary data:")
-        print(itinerary_data)
+        itinerary = Itinerary(
+            title=itinerary_data["trip_title"],
+            country=itinerary_data["trip_country"],
+            trip_types=itinerary_data["trip_types"],
+            user_id=current_user.id,
+            cover_image_url=(
+                itinerary_data["cover_photo"]["filename"]
+                if itinerary_data["cover_photo"]
+                else None
+            ),
+            total_days=itinerary_data["total_days"],
+            budget_level=itinerary_data["budget_level"],
+            budget_range=itinerary_data["budget_range"],
+        )
+
+        for day in itinerary_data["days"]:
+            itinerary_day = ItineraryDay(
+                day_number=day["day_number"],
+                state=day["state"] or None,
+                city=day["city"] or None,
+                transport=day["transport"],
+                transport_other_text=day["transport_other_text"] or None,
+                restaurants=day["restaurants"],
+                restaurant_specific=day["restaurant_specific"] or None,
+                accommodations=day["accommodations"],
+                accommodation_specific=day["accommodation_specific"] or None,
+            )
+
+            for activity in day["activities"]:
+                itinerary_activity = ItineraryActivity(
+                    activity_name=activity["title"],
+                    place=activity["place"] or None,
+                    time=activity["time"] or None,
+                    description=activity["description"] or None,
+                    photo_url=(
+                        activity["photo"]["filename"]
+                        if activity["photo"]
+                        else None
+                    ),
+                )
+                itinerary_day.activities.append(itinerary_activity)
+
+            itinerary.days.append(itinerary_day)
+
+        db.session.add(itinerary)
+        db.session.commit()
 
         return redirect(url_for("main.index"))
 
