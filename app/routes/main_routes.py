@@ -257,3 +257,8 @@ def submit_itinerary():
 
     return render_template("Submit-form-page.html")
 
+@main_bp.route("/portfolio")
+def portfolio():
+    if not session.get("user"):
+        return redirect(url_for("main.signin"))
+    return render_template("portfolio-page.html")
