@@ -261,4 +261,17 @@ def submit_itinerary():
 def portfolio():
     if not session.get("user"):
         return redirect(url_for("main.signin"))
-    return render_template("portfolio-page.html")
+    
+    current_user = User.query.filter_by(
+        username=session.get("user")
+    ).first()
+
+    itineraries= Itinerary.query.filter_by(
+        user_id = current_user.id
+    ).all()
+
+    return render_template(
+        "portfolio-page.html",
+        user=current_user,
+        itineraries=itineraries
+    )
