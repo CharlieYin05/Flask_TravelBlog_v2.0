@@ -13,6 +13,9 @@ class Itinerary(db.Model):
     title = db.Column(db.String(255), nullable=False)
     country = db.Column(db.String(255), nullable=False)
 
+    #加一行测试用
+    trip_types = db.Column(db.JSON, nullable=True)
+
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     user = db.relationship("User", back_populates="itineraries")
 

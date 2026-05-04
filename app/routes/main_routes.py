@@ -115,6 +115,9 @@ def submit_itinerary():
         from app.models import User, Itinerary
         from app.extensions import db
 
+        #找出app.db的路径
+        print("DB URI:", db.engine.url)
+
         # ⭐ 先简单获取数据（避免复杂bug）
         trip_title = request.form.get("trip_title", "").strip()
         trip_country = request.form.get("trip_country", "").strip()
@@ -148,5 +151,7 @@ def submit_itinerary():
         # ⭐ 跳转到 browse（更好测试）
         return redirect(url_for("main.browse"))
 
+        
+
     return render_template("Submit-form-page.html")
-#最小化，明天提交测试。
+#最小化，明天提交测试。app.db另外路径不对注意改

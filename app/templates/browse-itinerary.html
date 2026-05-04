@@ -19,72 +19,74 @@
 
   {% if itineraries %}
 
-  <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 
-    {% for it in itineraries %}
+      {% for it in itineraries %}
 
-    <a href="{{ url_for('main.view_itinerary', id=it.id) }}" class="block">
+        <div class="block">
 
-      <div class="bg-white rounded-2xl shadow hover:shadow-xl transition overflow-hidden group">
+          <div class="bg-white rounded-2xl shadow hover:shadow-xl transition overflow-hidden group">
 
-        <!-- IMAGE -->
-        {% if it.cover_image_url %}
-        <img src="{{ url_for('static', filename=it.cover_image_url) }}"
-             class="w-full h-48 object-cover group-hover:scale-105 transition">
-        {% else %}
-        <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400">
-          No Image
-        </div>
-        {% endif %}
+            <!-- IMAGE -->
+            {% if it.cover_image_url %}
+              <img src="{{ url_for('static', filename=it.cover_image_url) }}"
+                   class="w-full h-48 object-cover group-hover:scale-105 transition">
+            {% else %}
+              <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400">
+                No Image
+              </div>
+            {% endif %}
 
-        <!-- CONTENT -->
-        <div class="p-4 space-y-2">
+            <!-- CONTENT -->
+            <div class="p-4 space-y-2">
 
-          <!-- TITLE -->
-          <h3 class="text-lg font-semibold line-clamp-1">
-            {{ it.title }}
-          </h3>
+              <!-- TITLE -->
+              <h3 class="text-lg font-semibold line-clamp-1">
+                {{ it.title }}
+              </h3>
 
-          <!-- COUNTRY -->
-          <p class="text-sm text-gray-500">
-            📍 {{ it.country }}
-          </p>
+              <!-- COUNTRY -->
+              <p class="text-sm text-gray-500">
+                📍 {{ it.country }}
+              </p>
 
-          <!-- AUTHOR -->
-          <p class="text-xs text-gray-400">
-            by {{ it.user.username }}
-          </p>
+              <!-- AUTHOR -->
+              <p class="text-xs text-gray-400">
+                by {{ it.user.username }}
+              </p>
 
-          <!-- TAGS -->
-          <div class="flex flex-wrap gap-1 pt-2">
-            {% for tag in it.trip_types[:3] %}
-              <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                {{ tag }}
-              </span>
-            {% endfor %}
+              <!-- TAGS -->
+              <div class="flex flex-wrap gap-1 pt-2">
+                {% if it.trip_types %}
+                  {% for tag in it.trip_types[:3] %}
+                    <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                      {{ tag }}
+                    </span>
+                  {% endfor %}
+                {% endif %}
+              </div>
+
+            </div>
+
           </div>
 
         </div>
 
-      </div>
+      {% endfor %}
 
-    </a>
-
-    {% endfor %}
-
-  </div>
+    </div>
 
   {% else %}
 
-  <!-- EMPTY STATE -->
-  <div class="text-center py-20">
-    <h2 class="text-xl font-semibold mb-2">No itineraries yet</h2>
-    <p class="text-gray-500 mb-4">Be the first to create one!</p>
-    <a href="{{ url_for('main.submit_itinerary') }}"  
-       class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">
-       Create Itinerary
-    </a>
-  </div>
+    <!-- EMPTY STATE -->
+    <div class="text-center py-20">
+      <h2 class="text-xl font-semibold mb-2">No itineraries yet</h2>
+      <p class="text-gray-500 mb-4">Be the first to create one!</p>
+      <a href="{{ url_for('main.submit_itinerary') }}"
+         class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">
+         Create Itinerary
+      </a>
+    </div>
 
   {% endif %}
 
