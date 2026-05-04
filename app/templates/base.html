@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}Travel App{% endblock %}</title>
 
   <!-- Tailwind -->
@@ -33,7 +34,9 @@
           <a href="{{ url_for('main.signin') }}" class="hover:text-indigo-600">Post</a>
           {% endif %}
           <a href="{{ url_for('main.search') }}" class="hover:text-indigo-600">Search</a>
-          <a href="" class="hover:text-indigo-600">Browse</a>
+          <a href="{{ url_for('main.browse') }}" class="hover:text-indigo-600">
+            Browse
+          </a>
         </div>
 
         <!-- Auth / Profile -->
@@ -67,4 +70,5 @@
   {% block extra_js %}{% endblock %}
 
 </body>
+
 </html>
