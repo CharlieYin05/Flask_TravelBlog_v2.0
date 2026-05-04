@@ -1,12 +1,50 @@
 import re
-
+#---------------
+import os
+#---------------
 from flask import Blueprint, jsonify, render_template, request, redirect, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from app.models import ItineraryDay, ItineraryActivity
 from app.extensions import db
 from app.models import Itinerary, User
+#---------------
+from uuid import uuid4
+from werkzeug.utils import secure_filename
+from flask import current_app
+
+COVER_UPLOAD_DIR = "uploads/cover_photos"
+ACTIVITY_UPLOAD_DIR = "uploads/activity_photos"
+
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
 
+def allowed_image_file(filename):
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+    )
+
+
+def save_uploaded_file(file, upload_dir):
+    if file is None or file.filename == "":
+        return None
+
+    if not allowed_image_file(file.filename):
+        return None
+
+    filename = secure_filename(file.filename)
+    ext = filename.rsplit(".", 1)[1].lower()
+    unique_filename = f"{uuid4().hex}.{ext}"
+
+    absolute_upload_dir = os.path.join(current_app.static_folder, upload_dir)
+    os.makedirs(absolute_upload_dir, exist_ok=True)
+
+    absolute_file_path = os.path.join(absolute_upload_dir, unique_filename)
+    file.save(absolute_file_path)
+
+    return f"{upload_dir}/{unique_filename}"
+#---------------
 main_bp = Blueprint("main", __name__)
 
 @main_bp.route("/")
@@ -110,48 +148,139 @@ def logout():
 def submit_itinerary():
     if not session.get("user"):
         return redirect(url_for("main.signin"))
-
+    
     if request.method == "POST":
-        from app.models import User, Itinerary
-        from app.extensions import db
+        current_user = User.query.filter_by(username=session.get("user")).first()
+        if current_user is None:
+            return redirect(url_for("main.signin"))
 
-        #找出app.db的路径
-        print("DB URI:", db.engine.url)
-
-        # ⭐ 先简单获取数据（避免复杂bug）
         trip_title = request.form.get("trip_title", "").strip()
         trip_country = request.form.get("trip_country", "").strip()
+        total_days_raw = request.form.get("total_days", "0").strip()
+        declared_total_days = int(total_days_raw) if total_days_raw.isdigit() else 0
+
+        cover_photo = request.files.get("cover_photo")
         trip_types = request.form.getlist("trip_type")
-        total_days = request.form.get("total_days", "1")
 
-        # ⭐ 获取用户
-        user = User.query.filter_by(username=session.get("user")).first()
+        day_numbers = set()
+        day_key_pattern = re.compile(r"day(\d+)")
 
-        print("USER:", user)
+        for key in list(request.form.keys()) + list(request.files.keys()):
+            match = day_key_pattern.search(key)
+            if match:
+                day_numbers.add(int(match.group(1)))
 
-        # ⭐ 创建最小 Itinerary
+        inferred_total_days = max(day_numbers) if day_numbers else 0
+        total_days = max(declared_total_days, inferred_total_days)
+
+        cover_photo_path = save_uploaded_file(cover_photo, COVER_UPLOAD_DIR)
+
+        itinerary_data = {
+            "user": session.get("user"),
+            "trip_title": trip_title,
+            "trip_country": trip_country,
+            "total_days": total_days,
+            "declared_total_days": declared_total_days,
+            "trip_types": trip_types,
+            "budget_level": request.form.get("budget_level", "").strip(),
+            "budget_range": request.form.get("budget_range", "").strip(),
+            "cover_photo_path": cover_photo_path,
+            "days": [],
+        }
+
+        for day_number in range(1, total_days + 1):
+            day_data = {
+                "day_number": day_number,
+                "state": request.form.get(f"state_day{day_number}", "").strip(),
+                "city": request.form.get(f"city_day{day_number}", "").strip(),
+                "transport": request.form.getlist(f"transport_day{day_number}[]"),
+                "transport_other_text": request.form.get(
+                    f"transport_other_text_day{day_number}", ""
+                ).strip(),
+                "restaurants": request.form.getlist(f"restaurant_dropdown_day{day_number}"),
+                "restaurant_specific": request.form.get(
+                    f"restaurant_specific_day{day_number}", ""
+                ).strip(),
+                "accommodations": request.form.getlist(f"accommodation_dropdown_day{day_number}"),
+                "accommodation_specific": request.form.get(
+                    f"accommodation_specific_day{day_number}", ""
+                ).strip(),
+                "activities": [],
+            }
+
+            activity_number = 1
+            while True:
+                title_key = f"activity_title_day{day_number}_{activity_number}"
+                place_key = f"activity_place_day{day_number}_{activity_number}"
+                time_key = f"time_day{day_number}_{activity_number}"
+                description_key = f"activity_day{day_number}_{activity_number}"
+                photo_key = f"activity_photo_day{day_number}_{activity_number}"
+
+                has_activity_fields = any(
+                    key in request.form or key in request.files
+                    for key in (title_key, place_key, time_key, description_key, photo_key)
+                )
+
+                if not has_activity_fields:
+                    break
+
+                activity_photo = request.files.get(photo_key)
+                activity_photo_path = save_uploaded_file(
+                    activity_photo,
+                    ACTIVITY_UPLOAD_DIR,
+                )
+                activity_data = {
+                    "activity_number": activity_number,
+                    "title": request.form.get(title_key, "").strip(),
+                    "place": request.form.get(place_key, "").strip(),
+                    "time": request.form.get(time_key, "").strip(),
+                    "description": request.form.get(description_key, "").strip(),
+                    "photo_path": activity_photo_path,
+                }
+                day_data["activities"].append(activity_data)
+                activity_number += 1
+
+            itinerary_data["days"].append(day_data)
+
         itinerary = Itinerary(
-            title=trip_title or "Test Title",
-            country=trip_country or "Australia",
-            trip_types=trip_types if trip_types else ["test"],
-            total_days=int(total_days) if total_days.isdigit() else 1,
-            budget_level=request.form.get("budget_level") or "test",
-            budget_range=request.form.get("budget_range") or "0",
-            user_id=user.id
+            title=itinerary_data["trip_title"],
+            country=itinerary_data["trip_country"],
+            trip_types=itinerary_data["trip_types"],
+            user_id=current_user.id,
+            cover_image_url=itinerary_data["cover_photo_path"],
+            total_days=itinerary_data["total_days"],
+            budget_level=itinerary_data["budget_level"],
+            budget_range=itinerary_data["budget_range"],
         )
 
+        for day in itinerary_data["days"]:
+            itinerary_day = ItineraryDay(
+                day_number=day["day_number"],
+                state=day["state"] or None,
+                city=day["city"] or None,
+                transport=day["transport"],
+                transport_other_text=day["transport_other_text"] or None,
+                restaurants=day["restaurants"],
+                restaurant_specific=day["restaurant_specific"] or None,
+                accommodations=day["accommodations"],
+                accommodation_specific=day["accommodation_specific"] or None,
+            )
+
+            for activity in day["activities"]:
+                itinerary_activity = ItineraryActivity(
+                    activity_name=activity["title"],
+                    place=activity["place"] or None,
+                    time=activity["time"] or None,
+                    description=activity["description"] or None,
+                    photo_url=activity["photo_path"],
+                )
+                itinerary_day.activities.append(itinerary_activity)
+
+            itinerary.days.append(itinerary_day)
+
         db.session.add(itinerary)
+        db.session.commit()
 
-        try:
-            db.session.commit()
-            print("COMMIT SUCCESS")
-        except Exception as e:
-            print("COMMIT ERROR:", e)
-
-        # ⭐ 跳转到 browse（更好测试）
         return redirect(url_for("main.browse"))
 
-        
-
     return render_template("Submit-form-page.html")
-#最小化，明天提交测试。app.db另外路径不对注意改

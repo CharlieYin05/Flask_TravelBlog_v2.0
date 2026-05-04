@@ -12,9 +12,7 @@ class Itinerary(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     country = db.Column(db.String(255), nullable=False)
-
-    #加一行测试用
-    trip_types = db.Column(db.JSON, nullable=True)
+    trip_types = db.Column(db.JSON, nullable=False, default=list)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     user = db.relationship("User", back_populates="itineraries")
@@ -34,6 +32,14 @@ class Itinerary(db.Model):
 class ItineraryDay(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     day_number = db.Column(db.Integer, nullable=False)
+    state = db.Column(db.String(255), nullable=True)
+    city = db.Column(db.String(255), nullable=True)
+    transport = db.Column(db.JSON, nullable=False, default=list)
+    transport_other_text = db.Column(db.String(255), nullable=True)
+    restaurants = db.Column(db.JSON, nullable=False, default=list)
+    restaurant_specific = db.Column(db.String(255), nullable=True)
+    accommodations = db.Column(db.JSON, nullable=False, default=list)
+    accommodation_specific = db.Column(db.String(255), nullable=True)
 
     itinerary_id = db.Column(
         db.Integer,
@@ -52,6 +58,8 @@ class ItineraryDay(db.Model):
 class ItineraryActivity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     activity_name = db.Column(db.String(255), nullable=False)
+    place = db.Column(db.String(255), nullable=True)
+    time = db.Column(db.String(100), nullable=True)
     description = db.Column(db.Text, nullable=True)
     photo_url = db.Column(db.String(255), nullable=True)
 
