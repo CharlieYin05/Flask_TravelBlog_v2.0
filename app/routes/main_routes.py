@@ -1,49 +1,44 @@
 import re
-#---------------
-import os
-#---------------
-from flask import Blueprint, jsonify, render_template, request, redirect, session, url_for
-from werkzeug.security import check_password_hash, generate_password_hash
-
-from app.models import ItineraryDay, ItineraryActivity
-from app.extensions import db
-from app.models import Itinerary, User
-#---------------
+from pathlib import Path
 from uuid import uuid4
-from werkzeug.utils import secure_filename
-from flask import current_app
 
-COVER_UPLOAD_DIR = "uploads/cover_photos"
-ACTIVITY_UPLOAD_DIR = "uploads/activity_photos"
+from flask import (
+    Blueprint, jsonify, render_template,
+    request, redirect, session, url_for, current_app
+)
+from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
+
+from app.extensions import db
+from app.models import Itinerary, User, ItineraryDay, ItineraryActivity
+#---------------
+COVER_UPLOAD_DIR = Path("uploads/cover_photos")
+ACTIVITY_UPLOAD_DIR = Path("uploads/activity_photos")
 
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
 
-def allowed_image_file(filename):
-    return (
-        "." in filename
-        and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
-    )
+def allowed_image_file(filename: str) -> bool:
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
 
 
-def save_uploaded_file(file, upload_dir):
-    if file is None or file.filename == "":
+def save_uploaded_file(file, upload_dir: Path):
+    if not file or file.filename == "":
         return None
 
     if not allowed_image_file(file.filename):
         return None
 
-    filename = secure_filename(file.filename)
-    ext = filename.rsplit(".", 1)[1].lower()
-    unique_filename = f"{uuid4().hex}.{ext}"
+    ext = file.filename.rsplit(".", 1)[1].lower()
+    filename = f"{uuid4().hex}.{ext}"
 
-    absolute_upload_dir = os.path.join(current_app.static_folder, upload_dir)
-    os.makedirs(absolute_upload_dir, exist_ok=True)
+    upload_path = Path(current_app.static_folder) / upload_dir
+    upload_path.mkdir(parents=True, exist_ok=True)
 
-    absolute_file_path = os.path.join(absolute_upload_dir, unique_filename)
-    file.save(absolute_file_path)
+    file_path = upload_path / filename
+    file.save(file_path)
 
-    return f"{upload_dir}/{unique_filename}"
+    return str(upload_dir / filename)
 #---------------
 main_bp = Blueprint("main", __name__)
 
