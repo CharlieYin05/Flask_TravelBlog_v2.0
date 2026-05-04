@@ -55,6 +55,10 @@ def browse():
     itineraries = Itinerary.query.all()
     return render_template("browse-itinerary.html", itineraries=itineraries)
 
+@main_bp.route("/itinerary/<int:id>")
+def view_itinerary(id):
+    itinerary = Itinerary.query.get_or_404(id)
+    return render_template("view-itinerary.html", itinerary=itinerary)
 
 @main_bp.route("/signin", methods=["GET", "POST"])
 def signin():
