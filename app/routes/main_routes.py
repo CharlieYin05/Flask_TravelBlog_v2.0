@@ -59,9 +59,18 @@ def index():
     return render_template("home-page.html")
 
 
-@main_bp.route("/search")
+@main_bp.route("/search", methods=["GET"])
 def search():
-    return render_template("search.html")
+    query = request.args.get('query', '').strip()
+    results = []
+    
+    if query:
+        results = Itinerary.query.filter(
+            Itinerary.title.ilike(f'%{query}%')
+        ).all()
+    
+    return render_template("search.html", results=results, search_query=query)
+
 
 
 @main_bp.route("/browse")
