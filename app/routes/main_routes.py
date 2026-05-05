@@ -89,12 +89,6 @@ def browse():
     return render_template("browse-itinerary.html", itineraries=itineraries)
 
 
-@main_bp.route("/itinerary/<int:id>")
-def view_itinerary(id):
-    itinerary = Itinerary.query.get_or_404(id)
-    return render_template("view-itinerary.html", itinerary=itinerary)
-
-
 @main_bp.route("/signin", methods=["GET", "POST"])
 def signin():
     if request.method == "POST":
@@ -345,7 +339,6 @@ def submit_itinerary():
 
     return render_template("Submit-form-page.html")
 
-<<<<<<< HEAD
 #Browse itineraries page (can fetch data)
 @main_bp.route("/api/itineraries")
 def get_itineraries():
@@ -405,12 +398,13 @@ def get_itinerary(id):
 
     return jsonify(result)
 
-# View itinerary details page (renders HTML)
+# View itinerary details page
 @main_bp.route("/itinerary/<int:id>")
 def view_itinerary(id):
     itinerary = Itinerary.query.get_or_404(id)
     return render_template("view-itinerary.html", itinerary=itinerary)
-=======
+
+# Portfolio page
 @main_bp.route("/portfolio")
 def portfolio():
     if not session.get("user"):
@@ -429,4 +423,3 @@ def portfolio():
         user=current_user,
         itineraries=itineraries
     )
->>>>>>> origin/main
