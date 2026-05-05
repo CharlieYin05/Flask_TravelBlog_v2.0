@@ -89,12 +89,6 @@ def browse():
     return render_template("browse-itinerary.html", itineraries=itineraries)
 
 
-@main_bp.route("/itinerary/<int:id>")
-def view_itinerary(id):
-    itinerary = Itinerary.query.get_or_404(id)
-    return render_template("view-itinerary.html", itinerary=itinerary)
-
-
 @main_bp.route("/signin", methods=["GET", "POST"])
 def signin():
     if request.method == "POST":
@@ -345,6 +339,72 @@ def submit_itinerary():
 
     return render_template("Submit-form-page.html")
 
+#Browse itineraries page (can fetch data)
+@main_bp.route("/api/itineraries")
+def get_itineraries():
+    itineraries = Itinerary.query.all()
+
+    data = []
+    for it in itineraries:
+        data.append({
+            "id": it.id,
+            "title": it.title,
+            "country": it.country,
+            "cover": it.cover_image_url,
+            "days": it.total_days,
+        })
+
+    return jsonify(data)
+
+# View itinerary details page (placeholder, can be expanded later)
+@main_bp.route("/api/itinerary/<int:id>")
+def get_itinerary(id):
+    it = Itinerary.query.get_or_404(id)
+
+    result = {
+        "title": it.title,
+        "country": it.country,
+        "author": it.user.username if it.user else "Unknown",
+        "date": "",
+        "tags": it.trip_types or [],
+        "overview": f"{it.total_days} days itinerary in {it.country}.",
+        "coverPhoto": "/static/" + it.cover_image_url if it.cover_image_url else "",
+        "days": []
+    }
+
+    for day in it.days:
+        day_data = {
+         "day": day.day_number,
+         "state": day.state or "",
+         "city": day.city or "",
+         "transport": day.transport or [],
+         "restaurants": day.restaurants or [],
+         "restaurant_specific": day.restaurant_specific or "",
+          "accommodations": day.accommodations or [],
+         "accommodation_specific": day.accommodation_specific or "",
+         "activities": []
+        }
+
+        for act in day.activities:
+            day_data["activities"].append({
+                "title": act.activity_name,
+                "description": act.description,
+                "time": act.time,
+                "place": act.place,
+                "image": "/static/" + act.photo_url if act.photo_url else ""
+            })
+
+        result["days"].append(day_data)
+
+    return jsonify(result)
+
+# View itinerary details page
+@main_bp.route("/itinerary/<int:id>")
+def view_itinerary(id):
+    itinerary = Itinerary.query.get_or_404(id)
+    return render_template("view-itinerary.html", itinerary=itinerary)
+
+# Portfolio page
 @main_bp.route("/portfolio")
 def portfolio():
     if not session.get("user"):
