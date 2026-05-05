@@ -43,7 +43,9 @@
         <div class="flex items-center space-x-4">
           {% if session.get('user') %}
           <div class="flex items-center space-x-4">
-            <span class="text-sm text-gray-600">{{ session.get('user') }}</span>
+            <a href="{{ url_for('main.portfolio') }}" class="text-sm text-gray-600 hover:text-indigo-600">
+              {{ session.get('user') }}
+            </a>
             <a href="{{ url_for('main.logout') }}" class="text-red-600 hover:text-red-700 text-sm">
               Sign out
             </a>

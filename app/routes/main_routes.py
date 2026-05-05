@@ -59,9 +59,28 @@ def index():
     return render_template("home-page.html")
 
 
-@main_bp.route("/search")
+@main_bp.route("/search", methods=["GET"])
 def search():
     return render_template("search.html")
+
+
+@main_bp.route("/api/search", methods=["GET"])
+def search_api():
+    query = request.args.get('query', '').strip()
+    results = []
+    
+    if query:
+        results = Itinerary.query.filter(
+            Itinerary.title.ilike(f'%{query}%')
+        ).all()
+    
+    return jsonify([{
+        'id': r.id,
+        'title': r.title,
+        'country': r.country,
+        'cover_image_url': r.cover_image_url,
+        'total_days': r.total_days
+    } for r in results])
 
 
 @main_bp.route("/browse")
