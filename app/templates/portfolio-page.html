@@ -26,11 +26,11 @@
          <div class="relative -mt-28 mx-auto max-w-lg bg-white/25 backdrop-blur-md border border-white/50 rounded-xl px-7 py-6 text-center shadow-lg z-10">
             <div class="avatar-wrapper absolute -top-12 left-1/2 -translate-x-1/2">
                 <div class="avatar w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-900 flex items-center justify-center text-3xl font-bold text-white overflow-hidden border-3 border-white shadow-md" id="avatar-display">
-                    <span id="avatar-initials">?</span>
+                    <span id="avatar-initials">{{ user.username[0].upper() if user else '?' }}</span>
                 </div>
                 <input type="file" id="avatar-upload" accept="image/*" class="hidden">
             </div>
-            <div class="mt-14 text-3xl font-bold text-gray-900 mb-1.5" id="username"></div>
+            <div class="mt-14 text-3xl font-bold text-gray-900 mb-1.5" id="username">{{ user.username if user else '' }}</div>
             <span class="inline-block bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-0.5 rounded-full" id="uid"></span>
         </div>
 
