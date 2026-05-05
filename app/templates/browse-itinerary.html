@@ -1,34 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Browse Itineraries</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/browse-itinerary.css') }}">
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
+{% extends "base.html" %}
 
-<body class="bg-gray-50">
+{% block title %}Browse Itineraries{% endblock %}
 
-<!-- NAVBAR (same as view page) -->
-<header class="border-b bg-white fixed top-0 w-full z-50">
-  <div class="max-w-6xl mx-auto flex justify-between items-center px-4 py-6">
-    <a href="home-page.html" class="font-semibold text-lg">Travel Blog</a>
-    <h1 class="text-xl font-bold">Browse Itineraries</h1>
-  </div>
-</header>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/browse-itinerary.css') }}">
+{% endblock %}
 
-<!-- PAGE TITLE -->
-<section class="max-w-6xl mx-auto px-4 pt-28 pb-6">
-  <h1 class="text-3xl font-bold mb-2">Explore Travel Plans</h1>
-  <p class="text-gray-500">Find inspiration for your next trip ✈️</p>
+{% block content %}
+
+<!-- HEADER -->
+<section class="max-w-7xl mx-auto px-6 pt-28 pb-8">
+  <h1 class="text-3xl font-bold mb-2">Explore Travel Plans ✈️</h1>
+  <p class="text-gray-500">Find inspiration for your next trip</p>
 </section>
 
-<!-- CARD GRID -->
-<main class="max-w-6xl mx-auto px-4 pb-10">
-  <div id="card-container" class="grid md:grid-cols-3 gap-6"></div>
+<!-- GRID -->
+<main class="max-w-7xl mx-auto px-6 pb-12">
+
+  {% if itineraries %}
+
+    <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+      {% for it in itineraries %}
+
+        <a href="{{ url_for('main.view_itinerary', id=it.id) }}" class="block">
+
+          <div class="bg-white rounded-2xl shadow hover:shadow-xl transition overflow-hidden group">
+
+            <!-- IMAGE -->
+            {% if it.cover_image_url %}
+              <img src="{{ url_for('static', filename=it.cover_image_url) }}"
+                   class="w-full h-48 object-cover group-hover:scale-105 transition">
+            {% else %}
+              <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400">
+                No Image
+              </div>
+            {% endif %}
+
+            <!-- CONTENT -->
+            <div class="p-4 space-y-2">
+
+              <!-- TITLE -->
+              <h3 class="text-lg font-semibold line-clamp-1">
+                {{ it.title }}
+              </h3>
+
+              <!-- COUNTRY -->
+              <p class="text-sm text-gray-500">
+                📍 {{ it.country }}
+              </p>
+
+              <!-- AUTHOR -->
+              <p class="text-xs text-gray-400">
+                by {{ it.user.username }}
+              </p>
+
+              <!-- TAGS -->
+              <div class="flex flex-wrap gap-1 pt-2">
+                {% if it.trip_types %}
+                  {% for tag in it.trip_types[:3] %}
+                    <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                      {{ tag }}
+                    </span>
+                  {% endfor %}
+                {% endif %}
+              </div>
+
+            </div>
+
+          </div>
+
+        </a>
+
+      {% endfor %}
+
+    </div>
+
+  {% else %}
+
+    <!-- EMPTY STATE -->
+    <div class="text-center py-20">
+      <h2 class="text-xl font-semibold mb-2">No itineraries yet</h2>
+      <p class="text-gray-500 mb-4">Be the first to create one!</p>
+      <a href="{{ url_for('main.submit_itinerary') }}"
+         class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700">
+         Create Itinerary
+      </a>
+    </div>
+
+  {% endif %}
+
 </main>
 
-<script src="{{ url_for('static', filename='js/browse-itinerary.js') }}"></script>
-
-</body>
-</html>
+{% endblock %}

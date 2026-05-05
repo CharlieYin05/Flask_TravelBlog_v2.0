@@ -2,39 +2,97 @@ import re
 from pathlib import Path
 from uuid import uuid4
 
-from flask import Blueprint, jsonify, render_template, request, redirect, session, url_for
-from werkzeug.utils import secure_filename
+from flask import (
+    Blueprint,
+    jsonify,
+    render_template,
+    request,
+    redirect,
+    session,
+    url_for,
+)
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 
 from app.extensions import db
-from app.models import Itinerary, ItineraryActivity, ItineraryDay, User
+from app.models import Itinerary, User, ItineraryDay, ItineraryActivity
 
 
 main_bp = Blueprint("main", __name__)
 
+# Static upload folders
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 COVER_UPLOAD_DIR = STATIC_DIR / "uploads" / "cover_photos"
 ACTIVITY_UPLOAD_DIR = STATIC_DIR / "uploads" / "activity_photos"
 
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
-def save_uploaded_file(file_storage, upload_dir):
+
+def allowed_image_file(filename: str) -> bool:
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+    )
+
+
+def save_uploaded_file(file_storage, upload_dir: Path):
     if not file_storage or not file_storage.filename:
         return None
 
+    if not allowed_image_file(file_storage.filename):
+        return None
+
     upload_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"{uuid4().hex}_{secure_filename(file_storage.filename)}"
+
+    original_filename = secure_filename(file_storage.filename)
+    ext = original_filename.rsplit(".", 1)[1].lower()
+    filename = f"{uuid4().hex}.{ext}"
+
     save_path = upload_dir / filename
     file_storage.save(save_path)
 
     return str(save_path.relative_to(STATIC_DIR)).replace("\\", "/")
 
+
 @main_bp.route("/")
 def index():
     return render_template("home-page.html")
 
-@main_bp.route("/search")
+
+@main_bp.route("/search", methods=["GET"])
 def search():
     return render_template("search.html")
+
+
+@main_bp.route("/api/search", methods=["GET"])
+def search_api():
+    query = request.args.get('query', '').strip()
+    results = []
+    
+    if query:
+        results = Itinerary.query.filter(
+            Itinerary.title.ilike(f'%{query}%')
+        ).all()
+    
+    return jsonify([{
+        'id': r.id,
+        'title': r.title,
+        'country': r.country,
+        'cover_image_url': r.cover_image_url,
+        'total_days': r.total_days
+    } for r in results])
+
+
+@main_bp.route("/browse")
+def browse():
+    itineraries = Itinerary.query.all()
+    return render_template("browse-itinerary.html", itineraries=itineraries)
+
+
+@main_bp.route("/itinerary/<int:id>")
+def view_itinerary(id):
+    itinerary = Itinerary.query.get_or_404(id)
+    return render_template("view-itinerary.html", itinerary=itinerary)
 
 
 @main_bp.route("/signin", methods=["GET", "POST"])
@@ -46,6 +104,7 @@ def signin():
         is_ajax_request = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
         user = User.query.filter_by(username=username).first()
+
         if user is None:
             if is_ajax_request:
                 return jsonify({"success": False, "error": error_message}), 401
@@ -65,6 +124,7 @@ def signin():
         return redirect(redirect_url)
 
     return render_template("sign-in.html")
+
 
 @main_bp.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -95,10 +155,17 @@ def signup():
         new_user = User(
             username=username,
             email=email,
-            password_hash=generate_password_hash(password)
+            password_hash=generate_password_hash(password),
         )
+
         db.session.add(new_user)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+            print("COMMIT SUCCESS")
+        except Exception as e:
+            db.session.rollback()
+            print("COMMIT ERROR:", e)
 
         redirect_url = url_for("main.signin")
 
@@ -120,9 +187,10 @@ def logout():
 def submit_itinerary():
     if not session.get("user"):
         return redirect(url_for("main.signin"))
-    
+
     if request.method == "POST":
         current_user = User.query.filter_by(username=session.get("user")).first()
+
         if current_user is None:
             return redirect(url_for("main.signin"))
 
@@ -169,11 +237,15 @@ def submit_itinerary():
                 "transport_other_text": request.form.get(
                     f"transport_other_text_day{day_number}", ""
                 ).strip(),
-                "restaurants": request.form.getlist(f"restaurant_dropdown_day{day_number}"),
+                "restaurants": request.form.getlist(
+                    f"restaurant_dropdown_day{day_number}"
+                ),
                 "restaurant_specific": request.form.get(
                     f"restaurant_specific_day{day_number}", ""
                 ).strip(),
-                "accommodations": request.form.getlist(f"accommodation_dropdown_day{day_number}"),
+                "accommodations": request.form.getlist(
+                    f"accommodation_dropdown_day{day_number}"
+                ),
                 "accommodation_specific": request.form.get(
                     f"accommodation_specific_day{day_number}", ""
                 ).strip(),
@@ -181,6 +253,7 @@ def submit_itinerary():
             }
 
             activity_number = 1
+
             while True:
                 title_key = f"activity_title_day{day_number}_{activity_number}"
                 place_key = f"activity_place_day{day_number}_{activity_number}"
@@ -190,7 +263,13 @@ def submit_itinerary():
 
                 has_activity_fields = any(
                     key in request.form or key in request.files
-                    for key in (title_key, place_key, time_key, description_key, photo_key)
+                    for key in (
+                        title_key,
+                        place_key,
+                        time_key,
+                        description_key,
+                        photo_key,
+                    )
                 )
 
                 if not has_activity_fields:
@@ -201,6 +280,7 @@ def submit_itinerary():
                     activity_photo,
                     ACTIVITY_UPLOAD_DIR,
                 )
+
                 activity_data = {
                     "activity_number": activity_number,
                     "title": request.form.get(title_key, "").strip(),
@@ -209,20 +289,21 @@ def submit_itinerary():
                     "description": request.form.get(description_key, "").strip(),
                     "photo_path": activity_photo_path,
                 }
+
                 day_data["activities"].append(activity_data)
                 activity_number += 1
 
             itinerary_data["days"].append(day_data)
 
         itinerary = Itinerary(
-            title=itinerary_data["trip_title"],
-            country=itinerary_data["trip_country"],
+            title=itinerary_data["trip_title"] or "Untitled Trip",
+            country=itinerary_data["trip_country"] or "Unknown",
             trip_types=itinerary_data["trip_types"],
             user_id=current_user.id,
             cover_image_url=itinerary_data["cover_photo_path"],
             total_days=itinerary_data["total_days"],
-            budget_level=itinerary_data["budget_level"],
-            budget_range=itinerary_data["budget_range"],
+            budget_level=itinerary_data["budget_level"] or "Not specified",
+            budget_range=itinerary_data["budget_range"] or "Not specified",
         )
 
         for day in itinerary_data["days"]:
@@ -240,23 +321,31 @@ def submit_itinerary():
 
             for activity in day["activities"]:
                 itinerary_activity = ItineraryActivity(
-                    activity_name=activity["title"],
+                    activity_name=activity["title"] or "Untitled Activity",
                     place=activity["place"] or None,
                     time=activity["time"] or None,
                     description=activity["description"] or None,
                     photo_url=activity["photo_path"],
                 )
+
                 itinerary_day.activities.append(itinerary_activity)
 
             itinerary.days.append(itinerary_day)
 
         db.session.add(itinerary)
-        db.session.commit()
 
-        return redirect(url_for("main.index"))
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print("COMMIT ERROR:", e)
+            raise
+
+        return redirect(url_for("main.browse"))
 
     return render_template("Submit-form-page.html")
 
+<<<<<<< HEAD
 #Browse itineraries page (can fetch data)
 @main_bp.route("/api/itineraries")
 def get_itineraries():
@@ -321,3 +410,23 @@ def get_itinerary(id):
 def view_itinerary(id):
     itinerary = Itinerary.query.get_or_404(id)
     return render_template("view-itinerary.html", itinerary=itinerary)
+=======
+@main_bp.route("/portfolio")
+def portfolio():
+    if not session.get("user"):
+        return redirect(url_for("main.signin"))
+    
+    current_user = User.query.filter_by(
+        username=session.get("user")
+    ).first()
+    
+    itineraries = Itinerary.query.filter_by(
+        user_id=current_user.id
+    ).all()
+    
+    return render_template(
+        "portfolio-page.html",
+        user=current_user,
+        itineraries=itineraries
+    )
+>>>>>>> origin/main

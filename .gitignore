@@ -1,3 +1,4 @@
+# MacOS Trash
 .DS_Store
 
 # dependencies
@@ -18,3 +19,6 @@ __pycache__/
 
 # SQLite databases and migration cache
 instance/
+
+# User uploads files in static folder
+app/static/uploads/
