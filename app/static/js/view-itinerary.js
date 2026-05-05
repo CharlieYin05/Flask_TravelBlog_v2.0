@@ -73,7 +73,10 @@ function renderItineraryHeader() {
 
     if (tagsContainer) {
         tagsContainer.innerHTML = "";
-        itinerary.tags.slice(0, 3).forEach((tag) => {
+
+        const tags = itinerary.tags || [];
+
+        tags.slice(0, 3).forEach((tag) => {
             const el = document.createElement("span");
             el.className =
                 "px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium";
@@ -87,29 +90,44 @@ function renderItineraryHeader() {
 function renderTimeline() {
     const timeline = document.getElementById("timeline");
     if (!timeline) return;
+    if (!itinerary) return;
 
     timeline.innerHTML = "";
 
-    itinerary.days.forEach((dayObj) => {
+    const days = itinerary.days || [];
+
+    if (days.length === 0) {
+        timeline.innerHTML = `
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 text-slate-500">
+                No daily itinerary details yet.
+            </div>
+        `;
+        return;
+    }
+
+    days.forEach((dayObj) => {
+        const transport = dayObj.transport || [];
+        const activities = dayObj.activities || [];
+
         const daySection = document.createElement("section");
         daySection.className = "space-y-5";
 
         const dayHeader = document.createElement("div");
         dayHeader.className = "day-header-card";
         dayHeader.innerHTML = `
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <h2 class="text-2xl font-bold">Day ${dayObj.day}</h2>
-          <p class="text-gray-600 mt-1">${dayObj.state} · ${dayObj.city}</p>
-        </div>
-        <div class="text-sm text-gray-600">
-          <span class="font-semibold">Transport:</span> ${dayObj.transport.join(", ")}
-        </div>
-      </div>
-    `;
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h2 class="text-2xl font-bold">Day ${dayObj.day || ""}</h2>
+              <p class="text-gray-600 mt-1">${dayObj.state || ""} · ${dayObj.city || ""}</p>
+            </div>
+            <div class="text-sm text-gray-600">
+              <span class="font-semibold">Transport:</span> ${transport.length ? transport.join(", ") : "Not specified"}
+            </div>
+          </div>
+        `;
         daySection.appendChild(dayHeader);
 
-        dayObj.activities.forEach((act, i) => {
+        activities.forEach((act, i) => {
             const wrapper = document.createElement("div");
             wrapper.className = "timeline-item";
 
@@ -122,7 +140,7 @@ function renderTimeline() {
             const line = document.createElement("div");
             line.className = "timeline-line";
 
-            if (i === dayObj.activities.length - 1) {
+            if (i === activities.length - 1) {
                 line.classList.add("short-line");
             }
 
@@ -131,16 +149,16 @@ function renderTimeline() {
 
             const content = createLocationCard({
                 label: `Activity ${i + 1}`,
-                title: act.title,
-                image: act.image,
-                description: act.description,
-                place: act.place,
-                time: act.time,
-                state: dayObj.state,
-                city: dayObj.city,
+                title: act.title || "Untitled activity",
+                image: act.image || "",
+                description: act.description || "",
+                place: act.place || "",
+                time: act.time || "",
+                state: dayObj.state || "",
+                city: dayObj.city || "",
                 lat: act.lat,
                 lng: act.lng,
-                day: dayObj.day,
+                day: dayObj.day || "",
                 index: i + 1,
                 type: "activity"
             });
@@ -157,34 +175,35 @@ function renderTimeline() {
         transportBlock.className = "info-chip-group";
 
         transportBlock.innerHTML = `
-  <h3 class="font-semibold text-lg">Transport on this day</h3>
-  <div class="flex flex-wrap gap-2 mt-2">
-    ${dayObj.transport
-                .map(
-                    (item) => `
-          <div class="transport-card">
-            ${item}
+          <h3 class="font-semibold text-lg">Transport on this day</h3>
+          <div class="flex flex-wrap gap-2 mt-2">
+            ${
+                transport.length
+                    ? transport.map((item) => `
+                        <div class="transport-card">
+                            ${item}
+                        </div>
+                    `).join("")
+                    : `<div class="text-sm text-slate-500">Not specified</div>`
+            }
           </div>
-        `
-                )
-                .join("")}
-  </div>
-`;
+        `;
+
         extras.appendChild(transportBlock);
+
         const stayFoodGrid = document.createElement("div");
         stayFoodGrid.className = "stay-food-grid";
 
+        const accommodations = dayObj.accommodations || [];
+        const restaurants = dayObj.restaurants || [];
+
         const accommodationText =
             dayObj.accommodation_specific ||
-            (dayObj.accommodations && dayObj.accommodations.length
-                ? dayObj.accommodations.join(", ")
-                : "");
+            (accommodations.length ? accommodations.join(", ") : "");
 
         const restaurantText =
             dayObj.restaurant_specific ||
-            (dayObj.restaurants && dayObj.restaurants.length
-                ? dayObj.restaurants.join(", ")
-                : "");
+            (restaurants.length ? restaurants.join(", ") : "");
 
         if (accommodationText) {
             const accommodationCard = createLocationCard({
@@ -194,11 +213,11 @@ function renderTimeline() {
                 description: "",
                 place: accommodationText,
                 time: "",
-                state: dayObj.state,
-                city: dayObj.city,
+                state: dayObj.state || "",
+                city: dayObj.city || "",
                 lat: "",
                 lng: "",
-                day: dayObj.day,
+                day: dayObj.day || "",
                 index: "A",
                 type: "accommodation"
             });
@@ -214,11 +233,11 @@ function renderTimeline() {
                 description: "",
                 place: restaurantText,
                 time: "",
-                state: dayObj.state,
-                city: dayObj.city,
+                state: dayObj.state || "",
+                city: dayObj.city || "",
                 lat: "",
                 lng: "",
-                day: dayObj.day,
+                day: dayObj.day || "",
                 index: "R",
                 type: "restaurant"
             });
@@ -229,49 +248,8 @@ function renderTimeline() {
         if (stayFoodGrid.children.length > 0) {
             extras.appendChild(stayFoodGrid);
         }
-        /*
-        const stayFoodGrid = document.createElement("div");
-        stayFoodGrid.className = "stay-food-grid";
-    
-        const accommodationCard = createLocationCard({
-          label: "Accommodation",
-          title: dayObj.accommodation.name,
-          image: dayObj.accommodation.image,
-          description: dayObj.accommodation.description,
-          place: dayObj.accommodation.place,
-          time: dayObj.accommodation.time,
-          state: dayObj.state,
-          city: dayObj.city,
-          lat: dayObj.accommodation.lat,
-          lng: dayObj.accommodation.lng,
-          day: dayObj.day,
-          index: "A",
-          type: "accommodation"
-        });
-    
-        const restaurantCard = createLocationCard({
-          label: "Restaurant",
-          title: dayObj.restaurant.name,
-          image: dayObj.restaurant.image,
-          description: dayObj.restaurant.description,
-          place: dayObj.restaurant.place,
-          time: dayObj.restaurant.time,
-          state: dayObj.state,
-          city: dayObj.city,
-          lat: dayObj.restaurant.lat,
-          lng: dayObj.restaurant.lng,
-          day: dayObj.day,
-          index: "R",
-          type: "restaurant"
-        });
-    
-        stayFoodGrid.appendChild(accommodationCard);
-        stayFoodGrid.appendChild(restaurantCard);
-    
-        extras.appendChild(stayFoodGrid);
-        */
-        daySection.appendChild(extras);
 
+        daySection.appendChild(extras);
         timeline.appendChild(daySection);
     });
 }
@@ -292,35 +270,47 @@ function createLocationCard({
     type
 }) {
     const content = document.createElement("article");
+
+    // 这行非常重要：map marker 靠 .map-item 找卡片
     content.className = `timeline-content map-item ${type}`;
+
     content.dataset.day = day;
     content.dataset.index = index;
-    content.dataset.lat = lat;
-    content.dataset.lng = lng;
     content.dataset.type = type;
-    content.dataset.title = title;
+    content.dataset.title = title || "";
     content.dataset.place = place || "";
     content.dataset.time = time || "";
+    content.dataset.state = state || "";
+    content.dataset.city = city || "";
+    content.dataset.country = itinerary?.country || "";
+
+    if (lat !== undefined && lat !== null && lat !== "") {
+        content.dataset.lat = lat;
+    }
+
+    if (lng !== undefined && lng !== null && lng !== "") {
+        content.dataset.lng = lng;
+    }
 
     const typeBadgeClass = getBadgeClass(type);
 
     content.innerHTML = `
-  ${image ? `<img src="${image}" class="card-image">` : ""}
+        ${image ? `<img src="${image}" class="card-image">` : ""}
 
-  <div class="card-body">
-    <div class="flex justify-between items-center">
-      <span class="${typeBadgeClass}">${label}</span>
-      ${time ? `<span class="text-sm text-gray-500">${time}</span>` : ""}
-    </div>
+        <div class="card-body">
+            <div class="flex justify-between items-center">
+                <span class="${typeBadgeClass}">${label}</span>
+                ${time ? `<span class="text-sm text-gray-500">${time}</span>` : ""}
+            </div>
 
-    <h3 class="card-title">${title}</h3>
+            <h3 class="card-title">${title || "Untitled"}</h3>
 
-    ${description ? `<p class="card-desc">${description}</p>` : ""}
+            ${description ? `<p class="card-desc">${description}</p>` : ""}
 
-    ${place ? `<p class="card-meta"><b>Place:</b> ${place}</p>` : ""}
-    <p class="card-meta"><b>State + City:</b> ${state}, ${city}</p>
-  </div>
-`;
+            ${place ? `<p class="card-meta"><b>Place:</b> ${place}</p>` : ""}
+            <p class="card-meta"><b>State + City:</b> ${state || ""}, ${city || ""}</p>
+        </div>
+    `;
 
     return content;
 }
@@ -356,17 +346,74 @@ function initMap() {
     renderMapMarkers();
 }
 
-function renderMapMarkers() {
+function geocodeAddress(geocoder, address) {
+    return new Promise((resolve, reject) => {
+        geocoder.geocode({ address }, (results, status) => {
+            if (status === "OK" && results && results.length > 0) {
+                resolve(results[0].geometry.location);
+            } else if (status === "ZERO_RESULTS") {
+                resolve(null);
+            } else {
+                reject(status);
+            }
+        });
+    });
+}
+
+async function renderMapMarkers() {
     const items = document.querySelectorAll(".map-item");
     const bounds = new google.maps.LatLngBounds();
+    const geocoder = new google.maps.Geocoder();
 
-    items.forEach((el) => {
-        const lat = parseFloat(el.dataset.lat);
-        const lng = parseFloat(el.dataset.lng);
+    let markerCount = 0;
+
+    for (const el of items) {
         const type = el.dataset.type;
-        const title = el.dataset.title || "Location";
 
-        if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+        // 只给 activity 做地图 marker
+        if (type !== "activity") {
+            continue;
+        }
+
+        const title = el.dataset.title || "Location";
+        const place = el.dataset.place || "";
+        const city = el.dataset.city || "";
+        const state = el.dataset.state || "";
+        const country = el.dataset.country || "";
+
+        let lat = parseFloat(el.dataset.lat);
+        let lng = parseFloat(el.dataset.lng);
+
+        // 如果数据库/API 没有 lat/lng，就用地址文字 geocode
+        if (Number.isNaN(lat) || Number.isNaN(lng)) {
+            const address = [place, city, state, country]
+                .filter(Boolean)
+                .join(", ");
+
+            console.log("Geocoding address:", address);
+
+            if (!address) {
+                continue;
+            }
+
+            try {
+                const location = await geocodeAddress(geocoder, address);
+
+                if (!location) {
+                    console.warn("No geocode result for:", address);
+                    continue;
+                }
+
+                lat = location.lat();
+                lng = location.lng();
+
+                el.dataset.lat = lat;
+                el.dataset.lng = lng;
+            } catch (err) {
+                console.warn("Geocoding failed:", address, err);
+                continue;
+            }
+        }
 
         const marker = new google.maps.Marker({
             position: { lat, lng },
@@ -378,19 +425,13 @@ function renderMapMarkers() {
 
         const infoWindow = new google.maps.InfoWindow({
             content: `
-        <div style="min-width:180px;">
-          <div style="font-weight:700; margin-bottom:6px;">${title}</div>
-          <div style="font-size:13px; color:#555; text-transform:capitalize;">${type}</div>
-          ${el.dataset.place
-                    ? `<div style="margin-top:6px; font-size:13px;">${el.dataset.place}</div>`
-                    : ""
-                }
-          ${el.dataset.time
-                    ? `<div style="margin-top:4px; font-size:13px;"><b>Time:</b> ${el.dataset.time}</div>`
-                    : ""
-                }
-        </div>
-      `
+                <div style="min-width:180px;">
+                    <div style="font-weight:700; margin-bottom:6px;">${title}</div>
+                    <div style="font-size:13px; color:#555; text-transform:capitalize;">${type}</div>
+                    ${place ? `<div style="margin-top:6px; font-size:13px;">${place}</div>` : ""}
+                    ${el.dataset.time ? `<div style="margin-top:4px; font-size:13px;"><b>Time:</b> ${el.dataset.time}</div>` : ""}
+                </div>
+            `
         });
 
         marker.addListener("click", () => {
@@ -406,9 +447,10 @@ function renderMapMarkers() {
 
         allMapMarkers.push({ marker, card: el, infoWindow });
         bounds.extend({ lat, lng });
-    });
+        markerCount += 1;
+    }
 
-    if (!bounds.isEmpty()) {
+    if (markerCount > 0) {
         map.fitBounds(bounds);
     }
 }
