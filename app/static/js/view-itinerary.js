@@ -5,21 +5,21 @@ const allMapMarkers = [];
 
 let itinerary = null;
 let mapInitialized = false;
+let googleMapsReady = false;
 
-function initMap() {
+window.onGoogleMapsReady = function () {
+    googleMapsReady = true;
+    tryInitMap();
+};
+
+function tryInitMap() {
+    if (mapInitialized) return;
     if (!itinerary) return;
+    if (!googleMapsReady) return;
+    if (!window.google || !window.google.maps) return;
 
-    const defaultCenter = { lat: -31.9523, lng: 115.8613 };
-
-    map = new google.maps.Map(document.getElementById("map"), {
-        center: defaultCenter,
-        zoom: 10,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: true
-    });
-
-    renderMapMarkers();
+    mapInitialized = true;
+    initMap();
 }
 
 
@@ -136,8 +136,8 @@ function renderTimeline() {
                 description: act.description,
                 place: act.place,
                 time: act.time,
-                state: act.state,
-                city: act.city,
+                state: dayObj.state,
+                city: dayObj.city,
                 lat: act.lat,
                 lng: act.lng,
                 day: dayObj.day,
@@ -336,10 +336,16 @@ function getBadgeClass(type) {
 }
 
 // ===== MAP =====
+// 初始化地图（在 Google Maps API 加载完成后）,要加保护
 function initMap() {
+    if (!itinerary) return;
+
+    const mapEl = document.getElementById("map");
+    if (!mapEl) return;
+
     const defaultCenter = { lat: -31.9523, lng: 115.8613 };
 
-    map = new google.maps.Map(document.getElementById("map"), {
+    map = new google.maps.Map(mapEl, {
         center: defaultCenter,
         zoom: 10,
         mapTypeControl: false,

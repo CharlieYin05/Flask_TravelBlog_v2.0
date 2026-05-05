@@ -8,10 +8,11 @@ body {
 
 /* ===== CARD LAYOUT ===== */
 .card-image {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  border-radius: 10px;
+    width: 100%;
+    height: 260px;
+    object-fit: contain;
+    background: #f8fafc;
+    display: block;
 }
 
 .card-body {
