@@ -10,6 +10,8 @@ const mockUser = {
     itineraries: []
 };
 
+// ── DATA — comes from PORTFOLIO_DATA injected by Flask ──
+
 // ── HELPERS ──
 function getInitials(n) { if (!n) return "?"; return n.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2); }
 function calcAvg(r) { let t = 0, c = 0; for (let s = 1; s <= 5; s++) { t += s * (r[s] || 0); c += (r[s] || 0); } return c ? t / c : 0; }
@@ -18,38 +20,43 @@ function starsHTML(avg, large = false) {
     return [1, 2, 3, 4, 5].map(i => `<span class="${cls} ${i <= Math.round(avg) ? "!text-yellow-400" : ""}">★</span>`).join("");
 }
 
-// ── AVATAR UPLOAD ──
+// ── AVATAR UPLOAD (saves to server) ──
 document.getElementById("avatar-display").addEventListener("click", () => document.getElementById("avatar-upload").click());
 document.getElementById("avatar-overlay-btn").addEventListener("click", () => document.getElementById("avatar-upload").click());
 document.getElementById("avatar-upload").addEventListener("change", e => {
     const file = e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-        const src = ev.target.result;
-        const d = document.getElementById("avatar-display");
-        document.getElementById("avatar-initials").style.display = "none";
-        let img = d.querySelector("img");
-        if (!img) { img = document.createElement("img"); img.className = "w-full h-full object-cover"; d.appendChild(img); }
-        img.src = src;
-        const nav = document.getElementById("nav-avatar-display");
-        nav.innerHTML = `<img src="${src}" class="w-full h-full object-cover rounded-full">`;
-    };
-    reader.readAsDataURL(file);
+    const formData = new FormData();
+    formData.append("avatar", file);
+    fetch("/api/upload-avatar", { method: "POST", body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) { alert("Upload failed: " + data.error); return; }
+            const d = document.getElementById("avatar-display");
+            document.getElementById("avatar-initials").style.display = "none";
+            let img = d.querySelector("img");
+            if (!img) { img = document.createElement("img"); img.className = "w-full h-full object-cover"; d.appendChild(img); }
+            img.src = data.url;
+            const nav = document.getElementById("nav-avatar-display");
+            nav.innerHTML = `<img src="${data.url}" class="w-full h-full object-cover rounded-full">`;
+        });
 });
 
-// ── BANNER UPLOAD ──
+// ── BANNER UPLOAD (saves to server) ──
 document.getElementById("banner-edit-btn").addEventListener("click", () => document.getElementById("banner-upload").click());
 document.getElementById("banner-upload").addEventListener("change", e => {
     const file = e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-        const banner = document.getElementById("banner");
-        banner.style.background = "none";
-        banner.style.backgroundImage = `url(${ev.target.result})`;
-        banner.style.backgroundSize = "cover";
-        banner.style.backgroundPosition = "center";
-    };
-    reader.readAsDataURL(file);
+    const formData = new FormData();
+    formData.append("banner", file);
+    fetch("/api/upload-banner", { method: "POST", body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) { alert("Upload failed: " + data.error); return; }
+            const banner = document.getElementById("banner");
+            banner.style.background = "none";
+            banner.style.backgroundImage = `url(${data.url})`;
+            banner.style.backgroundSize = "cover";
+            banner.style.backgroundPosition = "center";
+        });
 });
 
 // ── COUNTRY FILTER ──
@@ -188,5 +195,22 @@ function renderItineraries(itineraries) {
     });
 }
 
-// ── GO ──
-renderProfile(mockUser);
+// Restore saved avatar and banner on page load
+if (PORTFOLIO_DATA.avatar_url) {
+    const d = document.getElementById("avatar-display");
+    document.getElementById("avatar-initials").style.display = "none";
+    let img = d.querySelector("img");
+    if (!img) { img = document.createElement("img"); img.className = "w-full h-full object-cover"; d.appendChild(img); }
+    img.src = PORTFOLIO_DATA.avatar_url;
+    const nav = document.getElementById("nav-avatar-display");
+    if (nav) nav.innerHTML = `<img src="${PORTFOLIO_DATA.avatar_url}" class="w-full h-full object-cover rounded-full">`;
+}
+if (PORTFOLIO_DATA.banner_url) {
+    const banner = document.getElementById("banner");
+    banner.style.background = "none";
+    banner.style.backgroundImage = `url(${PORTFOLIO_DATA.banner_url})`;
+    banner.style.backgroundSize = "cover";
+    banner.style.backgroundPosition = "center";
+}
+
+renderProfile(PORTFOLIO_DATA);
