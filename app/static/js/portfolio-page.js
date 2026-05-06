@@ -80,8 +80,9 @@ function closePopup() {
     overlay.classList.add("opacity-0", "pointer-events-none");
     popup.classList.add("translate-y-3");
 }
-document.getElementById("popup-close").addEventListener("click", closePopup);
-overlay.addEventListener("click", e => { if (e.target === overlay) closePopup(); });
+const popupClose = document.getElementById("popup-close");
+if (popupClose) popupClose.addEventListener("click", closePopup);
+if (overlay) overlay.addEventListener("click", e => { if (e.target === overlay) closePopup(); });
 
 function openRatingPopup(it) {
     const avg = calcAvg(it.ratings || {}), total = Object.values(it.ratings || {}).reduce((s, n) => s + n, 0);
