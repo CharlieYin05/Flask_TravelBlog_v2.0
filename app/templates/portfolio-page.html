@@ -82,7 +82,7 @@
         username: "{{ user.username if user else '' }}",
         avatar_url: "{{ ('/static/' + user.avatar_url) if user and user.avatar_url else '' }}",
         banner_url: "{{ ('/static/' + user.banner_url) if user and user.banner_url else '' }}",
-        countires: {
+        countries: {
             {% for it in itineraries %}
                 "{{ it.country }}": { flag: "🌍"}{% if not loop.last %}, {% endif %}
             {% endfor %}

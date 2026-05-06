@@ -1,14 +1,5 @@
 // portfolio-page.js
 // JavaScript for the Portfolio Page (your own profile)
-// Connect to backend by replacing renderProfile(mockUser) with a fetch() call
-
-// ── DATA — replace with fetch() when backend ready ──
-const mockUser = {
-    uid: "",
-    username: "",
-    countries: {},
-    itineraries: []
-};
 
 // ── DATA — comes from PORTFOLIO_DATA injected by Flask ──
 

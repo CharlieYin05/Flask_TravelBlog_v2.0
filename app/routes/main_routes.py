@@ -24,8 +24,8 @@ main_bp = Blueprint("main", __name__)
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 COVER_UPLOAD_DIR = STATIC_DIR / "uploads" / "cover_photos"
 ACTIVITY_UPLOAD_DIR = STATIC_DIR / "uploads" / "activity_photos"
-AVATAR_UPLOAD_DIR = STATIC_DIR /"uploads" / "avatar_photos"
-BANNER_UPLOAD_DIR = STATIC_DIR /"uploads" / "banner_photos"
+AVATAR_UPLOAD_DIR = STATIC_DIR / "uploads" / "avatar_photos"
+BANNER_UPLOAD_DIR = STATIC_DIR / "uploads" / "banner_photos"
 
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
