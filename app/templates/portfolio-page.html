@@ -80,8 +80,8 @@
     const PORTFOLIO_DATA = {
         uid: "{{ user.id if user else '' }}",
         username: "{{ user.username if user else '' }}",
-        avatar_url: "{{ ('/static/' + user.avatar_url) if user and user.avatar_url else '' }}",
-        banner_url: "{{ ('/static/' + user.banner_url) if user and user.banner_url else '' }}",
+        avatar_url: "{{ url_for('static', filename=user.avatar_url) if user and user.avatar_url else '' }}",
+        banner_url: "{{ url_for('static', filename=user.banner_url) if user and user.banner_url else '' }}",
         countries: {
             {% for it in itineraries %}
                 "{{ it.country }}": { flag: "🌍"}{% if not loop.last %}, {% endif %}

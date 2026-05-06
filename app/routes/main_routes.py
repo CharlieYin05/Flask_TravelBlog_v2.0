@@ -416,7 +416,7 @@ def upload_avatar():
     if not path:
         return jsonify({"success": False, "error": "Invalid file"}), 400
     user = User.query.filter_by(username=session.get("user")).first()
-    user.avatar.url = path
+    user.avatar_url = path
     db.session.commit()
     return jsonify({"success": True, "url": "/static/" + path.replace("\\", "/")})
 
