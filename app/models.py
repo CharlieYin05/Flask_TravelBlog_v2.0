@@ -6,6 +6,8 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    avatar_url = db.Column(db.String(255), nullable=True)
+    banner_url = db.Column(db.String(255), nullable=True)
     itineraries = db.relationship("Itinerary", back_populates="user")
 
 class Itinerary(db.Model):
