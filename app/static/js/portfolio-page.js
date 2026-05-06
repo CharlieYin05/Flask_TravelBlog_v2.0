@@ -112,7 +112,8 @@ function openRatingPopup(it) {
 function renderProfile(user) {
     const initials = getInitials(user.username);
     document.getElementById("avatar-initials").textContent = initials;
-    document.getElementById("nav-avatar-display").textContent = initials;
+    const navAvatar = document.getElementById("nav-avatar-display");
+    if (navAvatar) navAvatar.textContent = initials;
     document.getElementById("username").textContent = user.username || "—";
     document.getElementById("uid").textContent = "UID: " + (user.uid || "—");
     document.title = (user.username || "My Profile") + " – Travel Blog";
@@ -167,7 +168,11 @@ function renderItineraries(itineraries) {
         link.className = "itinerary-card block bg-white border border-gray-200 rounded-xl overflow-hidden no-underline text-inherit flex flex-col shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-200";
         link.dataset.country = it.location;
         link.innerHTML = `
-            <div class="h-24 flex items-center justify-center text-4xl" style="background:${colors[i % colors.length]}">${it.emoji || "✈️"}</div>
+            <div class="h-24 overflow-hidden" style="background:${colors[i % colors.length]}">
+                ${it.cover_image_url 
+                    ? `<img src="${it.cover_image_url}" class="w-full h-full object-cover">` 
+                    : `<div class="w-full h-full flex items-center justify-center text-4xl">✈️</div>`}
+            </div>
             <div class="p-3 flex-1">
                 <h3 class="text-xs font-bold text-blue-900 mb-1 leading-snug">${it.title}</h3>
                 <div class="text-xs text-gray-500">📍 ${it.location}</div>
