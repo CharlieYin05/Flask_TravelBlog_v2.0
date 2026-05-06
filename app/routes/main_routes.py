@@ -24,6 +24,8 @@ main_bp = Blueprint("main", __name__)
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 COVER_UPLOAD_DIR = STATIC_DIR / "uploads" / "cover_photos"
 ACTIVITY_UPLOAD_DIR = STATIC_DIR / "uploads" / "activity_photos"
+AVATAR_UPLOAD_DIR = STATIC_DIR /"uploads" / "avatar_photos"
+BANNER_UPLOAD_DIR = STATIC_DIR /"uploads" / "banner_photos"
 
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
@@ -405,6 +407,32 @@ def view_itinerary(id):
     return render_template("view-itinerary.html", itinerary=itinerary)
 
 # Portfolio page
+@main_bp.route("/api/upload-avatar", methods=["POST"])
+def upload_avatar():
+    if not session.get("user"):
+        return jsonify({"success": False, "error": "Not logged in"}), 401
+    file = request.files.get("avatar")
+    path = save_uploaded_file(file, AVATAR_UPLOAD_DIR)
+    if not path:
+        return jsonify({"success": False, "error": "Invalid file"}), 400
+    user = User.query.filter_by(username=session.get("user")).first()
+    user.avatar.url = path
+    db.session.commit()
+    return jsonify({"success": True, "url": "/static/" + path.replace("\\", "/")})
+
+@main_bp.route("/api/upload-banner", methods=["POST"])
+def upload_banner():
+    if not session.get("user"):
+        return jsonify({"success": False, "error": "Not logged in"}), 401
+    file = request.files.get("banner")
+    path = save_uploaded_file(file, BANNER_UPLOAD_DIR)
+    if not path:
+        return jsonify({"success": False, "error": "Invalid file"}), 400
+    user = User.query.filter_by(username=session.get("user")).first()
+    user.banner_url = path
+    db.session.commit()
+    return jsonify({"success": True, "url": "/static/" + path.replace("\\", "/")})
+
 @main_bp.route("/portfolio")
 def portfolio():
     if not session.get("user"):
