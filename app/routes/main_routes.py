@@ -560,6 +560,33 @@ def view_itinerary(id):
     itinerary = Itinerary.query.get_or_404(id)
     return render_template("view-itinerary.html", itinerary=itinerary)
 
+# View itinerary page delete own comments
+@main_bp.route("/api/itinerary/comments/<int:comment_id>", methods=["DELETE"])
+def delete_itinerary_comment(comment_id):
+    current_user, error_response = require_login_json()
+    if error_response:
+        return error_response
+
+    comment = ItineraryComment.query.get_or_404(comment_id)
+
+    if comment.user_id != current_user.id:
+        return jsonify({
+            "success": False,
+            "error": "You can only delete your own comments."
+        }), 403
+
+    itinerary_id = comment.itinerary_id
+
+    db.session.delete(comment)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "comment_count": ItineraryComment.query.filter_by(
+            itinerary_id=itinerary_id
+        ).count()
+    })
+
 # Portfolio page
 @main_bp.route("/portfolio")
 def portfolio():
