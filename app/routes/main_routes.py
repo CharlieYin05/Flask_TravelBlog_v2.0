@@ -34,6 +34,23 @@ COVER_UPLOAD_DIR = STATIC_DIR / "uploads" / "cover_photos"
 ACTIVITY_UPLOAD_DIR = STATIC_DIR / "uploads" / "activity_photos"
 
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]+$")
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+USERNAME_MIN_LENGTH = 3
+USERNAME_MAX_LENGTH = 20
+PASSWORD_MIN_LENGTH = 8
+MAX_IMAGE_FILE_SIZE = 10 * 1024 * 1024
+ALLOWED_TRIP_TYPES = {
+    "short-trip",
+    "beach",
+    "island",
+    "city",
+    "adventurous",
+    "slow-paced",
+    "food-centric",
+    "cultural",
+}
+ALLOWED_BUDGET_LEVELS = {"$", "$$", "$$$"}
 
 
 def allowed_image_file(filename: str) -> bool:
@@ -43,11 +60,100 @@ def allowed_image_file(filename: str) -> bool:
     )
 
 
+def signup_error_response(message: str, is_ajax_request: bool):
+    if is_ajax_request:
+        return jsonify({"success": False, "error": message}), 400
+    return render_template("sign-up.html", error=message)
+
+
+def submit_error_response(message: str):
+    return render_template("Submit-form-page.html", error=message)
+
+
+def get_uploaded_file_size(file_storage) -> int:
+    stream = file_storage.stream
+    current_position = stream.tell()
+    stream.seek(0, 2)
+    size = stream.tell()
+    stream.seek(current_position)
+    return size
+
+
+def validate_uploaded_image_file(file_storage, label: str):
+    if not file_storage or not file_storage.filename:
+        return ""
+
+    if not allowed_image_file(file_storage.filename):
+        return f"{label} must be a PNG, JPG, JPEG, GIF, or WEBP image."
+
+    if get_uploaded_file_size(file_storage) > MAX_IMAGE_FILE_SIZE:
+        return f"{label} must be smaller than 10MB."
+
+    return ""
+
+
+def validate_itinerary_submission(itinerary_data):
+    # Validate the main itinerary structure before saving anything.
+    if not itinerary_data["trip_title"]:
+        return "Trip title is required."
+
+    if not itinerary_data["trip_country"]:
+        return "Country is required."
+
+    if itinerary_data["declared_total_days"] < 1 or itinerary_data["total_days"] < 1:
+        return "Total travel days must be at least 1."
+
+    if not itinerary_data["trip_types"]:
+        return "Please select at least one trip type."
+
+    if any(trip_type not in ALLOWED_TRIP_TYPES for trip_type in itinerary_data["trip_types"]):
+        return "Please select a valid trip type."
+
+    if itinerary_data["budget_level"] not in ALLOWED_BUDGET_LEVELS:
+        return "Please select a valid budget level."
+
+    if not itinerary_data["budget_range"]:
+        return "Estimated cost range is required."
+
+    cover_photo_error = validate_uploaded_image_file(
+        itinerary_data["cover_photo"],
+        "Cover photo",
+    )
+    if cover_photo_error:
+        return cover_photo_error
+
+    if len(itinerary_data["days"]) != itinerary_data["total_days"]:
+        return "Each day must be filled in before submitting."
+
+    for day in itinerary_data["days"]:
+        if not day["city"]:
+            return f"City is required for Day {day['day_number']}."
+
+        if not day["activities"]:
+            return f"At least one activity is required for Day {day['day_number']}."
+
+        for activity in day["activities"]:
+            if not activity["title"]:
+                return (
+                    f"Activity title is required for Day {day['day_number']}, "
+                    f"Activity {activity['activity_number']}."
+                )
+
+            activity_photo_error = validate_uploaded_image_file(
+                activity["photo"],
+                f"Photo for Day {day['day_number']} Activity {activity['activity_number']}",
+            )
+            if activity_photo_error:
+                return activity_photo_error
+
+    return ""
+
+
 def save_uploaded_file(file_storage, upload_dir: Path):
     if not file_storage or not file_storage.filename:
         return None
 
-    if not allowed_image_file(file_storage.filename):
+    if validate_uploaded_image_file(file_storage, "File"):
         return None
 
     upload_dir.mkdir(parents=True, exist_ok=True)
@@ -155,22 +261,44 @@ def signup():
         confirm_password = request.form.get("confirm-password", "")
         is_ajax_request = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
+        # Validate the submitted signup data before touching the database.
+        if not username:
+            return signup_error_response("Username is required.", is_ajax_request)
+
+        if not (USERNAME_MIN_LENGTH <= len(username) <= USERNAME_MAX_LENGTH):
+            return signup_error_response(
+                f"Username must be between {USERNAME_MIN_LENGTH} and {USERNAME_MAX_LENGTH} characters.",
+                is_ajax_request,
+            )
+
+        if not USERNAME_PATTERN.fullmatch(username):
+            return signup_error_response(
+                "Username can only contain letters, numbers, and underscores.",
+                is_ajax_request,
+            )
+
+        if not email:
+            return signup_error_response("Email is required.", is_ajax_request)
+
+        if not EMAIL_PATTERN.fullmatch(email):
+            return signup_error_response("Please enter a valid email address.", is_ajax_request)
+
+        if len(password) < PASSWORD_MIN_LENGTH:
+            return signup_error_response(
+                f"Password must be at least {PASSWORD_MIN_LENGTH} characters long.",
+                is_ajax_request,
+            )
+
         if password != confirm_password:
-            if is_ajax_request:
-                return jsonify({"success": False, "error": "Passwords do not match."}), 400
-            return render_template("sign-up.html", error="Passwords do not match.")
+            return signup_error_response("Passwords do not match.", is_ajax_request)
 
         existing_user = User.query.filter_by(username=username).first()
         if existing_user is not None:
-            if is_ajax_request:
-                return jsonify({"success": False, "error": "This username is already taken."}), 400
-            return render_template("sign-up.html", error="This username is already taken.")
+            return signup_error_response("This username is already taken.", is_ajax_request)
 
         existing_email = User.query.filter_by(email=email).first()
         if existing_email is not None:
-            if is_ajax_request:
-                return jsonify({"success": False, "error": "This email is already registered."}), 400
-            return render_template("sign-up.html", error="This email is already registered.")
+            return signup_error_response("This email is already registered.", is_ajax_request)
 
         new_user = User(
             username=username,
@@ -220,7 +348,11 @@ def submit_itinerary():
         declared_total_days = int(total_days_raw) if total_days_raw.isdigit() else 0
 
         cover_photo = request.files.get("cover_photo")
-        trip_types = request.form.getlist("trip_type")
+        trip_types = [
+            trip_type.strip()
+            for trip_type in request.form.getlist("trip_type")
+            if trip_type.strip()
+        ]
 
         day_numbers = set()
         day_key_pattern = re.compile(r"day(\d+)")
@@ -244,6 +376,7 @@ def submit_itinerary():
             "trip_types": trip_types,
             "budget_level": request.form.get("budget_level", "").strip(),
             "budget_range": request.form.get("budget_range", "").strip(),
+            "cover_photo": cover_photo,
             "cover_photo_path": cover_photo_path,
             "days": [],
         }
@@ -307,6 +440,7 @@ def submit_itinerary():
                     "place": request.form.get(place_key, "").strip(),
                     "time": request.form.get(time_key, "").strip(),
                     "description": request.form.get(description_key, "").strip(),
+                    "photo": activity_photo,
                     "photo_path": activity_photo_path,
                 }
 
@@ -315,15 +449,20 @@ def submit_itinerary():
 
             itinerary_data["days"].append(day_data)
 
+        # Run one server-side validation pass before creating database rows.
+        validation_error = validate_itinerary_submission(itinerary_data)
+        if validation_error:
+            return submit_error_response(validation_error)
+
         itinerary = Itinerary(
-            title=itinerary_data["trip_title"] or "Untitled Trip",
-            country=itinerary_data["trip_country"] or "Unknown",
+            title=itinerary_data["trip_title"],
+            country=itinerary_data["trip_country"],
             trip_types=itinerary_data["trip_types"],
             user_id=current_user.id,
             cover_image_url=itinerary_data["cover_photo_path"],
             total_days=itinerary_data["total_days"],
-            budget_level=itinerary_data["budget_level"] or "Not specified",
-            budget_range=itinerary_data["budget_range"] or "Not specified",
+            budget_level=itinerary_data["budget_level"],
+            budget_range=itinerary_data["budget_range"],
         )
 
         for day in itinerary_data["days"]:
@@ -341,7 +480,7 @@ def submit_itinerary():
 
             for activity in day["activities"]:
                 itinerary_activity = ItineraryActivity(
-                    activity_name=activity["title"] or "Untitled Activity",
+                    activity_name=activity["title"],
                     place=activity["place"] or None,
                     time=activity["time"] or None,
                     description=activity["description"] or None,
