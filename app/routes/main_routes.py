@@ -391,7 +391,7 @@ def get_itinerary(id):
         "title": it.title,
         "country": it.country,
         "author": it.user.username if it.user else "Unknown",
-        "date": "",
+        "date": it.created_at.strftime("%Y-%m-%d") if it.created_at else "",
         "tags": it.trip_types or [],
         "overview": f"{it.total_days} days itinerary in {it.country}.",
         "coverPhoto": "/static/" + it.cover_image_url if it.cover_image_url else "",
@@ -453,8 +453,9 @@ def get_itinerary_interactions(id):
                 user_id=current_user.id,
             ).first()
         ),
+        # Only the front-end know which comments can display the Delete button.
         "comments": [
-            {
+        {
                 "id": comment.id,
                 "content": comment.content,
                 "author": comment.user.username if comment.user else "Unknown",
@@ -521,10 +522,11 @@ def toggle_itinerary_favorite(id):
         "favorite_count": ItineraryFavorite.query.filter_by(itinerary_id=id).count(),
     })
 
-
+# View itinerary details page interactions (add comment)
 @main_bp.route("/api/itinerary/<int:id>/comments", methods=["POST"])
 def create_itinerary_comment(id):
     Itinerary.query.get_or_404(id)
+
     current_user, error_response = require_login_json()
     if error_response:
         return error_response
@@ -533,35 +535,35 @@ def create_itinerary_comment(id):
     content = payload.get("content", "").strip()
 
     if not content:
-        return jsonify({"success": False, "error": "Comment cannot be empty."}), 400
+        return jsonify({
+            "success": False,
+            "error": "Comment cannot be empty."
+        }), 400
 
     comment = ItineraryComment(
         itinerary_id=id,
         user_id=current_user.id,
         content=content,
     )
+
     db.session.add(comment)
     db.session.commit()
 
     return jsonify({
         "success": True,
-        "comment_count": ItineraryComment.query.filter_by(itinerary_id=id).count(),
+        "comment_count": ItineraryComment.query.filter_by(
+            itinerary_id=id
+        ).count(),
         "comment": {
             "id": comment.id,
             "content": comment.content,
             "author": current_user.username,
             "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M"),
+            "can_delete": True,
         },
     }), 201
 
-
-# View itinerary details page
-@main_bp.route("/itinerary/<int:id>")
-def view_itinerary(id):
-    itinerary = Itinerary.query.get_or_404(id)
-    return render_template("view-itinerary.html", itinerary=itinerary)
-
-# View itinerary page delete own comments
+# View itinerary details page interactions (delete own comment)
 @main_bp.route("/api/itinerary/comments/<int:comment_id>", methods=["DELETE"])
 def delete_itinerary_comment(comment_id):
     current_user, error_response = require_login_json()
@@ -587,6 +589,14 @@ def delete_itinerary_comment(comment_id):
             itinerary_id=itinerary_id
         ).count()
     })
+
+
+# View itinerary details page
+@main_bp.route("/itinerary/<int:id>")
+def view_itinerary(id):
+    itinerary = Itinerary.query.get_or_404(id)
+    return render_template("view-itinerary.html", itinerary=itinerary)
+
 
 # Portfolio page
 @main_bp.route("/portfolio")
