@@ -15,7 +15,15 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
-from app.models import Itinerary, User, ItineraryDay, ItineraryActivity
+from app.models import (
+    Itinerary,
+    User,
+    ItineraryDay,
+    ItineraryActivity,
+    ItineraryLike,
+    ItineraryFavorite,
+    ItineraryComment,
+)
 
 
 main_bp = Blueprint("main", __name__)
@@ -158,6 +166,24 @@ def save_uploaded_file(file_storage, upload_dir: Path):
     file_storage.save(save_path)
 
     return str(save_path.relative_to(STATIC_DIR)).replace("\\", "/")
+
+
+def get_current_user():
+    username = session.get("user")
+    if not username:
+        return None
+    return User.query.filter_by(username=username).first()
+
+
+def require_login_json():
+    current_user = get_current_user()
+    if current_user is None:
+        return None, (jsonify({
+            "success": False,
+            "error": "Please sign in to use this feature.",
+            "redirect_url": url_for("main.signin"),
+        }), 401)
+    return current_user, None
 
 
 @main_bp.route("/")
@@ -495,7 +521,7 @@ def get_itineraries():
 
     return jsonify(data)
 
-# View itinerary details page (placeholder, can be expanded later)
+# View itinerary details page (fetch itinerary data) - can be used for both view and edit pages
 @main_bp.route("/api/itinerary/<int:id>")
 def get_itinerary(id):
     it = Itinerary.query.get_or_404(id)
@@ -504,7 +530,7 @@ def get_itinerary(id):
         "title": it.title,
         "country": it.country,
         "author": it.user.username if it.user else "Unknown",
-        "date": "",
+        "date": it.created_at.strftime("%Y-%m-%d") if it.created_at else "",
         "tags": it.trip_types or [],
         "overview": f"{it.total_days} days itinerary in {it.country}.",
         "coverPhoto": "/static/" + it.cover_image_url if it.cover_image_url else "",
@@ -537,11 +563,179 @@ def get_itinerary(id):
 
     return jsonify(result)
 
+# View itinerary details page interactions (likes, favorites, comments)
+@main_bp.route("/api/itinerary/<int:id>/interactions", methods=["GET"])
+def get_itinerary_interactions(id):
+    Itinerary.query.get_or_404(id)
+    current_user = get_current_user()
+
+    comments = (
+        ItineraryComment.query
+        .filter_by(itinerary_id=id)
+        .order_by(ItineraryComment.created_at.desc())
+        .all()
+    )
+
+    return jsonify({
+        "like_count": ItineraryLike.query.filter_by(itinerary_id=id).count(),
+        "favorite_count": ItineraryFavorite.query.filter_by(itinerary_id=id).count(),
+        "comment_count": len(comments),
+        "liked_by_me": bool(
+            current_user and ItineraryLike.query.filter_by(
+                itinerary_id=id,
+                user_id=current_user.id,
+            ).first()
+        ),
+        "favorited_by_me": bool(
+            current_user and ItineraryFavorite.query.filter_by(
+                itinerary_id=id,
+                user_id=current_user.id,
+            ).first()
+        ),
+        # Only the front-end know which comments can display the Delete button.
+        "comments": [
+        {
+                "id": comment.id,
+                "content": comment.content,
+                "author": comment.user.username if comment.user else "Unknown",
+                "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M"),
+                "can_delete": bool(current_user and comment.user_id == current_user.id),
+            }
+            for comment in comments
+        ],
+    })
+
+
+@main_bp.route("/api/itinerary/<int:id>/like", methods=["POST"])
+def toggle_itinerary_like(id):
+    Itinerary.query.get_or_404(id)
+    current_user, error_response = require_login_json()
+    if error_response:
+        return error_response
+
+    existing_like = ItineraryLike.query.filter_by(
+        itinerary_id=id,
+        user_id=current_user.id,
+    ).first()
+
+    if existing_like:
+        db.session.delete(existing_like)
+        liked = False
+    else:
+        db.session.add(ItineraryLike(itinerary_id=id, user_id=current_user.id))
+        liked = True
+
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "liked_by_me": liked,
+        "like_count": ItineraryLike.query.filter_by(itinerary_id=id).count(),
+    })
+
+
+@main_bp.route("/api/itinerary/<int:id>/favorite", methods=["POST"])
+def toggle_itinerary_favorite(id):
+    Itinerary.query.get_or_404(id)
+    current_user, error_response = require_login_json()
+    if error_response:
+        return error_response
+
+    existing_favorite = ItineraryFavorite.query.filter_by(
+        itinerary_id=id,
+        user_id=current_user.id,
+    ).first()
+
+    if existing_favorite:
+        db.session.delete(existing_favorite)
+        favorited = False
+    else:
+        db.session.add(ItineraryFavorite(itinerary_id=id, user_id=current_user.id))
+        favorited = True
+
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "favorited_by_me": favorited,
+        "favorite_count": ItineraryFavorite.query.filter_by(itinerary_id=id).count(),
+    })
+
+# View itinerary details page interactions (add comment)
+@main_bp.route("/api/itinerary/<int:id>/comments", methods=["POST"])
+def create_itinerary_comment(id):
+    Itinerary.query.get_or_404(id)
+
+    current_user, error_response = require_login_json()
+    if error_response:
+        return error_response
+
+    payload = request.get_json(silent=True) or {}
+    content = payload.get("content", "").strip()
+
+    if not content:
+        return jsonify({
+            "success": False,
+            "error": "Comment cannot be empty."
+        }), 400
+
+    comment = ItineraryComment(
+        itinerary_id=id,
+        user_id=current_user.id,
+        content=content,
+    )
+
+    db.session.add(comment)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "comment_count": ItineraryComment.query.filter_by(
+            itinerary_id=id
+        ).count(),
+        "comment": {
+            "id": comment.id,
+            "content": comment.content,
+            "author": current_user.username,
+            "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M"),
+            "can_delete": True,
+        },
+    }), 201
+
+# View itinerary details page interactions (delete own comment)
+@main_bp.route("/api/itinerary/comments/<int:comment_id>", methods=["DELETE"])
+def delete_itinerary_comment(comment_id):
+    current_user, error_response = require_login_json()
+    if error_response:
+        return error_response
+
+    comment = ItineraryComment.query.get_or_404(comment_id)
+
+    if comment.user_id != current_user.id:
+        return jsonify({
+            "success": False,
+            "error": "You can only delete your own comments."
+        }), 403
+
+    itinerary_id = comment.itinerary_id
+
+    db.session.delete(comment)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "comment_count": ItineraryComment.query.filter_by(
+            itinerary_id=itinerary_id
+        ).count()
+    })
+
+
 # View itinerary details page
 @main_bp.route("/itinerary/<int:id>")
 def view_itinerary(id):
     itinerary = Itinerary.query.get_or_404(id)
     return render_template("view-itinerary.html", itinerary=itinerary)
+
 
 # Portfolio page
 @main_bp.route("/portfolio")

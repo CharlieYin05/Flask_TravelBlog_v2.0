@@ -543,44 +543,247 @@ function highlightCard(el) {
 
 // ===== LIKE / FAVORITE / COMMENT =====
 function setupInteractionButtons() {
+    const itineraryId = window.location.pathname.split("/").pop();
+
     const likeBtn = document.getElementById("like-btn");
     const favBtn = document.getElementById("fav-btn");
     const commentBtn = document.getElementById("comment-btn");
     const commentBox = document.getElementById("comment-box");
 
-    let liked = false;
-    let favorited = false;
+    loadInteractions(itineraryId);
 
     if (likeBtn) {
-        likeBtn.addEventListener("click", () => {
-            liked = !liked;
-            likeBtn.classList.toggle("bg-blue-500", liked);
-            likeBtn.classList.toggle("text-white", liked);
-            likeBtn.classList.toggle("bg-gray-200", !liked);
-            likeBtn.innerText = liked ? "👍 Liked" : "👍 Like";
+        likeBtn.addEventListener("click", async () => {
+            const data = await postJson(`/api/itinerary/${itineraryId}/like`);
+
+            if (!data) return;
+            if (handleLoginRequired(data)) return;
+
+            updateLikeButton(data.liked_by_me, data.like_count);
         });
     }
 
     if (favBtn) {
-        favBtn.addEventListener("click", () => {
-            favorited = !favorited;
-            favBtn.classList.toggle("bg-yellow-400", favorited);
-            favBtn.classList.toggle("text-white", favorited);
-            favBtn.classList.toggle("bg-gray-200", !favorited);
-            favBtn.innerText = favorited ? "⭐ Favorited" : "⭐ Favorite";
+        favBtn.addEventListener("click", async () => {
+            const data = await postJson(`/api/itinerary/${itineraryId}/favorite`);
+
+            if (!data) return;
+            if (handleLoginRequired(data)) return;
+
+            updateFavoriteButton(data.favorited_by_me, data.favorite_count);
         });
     }
 
     if (commentBtn && commentBox) {
-        commentBtn.addEventListener("click", () => {
-            const value = commentBox.value.trim();
-            if (!value) {
-                alert("Please enter a comment before posting.");
+        commentBtn.addEventListener("click", async () => {
+            const content = commentBox.value.trim();
+
+            if (!content) {
+                showInteractionMessage("Please enter a comment before posting.");
                 return;
             }
 
-            alert(`Comment posted:\n${value}`);
+            const data = await postJson(`/api/itinerary/${itineraryId}/comments`, {
+                content
+            });
+
+            if (!data) return;
+            if (handleLoginRequired(data)) return;
+
             commentBox.value = "";
+            showInteractionMessage("");
+
+            await loadInteractions(itineraryId);
         });
     }
+}
+
+async function loadInteractions(itineraryId) {
+    try {
+        const res = await fetch(`/api/itinerary/${itineraryId}/interactions`);
+        const data = await res.json();
+
+        updateLikeButton(data.liked_by_me, data.like_count);
+        updateFavoriteButton(data.favorited_by_me, data.favorite_count);
+        updateCommentCount(data.comment_count);
+        renderComments(data.comments || []);
+    } catch (err) {
+        console.error("Failed to load interactions:", err);
+    }
+}
+
+async function postJson(url, body = null) {
+    try {
+        const options = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        };
+
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+
+        const res = await fetch(url, options);
+        const data = await res.json();
+
+        if (!res.ok && data.error) {
+            return data;
+        }
+
+        return data;
+    } catch (err) {
+        console.error("Request failed:", err);
+        showInteractionMessage("Something went wrong. Please try again.");
+        return null;
+    }
+}
+
+async function deleteComment(commentId) {
+    try {
+        const res = await fetch(`/api/itinerary/comments/${commentId}`, {
+            method: "DELETE"
+        });
+
+        const data = await res.json();
+
+        if (handleLoginRequired(data)) return;
+
+        if (!res.ok) {
+            showInteractionMessage(data.error || "Could not delete comment.");
+            return;
+        }
+
+        const itineraryId = window.location.pathname.split("/").pop();
+        await loadInteractions(itineraryId);
+    } catch (err) {
+        console.error("Failed to delete comment:", err);
+        showInteractionMessage("Something went wrong. Please try again.");
+    }
+}
+
+function handleLoginRequired(data) {
+    if (data && data.redirect_url) {
+        window.location.href = data.redirect_url;
+        return true;
+    }
+
+    return false;
+}
+
+function updateLikeButton(liked, count) {
+    const likeBtn = document.getElementById("like-btn");
+    const likeCount = document.getElementById("like-count");
+
+    if (!likeBtn) return;
+
+    likeBtn.classList.toggle("bg-blue-500", liked);
+    likeBtn.classList.toggle("text-white", liked);
+    likeBtn.classList.toggle("bg-slate-100", !liked);
+
+    likeBtn.innerHTML = liked
+        ? `👍 Liked <span id="like-count">${count}</span>`
+        : `👍 Like <span id="like-count">${count}</span>`;
+
+    if (likeCount) {
+        likeCount.innerText = count;
+    }
+}
+
+function updateFavoriteButton(favorited, count) {
+    const favBtn = document.getElementById("fav-btn");
+    const favoriteCount = document.getElementById("favorite-count");
+
+    if (!favBtn) return;
+
+    favBtn.classList.toggle("bg-yellow-400", favorited);
+    favBtn.classList.toggle("text-white", favorited);
+    favBtn.classList.toggle("bg-slate-100", !favorited);
+
+    favBtn.innerHTML = favorited
+        ? `⭐ Favorited <span id="favorite-count">${count}</span>`
+        : `⭐ Favorite <span id="favorite-count">${count}</span>`;
+
+    if (favoriteCount) {
+        favoriteCount.innerText = count;
+    }
+}
+
+function updateCommentCount(count) {
+    const commentCount = document.getElementById("comment-count");
+
+    if (commentCount) {
+        commentCount.innerText = count;
+    }
+}
+
+function renderComments(comments) {
+    const commentsList = document.getElementById("comments-list");
+
+    if (!commentsList) return;
+
+    commentsList.innerHTML = "";
+
+    if (comments.length === 0) {
+        commentsList.innerHTML = `
+            <div class="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                No comments yet. Be the first to comment.
+            </div>
+        `;
+        return;
+    }
+
+    comments.forEach((comment) => {
+        const item = document.createElement("div");
+        item.className = "comment-card bg-slate-50 border border-slate-200 rounded-2xl p-4";
+
+        item.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <div class="font-semibold text-slate-800">${escapeHtml(comment.author)}</div>
+                    <div class="text-xs text-slate-500">${escapeHtml(comment.created_at)}</div>
+                </div>
+
+                ${
+                    comment.can_delete
+                        ? `<button
+                            class="delete-comment-btn text-sm text-red-600 hover:text-red-700"
+                            data-comment-id="${comment.id}"
+                        >
+                            Delete
+                        </button>`
+                        : ""
+                }
+            </div>
+
+            <p class="mt-3 text-slate-700 leading-6">${escapeHtml(comment.content)}</p>
+        `;
+
+        commentsList.appendChild(item);
+    });
+
+    document.querySelectorAll(".delete-comment-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const commentId = btn.dataset.commentId;
+            deleteComment(commentId);
+        });
+    });
+}
+
+function showInteractionMessage(message) {
+    const messageEl = document.getElementById("interaction-message");
+
+    if (messageEl) {
+        messageEl.innerText = message;
+    }
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
