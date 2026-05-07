@@ -382,7 +382,7 @@ def get_itineraries():
 
     return jsonify(data)
 
-# View itinerary details page (placeholder, can be expanded later)
+# View itinerary details page (fetch itinerary data) - can be used for both view and edit pages
 @main_bp.route("/api/itinerary/<int:id>")
 def get_itinerary(id):
     it = Itinerary.query.get_or_404(id)
@@ -424,7 +424,7 @@ def get_itinerary(id):
 
     return jsonify(result)
 
-
+# View itinerary details page interactions (likes, favorites, comments)
 @main_bp.route("/api/itinerary/<int:id>/interactions", methods=["GET"])
 def get_itinerary_interactions(id):
     Itinerary.query.get_or_404(id)
@@ -459,6 +459,7 @@ def get_itinerary_interactions(id):
                 "content": comment.content,
                 "author": comment.user.username if comment.user else "Unknown",
                 "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M"),
+                "can_delete": bool(current_user and comment.user_id == current_user.id),
             }
             for comment in comments
         ],
