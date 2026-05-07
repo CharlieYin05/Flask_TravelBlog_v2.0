@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const submitForm = document.querySelector('form[action$="/submit"]');
     const totalDaysInput = document.getElementById("total-days");
     const dailyPlanSection = document.querySelector(".daily-plan-section");
+    const tripTypeSelect = document.getElementById("trip-type");
 
     let daysWrapper = document.getElementById("days-wrapper");
     if (!daysWrapper) {
@@ -29,9 +30,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     initializeActivitySummaries();
     syncTotalDays();
+    applyDynamicRequiredFields(document);
 
     if (submitForm) {
         submitForm.addEventListener("submit", function (event) {
+            if (!validateSubmitForm()) {
+                event.preventDefault();
+                return;
+            }
+
             const confirmed = window.confirm("Are you sure you want to submit this itinerary?");
             if (!confirmed) {
                 event.preventDefault();
@@ -58,7 +65,50 @@ document.addEventListener("DOMContentLoaded", function () {
 
             syncTotalDays();
             initializeActivitySummaries();
+            applyDynamicRequiredFields(newDay);
         });
+    }
+
+    // Keep the dynamic fields aligned with the minimum form rules.
+    function applyDynamicRequiredFields(root) {
+        root.querySelectorAll('input[name^="city_day"]').forEach(function (input) {
+            input.required = true;
+        });
+
+        root.querySelectorAll('input[name^="activity_title_day"]').forEach(function (input) {
+            input.required = true;
+        });
+    }
+
+    function validateTripTypeSelection() {
+        if (!tripTypeSelect) {
+            return;
+        }
+
+        const selectedValues = Array.from(tripTypeSelect.selectedOptions)
+            .map(function (option) {
+                return option.value.trim();
+            })
+            .filter(Boolean);
+
+        if (selectedValues.length === 0) {
+            tripTypeSelect.setCustomValidity("Please select at least one trip type");
+            return;
+        }
+
+        tripTypeSelect.setCustomValidity("");
+    }
+
+    function validateSubmitForm() {
+        applyDynamicRequiredFields(document);
+        validateTripTypeSelection();
+
+        if (!submitForm.checkValidity()) {
+            submitForm.reportValidity();
+            return false;
+        }
+
+        return true;
     }
 
     function copyPreviousLocation(previousDay, newDay) {
@@ -123,6 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             activitiesList.appendChild(newActivity);
+            applyDynamicRequiredFields(newActivity);
 
             const firstInput = newActivity.querySelector("input, textarea, select");
             if (firstInput) {
@@ -183,6 +234,10 @@ document.addEventListener("DOMContentLoaded", function () {
      */
 
     document.addEventListener("change", function (e) {
+        if (e.target === tripTypeSelect) {
+            validateTripTypeSelection();
+        }
+
         if (e.target.classList.contains("transport-other-checkbox")) {
             const checkbox = e.target;
             const checkboxGroup = checkbox.closest(".checkbox-group");
