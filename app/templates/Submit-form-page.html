@@ -154,6 +154,11 @@
         </div>
 
         <form method="POST" action="{{ url_for('main.submit_itinerary') }}" enctype="multipart/form-data" class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            {% if error %}
+                <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {{ error }}
+                </div>
+            {% endif %}
             <div class="space-y-12">
 
                 <section class="general-info-section border-b border-gray-900/10 pb-12">
@@ -340,7 +345,7 @@
                                                     <div>
                                                         <label for="activity-title-day1-1" class="block text-sm/6 font-medium text-gray-900">Title the activity</label>
                                                         <div class="mt-2">
-                                                            <input id="activity-title-day1-1" type="text" name="activity_title_day1_1"
+                                                            <input id="activity-title-day1-1" type="text" name="activity_title_day1_1" required
                                                                 placeholder="E.g. Morning market walk"
                                                                 class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
                                                         </div>
