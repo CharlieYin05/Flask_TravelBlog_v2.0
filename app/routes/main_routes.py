@@ -26,6 +26,11 @@ COVER_UPLOAD_DIR = STATIC_DIR / "uploads" / "cover_photos"
 ACTIVITY_UPLOAD_DIR = STATIC_DIR / "uploads" / "activity_photos"
 
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]+$")
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+USERNAME_MIN_LENGTH = 3
+USERNAME_MAX_LENGTH = 20
+PASSWORD_MIN_LENGTH = 8
 
 
 def allowed_image_file(filename: str) -> bool:
@@ -33,6 +38,12 @@ def allowed_image_file(filename: str) -> bool:
         "." in filename
         and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
     )
+
+
+def signup_error_response(message: str, is_ajax_request: bool):
+    if is_ajax_request:
+        return jsonify({"success": False, "error": message}), 400
+    return render_template("sign-up.html", error=message)
 
 
 def save_uploaded_file(file_storage, upload_dir: Path):
@@ -129,22 +140,44 @@ def signup():
         confirm_password = request.form.get("confirm-password", "")
         is_ajax_request = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
+        # Validate the submitted signup data before touching the database.
+        if not username:
+            return signup_error_response("Username is required.", is_ajax_request)
+
+        if not (USERNAME_MIN_LENGTH <= len(username) <= USERNAME_MAX_LENGTH):
+            return signup_error_response(
+                f"Username must be between {USERNAME_MIN_LENGTH} and {USERNAME_MAX_LENGTH} characters.",
+                is_ajax_request,
+            )
+
+        if not USERNAME_PATTERN.fullmatch(username):
+            return signup_error_response(
+                "Username can only contain letters, numbers, and underscores.",
+                is_ajax_request,
+            )
+
+        if not email:
+            return signup_error_response("Email is required.", is_ajax_request)
+
+        if not EMAIL_PATTERN.fullmatch(email):
+            return signup_error_response("Please enter a valid email address.", is_ajax_request)
+
+        if len(password) < PASSWORD_MIN_LENGTH:
+            return signup_error_response(
+                f"Password must be at least {PASSWORD_MIN_LENGTH} characters long.",
+                is_ajax_request,
+            )
+
         if password != confirm_password:
-            if is_ajax_request:
-                return jsonify({"success": False, "error": "Passwords do not match."}), 400
-            return render_template("sign-up.html", error="Passwords do not match.")
+            return signup_error_response("Passwords do not match.", is_ajax_request)
 
         existing_user = User.query.filter_by(username=username).first()
         if existing_user is not None:
-            if is_ajax_request:
-                return jsonify({"success": False, "error": "This username is already taken."}), 400
-            return render_template("sign-up.html", error="This username is already taken.")
+            return signup_error_response("This username is already taken.", is_ajax_request)
 
         existing_email = User.query.filter_by(email=email).first()
         if existing_email is not None:
-            if is_ajax_request:
-                return jsonify({"success": False, "error": "This email is already registered."}), 400
-            return render_template("sign-up.html", error="This email is already registered.")
+            return signup_error_response("This email is already registered.", is_ajax_request)
 
         new_user = User(
             username=username,
