@@ -26,6 +26,7 @@ class Itinerary(db.Model):
     total_days = db.Column(db.Integer, nullable=False)  
     budget_level = db.Column(db.String(50), nullable=False)
     budget_range = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     days = db.relationship(
         "ItineraryDay",
