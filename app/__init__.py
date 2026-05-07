@@ -8,9 +8,15 @@ from app.routes import main_bp
 def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_object(Config)
+
     db.init_app(app)
     migrate.init_app(app, db)
+
     from app import models
 
     app.register_blueprint(main_bp)
+
+    with app.app_context():
+        db.create_all()
+
     return app
