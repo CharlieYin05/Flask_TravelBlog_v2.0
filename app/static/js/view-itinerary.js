@@ -450,7 +450,12 @@ async function renderMapMarkers() {
         markerCount += 1;
     }
 
-    if (markerCount > 0) {
+    // If only one marker, do not zoom too much - just center on it. If multiple markers, fit bounds.
+    if (markerCount === 1) {
+        const onlyMarker = allMapMarkers[0].marker;
+        map.setCenter(onlyMarker.getPosition());
+        map.setZoom(11);
+    } else if (markerCount > 1) {
         map.fitBounds(bounds);
     }
 }
