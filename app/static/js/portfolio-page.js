@@ -4,6 +4,10 @@
 // ── DATA — comes from PORTFOLIO_DATA injected by Flask ──
 
 // ── HELPERS ──
+function getCsrfToken() {
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    return csrfMeta ? csrfMeta.content : "";
+}
 function getInitials(n) { if (!n) return "?"; return n.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2); }
 function calcAvg(r) { let t = 0, c = 0; for (let s = 1; s <= 5; s++) { t += s * (r[s] || 0); c += (r[s] || 0); } return c ? t / c : 0; }
 function starsHTML(avg, large = false) {
@@ -18,7 +22,15 @@ document.getElementById("avatar-upload").addEventListener("change", e => {
     const file = e.target.files[0]; if (!file) return;
     const formData = new FormData();
     formData.append("avatar", file);
-    fetch("/api/upload-avatar", { method: "POST", body: formData })
+    
+    fetch("/api/upload-avatar", {
+    method: "POST",
+    headers: {
+        "X-CSRFToken": getCsrfToken()
+    },
+    body: formData
+    })
+    
         .then(r => r.json())
         .then(data => {
             if (!data.success) { alert("Upload failed: " + data.error); return; }
@@ -38,7 +50,15 @@ document.getElementById("banner-upload").addEventListener("change", e => {
     const file = e.target.files[0]; if (!file) return;
     const formData = new FormData();
     formData.append("banner", file);
-    fetch("/api/upload-banner", { method: "POST", body: formData })
+    
+    fetch("/api/upload-banner", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCsrfToken()
+        },
+        body: formData
+    })
+
         .then(r => r.json())
         .then(data => {
             if (!data.success) { alert("Upload failed: " + data.error); return; }
