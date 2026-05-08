@@ -28,7 +28,7 @@ document.getElementById("avatar-upload").addEventListener("change", e => {
             if (!img) { img = document.createElement("img"); img.className = "w-full h-full object-cover"; d.appendChild(img); }
             img.src = data.url;
             const nav = document.getElementById("nav-avatar-display");
-            nav.innerHTML = `<img src="${data.url}" class="w-full h-full object-cover rounded-full">`;
+            if (nav) nav.innerHTML = `<img src="${data.url}" class="w-full h-full object-cover rounded-full">`;
         });
 });
 
