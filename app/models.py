@@ -8,6 +8,8 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    avatar_url = db.Column(db.String(255), nullable=True)
+    banner_url = db.Column(db.String(255), nullable=True)
     itineraries = db.relationship("Itinerary", back_populates="user")
     likes = db.relationship("ItineraryLike", back_populates="user", cascade="all, delete-orphan")
     favorites = db.relationship("ItineraryFavorite", back_populates="user", cascade="all, delete-orphan")
