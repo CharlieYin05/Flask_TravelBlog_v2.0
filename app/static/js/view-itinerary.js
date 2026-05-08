@@ -22,6 +22,11 @@ function tryInitMap() {
     initMap();
 }
 
+// ===== CSRF =====
+function getCsrfToken() {
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    return csrfMeta ? csrfMeta.content : "";
+}
 
 // ===== DOM RENDER =====
 document.addEventListener("DOMContentLoaded", () => {
@@ -547,6 +552,12 @@ function highlightCard(el) {
 }
 
 // ===== LIKE / FAVORITE / COMMENT =====
+    // 1. 准备一个 POST 请求
+    // 2. 告诉后端：我发的是 JSON
+    // 3. 如果有 body，就 JSON.stringify(body)
+    // 4. fetch 这个 url
+    // 5. 把后端返回的 JSON 转成 JavaScript object
+    // 6. 出错时显示错误信息
 function setupInteractionButtons() {
     const itineraryId = window.location.pathname.split("/").pop();
 
@@ -622,7 +633,8 @@ async function postJson(url, body = null) {
         const options = {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCsrfToken()
             }
         };
 
@@ -645,11 +657,15 @@ async function postJson(url, body = null) {
     }
 }
 
+// DELETE comment
 async function deleteComment(commentId) {
     try {
         const res = await fetch(`/api/itinerary/comments/${commentId}`, {
-            method: "DELETE"
-        });
+            method: "DELETE",
+            headers: {
+        "X-CSRFToken": getCsrfToken()   //DELETE need CSRF token
+        }
+    });
 
         const data = await res.json();
 
