@@ -326,11 +326,11 @@ def signup():
 
     return render_template("sign-up.html")
 
-
+# Sign out
 @main_bp.route("/logout")
 def logout():
     session.pop("user", None)
-    return redirect(url_for("main.signin"))
+    return redirect(url_for("main.index"))
 
 
 @main_bp.route("/submit", methods=["GET", "POST"])
