@@ -47,9 +47,12 @@
             <a href="{{ url_for('main.portfolio') }}" class="text-sm text-gray-600 hover:text-indigo-600">
               {{ session.get('user') }}
             </a>
-            <a href="{{ url_for('main.logout') }}" class="text-red-600 hover:text-red-700 text-sm">
-              Sign out
-            </a>
+            <form method="POST" action="{{ url_for('main.logout') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="text-red-600 hover:text-red-700 text-sm">
+                Sign out
+              </button>
+            </form>
           </div>
           {% else %}
           <div class="flex items-center space-x-4">
