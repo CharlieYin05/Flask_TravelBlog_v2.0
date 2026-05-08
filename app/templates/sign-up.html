@@ -14,15 +14,15 @@
         <section class="signup-card">
             <h2>Sign Up</h2>
             <form method="POST" action="{{ url_for('main.signup') }}">
-                <input type="text" placeholder="Choose a username" name="username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+"
+                <input id="username" type="text" placeholder="Choose a username" name="username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+"
                     title="Username must be 3-20 characters and use only letters, numbers, or underscores.">
-                <input type="email" placeholder="Enter your email" name="email" required>
+                <input id="email" type="email" placeholder="Enter your email" name="email" required>
                 <input type="password" id="password" placeholder="Create a password" name="password" required minlength="8"
                     title="Password must be at least 8 characters long.">
                 <input type="password" id="confirm-password" placeholder="Confirm your password" name="confirm-password"
                     required>
                 <p class="form-error{% if not error %} is-hidden{% endif %}" id="signup-error">{{ error or "" }}</p>
-                <button type="submit" class="submit">SIGN UP</button>
+                <button id="signup-button" type="submit" class="submit">SIGN UP</button>
             </form>
 
             <p class="switch-to-sign-in">
