@@ -14,7 +14,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from werkzeug.security import generate_password_hash
 from werkzeug.serving import make_server
 
-from app.extensions import db
+from app.extensions import csrf, db
 from app.models import User
 from app.routes import main_bp
 
@@ -59,6 +59,7 @@ class AuthSystemTests(unittest.TestCase):
         self.app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
         db.init_app(self.app)
+        csrf.init_app(self.app)
         self.app.register_blueprint(main_bp)
 
         with self.app.app_context():
@@ -157,10 +158,12 @@ class AuthSystemTests(unittest.TestCase):
         self.fill_signin_form("existinguser", "correctpassword")
         self.wait.until(EC.url_to_be(f"{self.base_url}/"))
 
-        sign_out_link = self.wait.until(
-            EC.element_to_be_clickable((By.LINK_TEXT, "Sign out"))
+        sign_out_button = self.wait.until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//form[@action='/logout']//button[normalize-space()='Sign out']")
+            )
         )
-        sign_out_link.click()
+        sign_out_button.click()
         self.wait.until(EC.url_to_be(f"{self.base_url}/"))
 
         self.assertEqual(self.driver.current_url, f"{self.base_url}/")

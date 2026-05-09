@@ -15,7 +15,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from werkzeug.security import generate_password_hash
 from werkzeug.serving import make_server
 
-from app.extensions import db
+from app.extensions import csrf, db
 from app.models import Itinerary, User
 from app.routes import main_bp
 
@@ -54,6 +54,7 @@ class SubmitSystemTests(unittest.TestCase):
         self.app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
         db.init_app(self.app)
+        csrf.init_app(self.app)
         self.app.register_blueprint(main_bp)
 
         with self.app.app_context():
