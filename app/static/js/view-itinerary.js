@@ -762,13 +762,15 @@ function renderComments(comments) {
         const author = escapeHtml(comment.author || "User");
         const createdAt = escapeHtml(comment.created_at || "");
         const content = escapeHtml(comment.content || "");
-
+        const avatarUrl = comment.author_avatar_url || "";
         const initial = author.charAt(0).toUpperCase();
 
+        const avatarHtml = avatarUrl
+            ? `<img src="${escapeHtml(avatarUrl)}" alt="${author}'s avatar" class="comment-avatar-img">`
+            : `<div class="comment-avatar">${initial}</div>`;
+
         item.innerHTML = `
-            <div class="comment-avatar">
-                ${initial}
-            </div>
+            ${avatarHtml}
 
             <div class="comment-main">
                 <div class="comment-header">
