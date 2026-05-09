@@ -46,10 +46,17 @@
 
               <!-- Profile Icon -->
               <a href="{{ url_for('main.portfolio') }}">
-                <img 
-                  id="avatar-img" src="{{ url_for('static', filename=user.avatar_url) if user and user.avatar_url else '' }}"
-                  class="w-10 h-10 rounded-full object-cover border border-gray-300 hover:ring-2 hover:ring-indigo-500 transition"
-                />
+                {% if current_user and current_user.avatar_url %}
+                  <img
+                    id="nav-avatar-display"
+                    src="/static/{{ current_user.avatar_url }}"
+                    class="w-10 h-10 rounded-full object-cover border border-gray-300 hover:ring-2 hover:ring-indigo-500 transition"
+                  />
+                {% else %}
+                  <div id="nav-avatar-display" class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-900 flex items-center justify-center text-sm font-bold text-white border border-gray-300 hover:ring-2 hover:ring-indigo-500 transition">
+                    {{ current_user.username[0].upper() if current_user else '?' }}
+                  </div>
+                {% endif %}
               </a>
 
               <!-- Logout -->
@@ -83,6 +90,7 @@
 
   <!-- Page-specific JS -->
   {% block extra_js %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/base.js') }}"></script>
 
 </body>
 </html>

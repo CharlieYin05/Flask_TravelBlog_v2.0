@@ -56,6 +56,7 @@ ALLOWED_TRIP_TYPES = {
 ALLOWED_BUDGET_LEVELS = {"$", "$$", "$$$"}
 
 
+
 def allowed_image_file(filename: str) -> bool:
     return (
         "." in filename

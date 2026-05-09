@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 
 from app.config import Config
 from app.extensions import db, migrate, csrf
@@ -16,5 +16,15 @@ def create_app() -> Flask:
     from app import models
 
     app.register_blueprint(main_bp)
+
+    @app.context_processor
+    def inject_current_user():
+        from app.models import User
+        username = session.get("user")
+        if username:
+            user = User.query.filter_by(username=username).first()
+        else:
+            user = None
+        return {"current_user": user}
 
     return app

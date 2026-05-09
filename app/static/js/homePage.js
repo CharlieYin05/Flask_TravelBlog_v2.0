@@ -11,4 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (heroBg) {
     heroBg.style.backgroundImage = `url('${randomImage}')`;
   }
+
+
+  updateNavbarAvatar(USER_DATA.avatar_url);
 });

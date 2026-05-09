@@ -64,5 +64,12 @@
 {% endblock %}
 
 {% block extra_js %}
+
+<script>
+  const USER_DATA = {
+    avatar_url: "{{ url_for('static', filename=current_user.avatar_url) if current_user and current_user.avatar_url else '' }}"
+  };
+</script>
+
 <script src="{{ url_for('static', filename='js/homePage.js') }}"></script>
 {% endblock %}
