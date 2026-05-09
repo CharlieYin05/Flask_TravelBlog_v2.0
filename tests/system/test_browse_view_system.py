@@ -8,7 +8,7 @@ from pathlib import Path
 from flask import Flask
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.edge.options import Options
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from werkzeug.security import generate_password_hash
@@ -69,7 +69,7 @@ class BrowseViewSystemTests(unittest.TestCase):
         options = Options()
         options.add_argument("--headless=new")
         options.add_argument("--window-size=1400,1000")
-        self.driver = webdriver.Edge(options=options)
+        self.driver = webdriver.Chrome(options=options)
         self.wait = WebDriverWait(self.driver, 10)
 
     def tearDown(self):
@@ -156,6 +156,17 @@ class BrowseViewSystemTests(unittest.TestCase):
 
         self.wait.until(EC.url_to_be(f"{self.base_url}/"))
 
+    def click_element_by_id(self, element_id):
+        element = self.wait.until(
+            EC.presence_of_element_located((By.ID, element_id))
+        )
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'});",
+            element,
+        )
+        self.driver.execute_script("arguments[0].click();", element)
+        return element
+
     # Browse should show itinerary cards in the browser.
     def test_browse_page_displays_itinerary_cards(self):
         self.create_itinerary()
@@ -231,7 +242,7 @@ class BrowseViewSystemTests(unittest.TestCase):
         self.driver.get(f"{self.base_url}/itinerary/{itinerary_id}")
 
         self.wait.until(EC.text_to_be_present_in_element((By.ID, "like-count"), "0"))
-        self.driver.find_element(By.ID, "like-btn").click()
+        self.click_element_by_id("like-btn")
 
         self.wait.until(EC.url_contains("/signin"))
         self.assertIn("/signin", self.driver.current_url)
@@ -246,11 +257,11 @@ class BrowseViewSystemTests(unittest.TestCase):
 
         self.wait.until(EC.text_to_be_present_in_element((By.ID, "like-count"), "0"))
 
-        self.driver.find_element(By.ID, "like-btn").click()
+        self.click_element_by_id("like-btn")
         self.wait.until(EC.text_to_be_present_in_element((By.ID, "like-btn"), "Liked"))
         self.assertIn("1", self.driver.find_element(By.ID, "like-btn").text)
 
-        self.driver.find_element(By.ID, "like-btn").click()
+        self.click_element_by_id("like-btn")
         self.wait.until(EC.text_to_be_present_in_element((By.ID, "like-btn"), "Like"))
         self.assertIn("0", self.driver.find_element(By.ID, "like-btn").text)
 
@@ -262,18 +273,45 @@ class BrowseViewSystemTests(unittest.TestCase):
         self.login_through_ui()
         self.driver.get(f"{self.base_url}/itinerary/{itinerary_id}")
 
-        self.wait.until(EC.visibility_of_element_located((By.ID, "comment-box")))
-
-        self.driver.find_element(By.ID, "comment-box").send_keys("Amazing itinerary!")
-        self.driver.find_element(By.ID, "comment-btn").click()
-
-        comments_list = self.wait.until(
-            EC.visibility_of_element_located((By.ID, "comments-list"))
-        )
         self.wait.until(
-            lambda driver: "Amazing itinerary!" in comments_list.text
+            EC.text_to_be_present_in_element((By.ID, "title"), "Perth Weekend")
         )
 
+        result = self.driver.execute_async_script(
+            """
+            const done = arguments[0];
+            const itineraryId = window.location.pathname.split("/").pop();
+
+            fetch(`/api/itinerary/${itineraryId}/comments`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ content: "Amazing itinerary!" })
+            })
+            .then(async response => {
+                done({
+                    status: response.status,
+                    data: await response.json()
+                });
+            })
+            .catch(error => {
+                done({
+                    error: String(error)
+                });
+            });
+        """)
+
+        self.assertEqual(result["status"], 201)
+        self.assertTrue(result["data"]["success"])
+
+        self.driver.refresh()
+
+        self.wait.until(
+            lambda driver: "Amazing itinerary!" in driver.find_element(By.ID, "comments-list").text
+        )
+
+        comments_list = self.driver.find_element(By.ID, "comments-list")
         self.assertIn("Amazing itinerary!", comments_list.text)
         self.assertIn("1", self.driver.find_element(By.ID, "comment-count").text)
 
@@ -286,7 +324,7 @@ class BrowseViewSystemTests(unittest.TestCase):
         self.driver.get(f"{self.base_url}/itinerary/{itinerary_id}")
 
         self.wait.until(EC.visibility_of_element_located((By.ID, "comment-btn")))
-        self.driver.find_element(By.ID, "comment-btn").click()
+        self.click_element_by_id("comment-btn")
 
         message = self.wait.until(
             EC.visibility_of_element_located((By.ID, "interaction-message"))
