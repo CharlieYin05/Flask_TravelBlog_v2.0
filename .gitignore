@@ -4,6 +4,9 @@
 # dependencies
 node_modules/
 
+# Python wheel files
+*.whl
+
 # Python virtual environment
 .venv/
 venv/

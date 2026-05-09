@@ -34,13 +34,31 @@
         <input 
           type="text" 
           id="search-input"
-          placeholder="Search countries, cities, itineraries..."
+          placeholder="Search itineraries..."
           class="w-full px-6 py-4 text-lg rounded-2xl border-2 border-white shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/95"
         />
 
         <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600">
           🔍
         </div>
+      </div>
+
+      <!-- Search type toggle -->
+      <div class="flex justify-center mt-4 gap-2">
+        <button
+          id="toggle-title"
+          class="search-toggle px-5 py-2 rounded-full text-sm font-semibold bg-white text-indigo-600 shadow transition"
+          data-type="title"
+        >
+          By Title
+        </button>
+        <button
+          id="toggle-country"
+          class="search-toggle px-5 py-2 rounded-full text-sm font-semibold bg-white/30 text-white shadow transition"
+          data-type="country"
+        >
+          By Country
+        </button>
       </div>
 
     </div>

@@ -205,12 +205,18 @@ def search():
 @main_bp.route("/api/search", methods=["GET"])
 def search_api():
     query = request.args.get('query', '').strip()
+    search_type = request.args.get('type', 'title')
     results = []
     
     if query:
-        results = Itinerary.query.filter(
-            Itinerary.title.ilike(f'%{query}%')
-        ).all()
+        if search_type == 'country':
+            results = Itinerary.query.filter(
+                Itinerary.country.ilike(f'%{query}%')
+            ).all()
+        else:
+            results = Itinerary.query.filter(
+                Itinerary.title.ilike(f'%{query}%')
+            ).all()
     
     return jsonify([{
         'id': r.id,

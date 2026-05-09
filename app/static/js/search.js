@@ -19,7 +19,26 @@ document.addEventListener("DOMContentLoaded", () => {
   // Live search functionality
   const searchInput = document.getElementById("search-input");
   const resultsContainer = document.getElementById("search-results");
+  const toggleButtons = document.querySelectorAll(".search-toggle");
   let searchTimeout;
+  let activeSearchType = "title";
+
+  // Toggle button behaviour
+  toggleButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeSearchType = btn.dataset.type;
+
+      toggleButtons.forEach(b => {
+        b.classList.remove("bg-white", "text-indigo-600");
+        b.classList.add("bg-white/30", "text-white");
+      });
+      btn.classList.remove("bg-white/30", "text-white");
+      btn.classList.add("bg-white", "text-indigo-600");
+
+      const query = searchInput ? searchInput.value.trim() : "";
+      if (query) performSearch(query);
+    });
+  });
 
   if (searchInput && resultsContainer) {
     searchInput.addEventListener("input", (e) => {
@@ -46,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   async function performSearch(query) {
     try {
-      const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
+      const response = await fetch(`/api/search?query=${encodeURIComponent(query)}&type=${encodeURIComponent(activeSearchType)}`);
       if (!response.ok) {
         throw new Error('Search failed');
       }
