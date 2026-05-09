@@ -11,4 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (heroBg) {
     heroBg.style.backgroundImage = `url('${randomImage}')`;
   }
+
+
 });

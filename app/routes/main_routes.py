@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from flask import (
     Blueprint,
+    app,
     jsonify,
     render_template,
     request,
@@ -53,6 +54,7 @@ ALLOWED_TRIP_TYPES = {
     "cultural",
 }
 ALLOWED_BUDGET_LEVELS = {"$", "$$", "$$$"}
+
 
 
 def allowed_image_file(filename: str) -> bool:
@@ -271,23 +273,31 @@ def require_login_json():
 
 @main_bp.route("/")
 def index():
-    return render_template("home-page.html")
+    user = User.query.get(session.get("user_id"))
+    return render_template("home-page.html", user=user)
 
 
 @main_bp.route("/search", methods=["GET"])
 def search():
-    return render_template("search.html")
+    user = User.query.get(session.get("user_id"))
+    return render_template("search.html", user=user)
 
 
 @main_bp.route("/api/search", methods=["GET"])
 def search_api():
     query = request.args.get('query', '').strip()
+    search_type = request.args.get('type', 'title')
     results = []
     
     if query:
-        results = Itinerary.query.filter(
-            Itinerary.title.ilike(f'%{query}%')
-        ).all()
+        if search_type == 'country':
+            results = Itinerary.query.filter(
+                Itinerary.country.ilike(f'%{query}%')
+            ).all()
+        else:
+            results = Itinerary.query.filter(
+                Itinerary.title.ilike(f'%{query}%')
+            ).all()
     
     return jsonify([{
         'id': r.id,

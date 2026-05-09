@@ -31,50 +31,57 @@
         </span>
 
         <!-- Nav Links -->
-        <div class="hidden md:flex items-center space-x-8 font-medium">
+        <div class="hidden md:flex items-center space-x-8">
           {% if session.get('user') %}
-          <a href="{{ url_for('main.submit_itinerary') }}"
-            class="text-slate-700 hover:text-blue-600 transition-colors">Post</a>
+            <a href="{{ url_for('main.submit_itinerary') }}" class="hover:text-indigo-600">Post</a>
           {% else %}
-          <a href="{{ url_for('main.signin') }}" class="text-slate-700 hover:text-blue-600 transition-colors">Post</a>
+            <a href="{{ url_for('main.signin') }}" class="hover:text-indigo-600">Post</a>
           {% endif %}
 
-          <a href="{{ url_for('main.search') }}" class="text-slate-700 hover:text-blue-600 transition-colors">Search</a>
-
-          <a href="{{ url_for('main.browse') }}" class="text-slate-700 hover:text-blue-600 transition-colors">
-            Browse
-          </a>
+          <a href="{{ url_for('main.search') }}" class="hover:text-indigo-600">Search</a>
+          <a href="{{ url_for('main.browse') }}" class="hover:text-indigo-600">Browse</a>
         </div>
 
         <!-- Auth / Profile -->
         <div class="flex items-center space-x-4">
+
           {% if session.get('user') %}
-          <div class="flex items-center space-x-4">
-            <a href="{{ url_for('main.portfolio') }}"
-              class="text-sm text-slate-600 hover:text-blue-600 transition-colors">
-              {{ session.get('user') }}
-            </a>
+            <div class="flex items-center space-x-4">
 
-            <form method="POST" action="{{ url_for('main.logout') }}">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit"
-                class="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all">
-                Sign out
-              </button>
-            </form>
-          </div>
+              <!-- Profile Icon -->
+              <a href="{{ url_for('main.portfolio') }}">
+                {% if current_user and current_user.avatar_url %}
+                  <img
+                    id="nav-avatar-display"
+                    src="/static/{{ current_user.avatar_url }}"
+                    class="w-10 h-10 rounded-full object-cover border border-gray-300 hover:ring-2 hover:ring-indigo-500 transition"
+                  />
+                {% else %}
+                  <div id="nav-avatar-display" class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-900 flex items-center justify-center text-sm font-bold text-white border border-gray-300 hover:ring-2 hover:ring-indigo-500 transition">
+                    {{ current_user.username[0].upper() if current_user else '?' }}
+                  </div>
+                {% endif %}
+              </a>
+
+              <!-- Logout -->
+              <form method="POST" action="{{ url_for('main.logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="text-red-600 hover:text-red-700 text-sm bg-red-100 px-3 py-1 rounded-lg">
+                  Sign out
+                </button>
+              </form>
+
+            </div>
           {% else %}
-          <div class="flex items-center space-x-4">
-            <a href="{{ url_for('main.signin') }}" class="text-slate-600 hover:text-blue-600 transition-colors">
-              Sign in
-            </a>
-
-            <a href="{{ url_for('main.signup') }}"
-              class="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all">
-              Sign up
-            </a>
-          </div>
+            <div class="flex items-center space-x-4">
+              <a href="{{ url_for('main.signin') }}" class="text-gray-600 hover:text-black">Sign in</a>
+              <a href="{{ url_for('main.signup') }}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg">
+                Sign up
+              </a>
+            </div>
           {% endif %}
+
         </div>
       </div>
     </div>
@@ -87,7 +94,7 @@
 
   <!-- Page-specific JS -->
   {% block extra_js %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/base.js') }}"></script>
 
 </body>
-
 </html>
