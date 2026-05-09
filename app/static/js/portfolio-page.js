@@ -184,7 +184,7 @@ function renderItineraries(itineraries) {
         const avg = calcAvg(it.ratings || {});
         const li = document.createElement("li");
         const link = document.createElement("a");
-        link.href = `post-interface.html?id=${it.id}`;
+        link.href = `/itinerary/${it.id}`;
         link.className = "itinerary-card block bg-white border border-gray-200 rounded-xl overflow-hidden no-underline text-inherit flex flex-col shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-200";
         link.dataset.country = it.location;
         link.innerHTML = `
