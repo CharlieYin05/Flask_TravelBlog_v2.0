@@ -28,7 +28,6 @@
 
         <!-- Nav Links -->
         <div class="hidden md:flex items-center space-x-8">
-          <a href="" class="hover:text-indigo-600">Countries</a>
           {% if session.get('user') %}
           <a href="{{ url_for('main.submit_itinerary') }}" class="hover:text-indigo-600">Post</a>
           {% else %}
