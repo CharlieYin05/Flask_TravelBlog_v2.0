@@ -15,11 +15,33 @@ function starsHTML(avg, large = false) {
     return [1, 2, 3, 4, 5].map(i => `<span class="${cls} ${i <= Math.round(avg) ? "!text-yellow-400" : ""}">★</span>`).join("");
 }
 
+// ── UPLOAD VALIDATION ──
+const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+
+function validateImageFile(file) {
+    if (!VALID_IMAGE_TYPES.includes(file.type)) {
+        return "Only PNG, JPG, GIF, or WEBP images are allowed. Videos are not permitted.";
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+        return "File must be smaller than 10MB.";
+    }
+    return null;
+}
+
 // ── AVATAR UPLOAD (saves to server) ──
 document.getElementById("avatar-display").addEventListener("click", () => document.getElementById("avatar-upload").click());
 document.getElementById("avatar-overlay-btn").addEventListener("click", () => document.getElementById("avatar-upload").click());
 document.getElementById("avatar-upload").addEventListener("change", e => {
     const file = e.target.files[0]; if (!file) return;
+
+    const error = validateImageFile(file);
+    if (error) {
+        alert(error);
+        e.target.value = "";
+        return;
+    }
+
     const formData = new FormData();
     formData.append("avatar", file);
     
@@ -48,6 +70,14 @@ document.getElementById("avatar-upload").addEventListener("change", e => {
 document.getElementById("banner-edit-btn").addEventListener("click", () => document.getElementById("banner-upload").click());
 document.getElementById("banner-upload").addEventListener("change", e => {
     const file = e.target.files[0]; if (!file) return;
+
+    const error = validateImageFile(file);
+    if (error) {
+        alert(error);
+        e.target.value = "";
+        return;
+    }
+
     const formData = new FormData();
     formData.append("banner", file);
     
