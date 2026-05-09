@@ -13,6 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const avatar = document.getElementById("avatar-img");
+  if (avatar && PORTFOLIO_DATA.avatar_url) {
+        avatar.src = PORTFOLIO_DATA.avatar_url;
+  }
+  
+
   // Live search functionality
   const searchInput = document.getElementById("search-input");
   const resultsContainer = document.getElementById("search-results");

@@ -29,38 +29,48 @@
         <!-- Nav Links -->
         <div class="hidden md:flex items-center space-x-8">
           {% if session.get('user') %}
-          <a href="{{ url_for('main.submit_itinerary') }}" class="hover:text-indigo-600">Post</a>
+            <a href="{{ url_for('main.submit_itinerary') }}" class="hover:text-indigo-600">Post</a>
           {% else %}
-          <a href="{{ url_for('main.signin') }}" class="hover:text-indigo-600">Post</a>
+            <a href="{{ url_for('main.signin') }}" class="hover:text-indigo-600">Post</a>
           {% endif %}
+
           <a href="{{ url_for('main.search') }}" class="hover:text-indigo-600">Search</a>
-          <a href="{{ url_for('main.browse') }}" class="hover:text-indigo-600">
-            Browse
-          </a>
+          <a href="{{ url_for('main.browse') }}" class="hover:text-indigo-600">Browse</a>
         </div>
 
         <!-- Auth / Profile -->
         <div class="flex items-center space-x-4">
+
           {% if session.get('user') %}
-          <div class="flex items-center space-x-4">
-            <a href="{{ url_for('main.portfolio') }}" class="text-sm text-gray-600 hover:text-indigo-600">
-              {{ session.get('user') }}
-            </a>
-            <form method="POST" action="{{ url_for('main.logout') }}">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="text-red-600 hover:text-red-700 text-sm">
-                Sign out
-              </button>
-            </form>
-          </div>
+            <div class="flex items-center space-x-4">
+
+              <!-- Profile Icon -->
+              <a href="{{ url_for('main.portfolio') }}">
+                <img 
+                  id="avatar-img" src="{{ url_for('static', filename=user.avatar_url) if user and user.avatar_url else '' }}"
+                  class="w-10 h-10 rounded-full object-cover border border-gray-300 hover:ring-2 hover:ring-indigo-500 transition"
+                />
+              </a>
+
+              <!-- Logout -->
+              <form method="POST" action="{{ url_for('main.logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        class="text-red-600 hover:text-red-700 text-sm bg-red-100 px-3 py-1 rounded-lg">
+                  Sign out
+                </button>
+              </form>
+
+            </div>
           {% else %}
-          <div class="flex items-center space-x-4">
-            <a href="{{ url_for('main.signin') }}" class="text-gray-600 hover:text-black">Sign in</a>
-            <a href="{{ url_for('main.signup') }}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg">
-              Sign up
-            </a>
-          </div>
+            <div class="flex items-center space-x-4">
+              <a href="{{ url_for('main.signin') }}" class="text-gray-600 hover:text-black">Sign in</a>
+              <a href="{{ url_for('main.signup') }}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg">
+                Sign up
+              </a>
+            </div>
           {% endif %}
+
         </div>
       </div>
     </div>
@@ -75,5 +85,4 @@
   {% block extra_js %}{% endblock %}
 
 </body>
-
 </html>
