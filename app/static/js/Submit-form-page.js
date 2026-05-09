@@ -5,13 +5,12 @@
  * - Wait until the DOM is fully loaded before accessing page elements
  * - Cache frequently used DOM nodes
  * - Ensure all day containers are wrapped inside #days-wrapper
- * - Initialize activity summary display and total day count
+ * - Initialize activity summary display
  * - Bind the click event for adding a new day
  */
 document.addEventListener("DOMContentLoaded", function () {
     const addDayBtn = document.querySelector(".add-day-btn");
     const submitForm = document.querySelector('form[action$="/submit"]');
-    const totalDaysInput = document.getElementById("total-days");
     const dailyPlanSection = document.querySelector(".daily-plan-section");
     const tripTypeSelect = document.getElementById("trip-type");
 
@@ -29,7 +28,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     initializeActivitySummaries();
-    syncTotalDays();
     applyDynamicRequiredFields(document);
 
     if (submitForm) {
@@ -63,7 +61,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 window.rebuildCustomDropdowns(newDay);
             }
 
-            syncTotalDays();
             initializeActivitySummaries();
             applyDynamicRequiredFields(newDay);
         });
@@ -71,12 +68,51 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Keep the dynamic fields aligned with the minimum form rules.
     function applyDynamicRequiredFields(root) {
+        root.querySelectorAll('input[name="trip_title"], select[name="trip_country"], input[name="total_days"], select[name="trip_type"], select[name="budget_level"], input[name="budget_range"], input[name="cover_photo"]').forEach(function (input) {
+            input.required = true;
+        });
+
+        root.querySelectorAll('select[name^="state_day"]').forEach(function (input) {
+            input.required = true;
+        });
+
         root.querySelectorAll('input[name^="city_day"]').forEach(function (input) {
+            input.required = true;
+        });
+
+        root.querySelectorAll('input[name^="activity_place_day"], input[name^="time_day"], textarea[name^="activity_day"], input[name^="activity_photo_day"]').forEach(function (input) {
             input.required = true;
         });
 
         root.querySelectorAll('input[name^="activity_title_day"]').forEach(function (input) {
             input.required = true;
+        });
+
+        root.querySelectorAll('select[name^="restaurant_dropdown_day"], select[name^="accommodation_dropdown_day"]').forEach(function (input) {
+            input.required = true;
+        });
+
+        document.querySelectorAll(".transport-other-text").forEach(function (input) {
+            const dayContainer = input.closest(".day-container");
+            const otherCheckbox = dayContainer
+                ? dayContainer.querySelector('.transport-other-checkbox')
+                : null;
+
+            input.required = Boolean(otherCheckbox && otherCheckbox.checked);
+        });
+    }
+
+    function validateTransportSelections() {
+        document.querySelectorAll(".day-container").forEach(function (dayContainer) {
+            const checkboxes = dayContainer.querySelectorAll('input[name^="transport_day"]');
+            const hasSelection = Array.from(checkboxes).some(function (checkbox) {
+                return checkbox.checked;
+            });
+            const message = hasSelection ? "" : "Please select at least one transportation option";
+
+            checkboxes.forEach(function (checkbox) {
+                checkbox.setCustomValidity(message);
+            });
         });
     }
 
@@ -102,6 +138,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function validateSubmitForm() {
         applyDynamicRequiredFields(document);
         validateTripTypeSelection();
+        validateTransportSelections();
 
         if (!submitForm.checkValidity()) {
             submitForm.reportValidity();
@@ -216,7 +253,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             dayContainer.remove();
             renumberDays();
-            syncTotalDays();
         }
     });
 
@@ -247,11 +283,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (checkbox.checked) {
                 textInput.disabled = false;
+                textInput.required = true;
                 textInput.focus();
             } else {
                 textInput.disabled = true;
+                textInput.required = false;
                 textInput.value = "";
             }
+        }
+
+        if (e.target.matches('input[name^="transport_day"]')) {
+            validateTransportSelections();
         }
     });
 
@@ -524,21 +566,6 @@ document.addEventListener("DOMContentLoaded", function () {
      */
     function replaceDayNumber(str, newDayNumber) {
         return str.replace(/day\d+/g, "day" + newDayNumber);
-    }
-
-    /**
-     * Synchronize the hidden or visible total day input with the current day count
-     *
-     * Purpose:
-     * - Count the number of .day-container elements inside #days-wrapper
-     * - Write that number into the total-days input field
-     * - Keep the form value accurate after adding or deleting days
-     */
-    function syncTotalDays() {
-        const totalDays = daysWrapper.querySelectorAll(".day-container").length;
-        if (totalDaysInput) {
-            totalDaysInput.value = totalDays;
-        }
     }
 
     /**

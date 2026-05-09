@@ -94,6 +94,34 @@ def validate_uploaded_image_file(file_storage, label: str):
     return ""
 
 
+def activity_has_content(activity_data):
+    return any(
+        (
+            activity_data["title"],
+            activity_data["place"],
+            activity_data["time"],
+            activity_data["description"],
+            activity_data["photo"] and activity_data["photo"].filename,
+        )
+    )
+
+
+def day_has_content(day_data):
+    return any(
+        (
+            day_data["state"],
+            day_data["city"],
+            day_data["transport"],
+            day_data["transport_other_text"],
+            day_data["restaurants"],
+            day_data["restaurant_specific"],
+            day_data["accommodations"],
+            day_data["accommodation_specific"],
+            day_data["activities"],
+        )
+    )
+
+
 def validate_itinerary_submission(itinerary_data):
     # Validate the main itinerary structure before saving anything.
     if not itinerary_data["trip_title"]:
@@ -117,6 +145,11 @@ def validate_itinerary_submission(itinerary_data):
     if not itinerary_data["budget_range"]:
         return "Estimated cost range is required."
 
+    # Re-check required upload and day/activity fields on the server side
+    # so empty submissions cannot bypass the frontend validation rules.
+    if not itinerary_data["cover_photo"] or not itinerary_data["cover_photo"].filename:
+        return "Cover photo is required."
+
     cover_photo_error = validate_uploaded_image_file(
         itinerary_data["cover_photo"],
         "Cover photo",
@@ -124,21 +157,69 @@ def validate_itinerary_submission(itinerary_data):
     if cover_photo_error:
         return cover_photo_error
 
-    if len(itinerary_data["days"]) != itinerary_data["total_days"]:
-        return "Each day must be filled in before submitting."
+    if not itinerary_data["days"]:
+        return "Please fill in at least one day before submitting."
 
     for day in itinerary_data["days"]:
+        if not day["state"]:
+            return f"State/Province is required for Day {day['day_number']}."
+
         if not day["city"]:
             return f"City is required for Day {day['day_number']}."
 
         if not day["activities"]:
             return f"At least one activity is required for Day {day['day_number']}."
 
+        if not day["transport"]:
+            return (
+                f"At least one transportation option is required for Day "
+                f"{day['day_number']}."
+            )
+
+        if "other" in day["transport"] and not day["transport_other_text"]:
+            return (
+                f"Please specify the other transportation for Day "
+                f"{day['day_number']}."
+            )
+
+        if not day["restaurants"]:
+            return f"At least one restaurant option is required for Day {day['day_number']}."
+
+        if not day["accommodations"]:
+            return (
+                f"At least one accommodation option is required for Day "
+                f"{day['day_number']}."
+            )
+
         for activity in day["activities"]:
+            if not activity["place"]:
+                return (
+                    f"Activity place is required for Day {day['day_number']}, "
+                    f"Activity {activity['activity_number']}."
+                )
+
             if not activity["title"]:
                 return (
                     f"Activity title is required for Day {day['day_number']}, "
                     f"Activity {activity['activity_number']}."
+                )
+
+            if not activity["time"]:
+                return (
+                    f"Activity time is required for Day {day['day_number']}, "
+                    f"Activity {activity['activity_number']}."
+                )
+
+            if not activity["description"]:
+                return (
+                    f"Activity description is required for Day {day['day_number']}, "
+                    f"Activity {activity['activity_number']}."
+                )
+
+            if not activity["photo"] or not activity["photo"].filename:
+                return (
+                    f"Photo is required for Day {day['day_number']} Activity "
+                    f"{activity['activity_number']}."
                 )
 
             activity_photo_error = validate_uploaded_image_file(
@@ -222,41 +303,49 @@ def browse():
     itineraries = Itinerary.query.all()
     return render_template("browse-itinerary.html", itineraries=itineraries)
 
-
+# Handle sign-in page rendering and login form submission.
 @main_bp.route("/signin", methods=["GET", "POST"])
 def signin():
     if request.method == "POST":
+        # Read the submitted login credentials from the form.
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
         error_message = "Incorrect username or password."
         is_ajax_request = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
+        # Look up the user account by username.
         user = User.query.filter_by(username=username).first()
 
+        # Return an error if the username does not exist.
         if user is None:
             if is_ajax_request:
                 return jsonify({"success": False, "error": error_message}), 401
             return render_template("sign-in.html", error=error_message)
 
+        # Compare the submitted password with the stored password hash.
         if not check_password_hash(user.password_hash, password):
             if is_ajax_request:
                 return jsonify({"success": False, "error": error_message}), 401
             return render_template("sign-in.html", error=error_message)
 
+        # Store the signed-in username in the session.
         session["user"] = user.username
         redirect_url = url_for("main.index")
 
+        # Return JSON for AJAX login requests.
         if is_ajax_request:
             return jsonify({"success": True, "redirect_url": redirect_url})
 
+        # Redirect normal form submissions to the home page after login.
         return redirect(redirect_url)
 
     return render_template("sign-in.html")
 
-
+# Handle sign-up page rendering, form validation, and new user creation.
 @main_bp.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
+        # Read and normalize the submitted registration fields.
         username = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
@@ -294,61 +383,76 @@ def signup():
         if password != confirm_password:
             return signup_error_response("Passwords do not match.", is_ajax_request)
 
+        # Reject duplicate usernames before creating the new account.
         existing_user = User.query.filter_by(username=username).first()
         if existing_user is not None:
             return signup_error_response("This username is already taken.", is_ajax_request)
 
+        # Reject duplicate email addresses before creating the new account.
         existing_email = User.query.filter_by(email=email).first()
         if existing_email is not None:
             return signup_error_response("This email is already registered.", is_ajax_request)
 
+        # Create the new user model with a hashed password.
         new_user = User(
             username=username,
             email=email,
             password_hash=generate_password_hash(password),
         )
 
+        # Stage the new user record for insertion into the database.
         db.session.add(new_user)
 
         try:
+            # Save the new user account to the database.
             db.session.commit()
             print("COMMIT SUCCESS")
         except Exception as e:
+            # Undo the pending transaction if the database write fails.
             db.session.rollback()
             print("COMMIT ERROR:", e)
 
         redirect_url = url_for("main.signin")
 
+        # Return JSON for AJAX sign-up requests.
         if is_ajax_request:
             return jsonify({"success": True, "redirect_url": redirect_url})
 
+        # Redirect normal form submissions to the sign-in page after registration.
         return redirect(redirect_url)
 
     return render_template("sign-up.html")
 
-# Sign out
+# Clear the current session and log the user out.
 @main_bp.route("/logout", methods=["POST"])
 def logout():
+    # Remove the logged-in user from the current session.
     session.pop("user", None)
     return redirect(url_for("main.index"))
 
 
+# Show the itinerary submission form and process submitted itinerary data.
 @main_bp.route("/submit", methods=["GET", "POST"])
 def submit_itinerary():
+    # Block access to the submit page unless the user is signed in.
     if not session.get("user"):
         return redirect(url_for("main.signin"))
 
     if request.method == "POST":
+        # Load the current signed-in user from the database.
         current_user = User.query.filter_by(username=session.get("user")).first()
 
+        # Redirect back to sign-in if the stored session user no longer exists.
         if current_user is None:
             return redirect(url_for("main.signin"))
 
+        # Read the top-level itinerary fields from the submitted form.
         trip_title = request.form.get("trip_title", "").strip()
         trip_country = request.form.get("trip_country", "").strip()
         total_days_raw = request.form.get("total_days", "0").strip()
         declared_total_days = int(total_days_raw) if total_days_raw.isdigit() else 0
 
+        # Read uploaded files and multi-select trip type values.
         cover_photo = request.files.get("cover_photo")
         trip_types = [
             trip_type.strip()
@@ -356,6 +460,7 @@ def submit_itinerary():
             if trip_type.strip()
         ]
 
+        # Scan the submitted field names to detect which day numbers were posted.
         day_numbers = set()
         day_key_pattern = re.compile(r"day(\d+)")
 
@@ -364,11 +469,14 @@ def submit_itinerary():
             if match:
                 day_numbers.add(int(match.group(1)))
 
+        # Keep the total day count aligned with both the declared and posted day data.
         inferred_total_days = max(day_numbers) if day_numbers else 0
         total_days = max(declared_total_days, inferred_total_days)
 
+        # Save the uploaded cover image and keep its relative file path.
         cover_photo_path = save_uploaded_file(cover_photo, COVER_UPLOAD_DIR)
 
+        # Build one dictionary that collects all submitted itinerary data.
         itinerary_data = {
             "user": session.get("user"),
             "trip_title": trip_title,
@@ -383,6 +491,7 @@ def submit_itinerary():
             "days": [],
         }
 
+        # Collect each submitted day and its nested fields.
         for day_number in range(1, total_days + 1):
             day_data = {
                 "day_number": day_number,
@@ -410,12 +519,14 @@ def submit_itinerary():
             activity_number = 1
 
             while True:
+                # Build the dynamic field names for the current activity row.
                 title_key = f"activity_title_day{day_number}_{activity_number}"
                 place_key = f"activity_place_day{day_number}_{activity_number}"
                 time_key = f"time_day{day_number}_{activity_number}"
                 description_key = f"activity_day{day_number}_{activity_number}"
                 photo_key = f"activity_photo_day{day_number}_{activity_number}"
 
+                # Stop reading activities when no fields exist for the next activity number.
                 has_activity_fields = any(
                     key in request.form or key in request.files
                     for key in (
@@ -430,12 +541,14 @@ def submit_itinerary():
                 if not has_activity_fields:
                     break
 
+                # Save the uploaded activity photo and keep its relative file path.
                 activity_photo = request.files.get(photo_key)
                 activity_photo_path = save_uploaded_file(
                     activity_photo,
                     ACTIVITY_UPLOAD_DIR,
                 )
 
+                # Store the submitted values for one activity entry.
                 activity_data = {
                     "activity_number": activity_number,
                     "title": request.form.get(title_key, "").strip(),
@@ -446,16 +559,21 @@ def submit_itinerary():
                     "photo_path": activity_photo_path,
                 }
 
-                day_data["activities"].append(activity_data)
+                # Only keep activities that contain at least some user-entered content.
+                if activity_has_content(activity_data):
+                    day_data["activities"].append(activity_data)
                 activity_number += 1
 
-            itinerary_data["days"].append(day_data)
+            # Only keep days that contain at least some user-entered content.
+            if day_has_content(day_data):
+                itinerary_data["days"].append(day_data)
 
         # Run one server-side validation pass before creating database rows.
         validation_error = validate_itinerary_submission(itinerary_data)
         if validation_error:
             return submit_error_response(validation_error)
 
+        # Create the top-level itinerary database record after validation passes.
         itinerary = Itinerary(
             title=itinerary_data["trip_title"],
             country=itinerary_data["trip_country"],
@@ -467,6 +585,7 @@ def submit_itinerary():
             budget_range=itinerary_data["budget_range"],
         )
 
+        # Create and attach each itinerary day to the main itinerary.
         for day in itinerary_data["days"]:
             itinerary_day = ItineraryDay(
                 day_number=day["day_number"],
@@ -480,6 +599,7 @@ def submit_itinerary():
                 accommodation_specific=day["accommodation_specific"] or None,
             )
 
+            # Create and attach each activity to its corresponding day.
             for activity in day["activities"]:
                 itinerary_activity = ItineraryActivity(
                     activity_name=activity["title"],
@@ -493,11 +613,14 @@ def submit_itinerary():
 
             itinerary.days.append(itinerary_day)
 
+        # Stage the completed itinerary tree for insertion into the database.
         db.session.add(itinerary)
 
         try:
+            # Save the itinerary, days, and activities in one transaction.
             db.session.commit()
         except Exception as e:
+            # Roll back the transaction if any database write fails.
             db.session.rollback()
             print("COMMIT ERROR:", e)
             raise
