@@ -2,12 +2,13 @@ import os
 import shutil
 import tempfile
 import unittest
+from io import BytesIO
 from pathlib import Path
 
 from flask import Flask
 from werkzeug.security import generate_password_hash
 
-from app.extensions import db
+from app.extensions import csrf, db
 from app.models import User
 from app.routes import main_bp
 
@@ -27,8 +28,10 @@ class SubmitTests(unittest.TestCase):
         self.app.config["SECRET_KEY"] = "test-secret-key"
         self.app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{self.db_path}"
         self.app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+        self.app.config["WTF_CSRF_ENABLED"] = False
 
         db.init_app(self.app)
+        csrf.init_app(self.app)
         self.app.register_blueprint(main_bp)
 
         with self.app.app_context():
@@ -62,19 +65,28 @@ class SubmitTests(unittest.TestCase):
         with self.client.session_transaction() as session:
             session["user"] = "testuser"
 
-     # This is the smallest valid itinerary payload for one day and one activity
+    # Build a small in-memory image upload for form submission tests.
+    def image_upload(self, filename="test.png"):
+        return (BytesIO(b"fake image bytes"), filename)
+
+    # This is the smallest valid itinerary payload for one day and one activity
     def valid_submit_data(self):
         return {
             "trip_title": "Perth Weekend",
             "trip_country": "Australia",
             "total_days": "1",
             "trip_type": "city",
+            "cover_photo": self.image_upload("cover.png"),
             "budget_level": "$$",
             "budget_range": "$500-$800",
             "state_day1": "WA",
             "city_day1": "Perth",
+            "transport_day1[]": "flight",
+            "restaurant_dropdown_day1": "Cafe",
+            "accommodation_dropdown_day1": "Hotel",
             "activity_title_day1_1": "Kings Park Visit",
             "activity_place_day1_1": "Kings Park",
+            "activity_photo_day1_1": self.image_upload("activity.png"),
             "time_day1_1": "09:00",
             "activity_day1_1": "Walk around the park and city lookout.",
         }
