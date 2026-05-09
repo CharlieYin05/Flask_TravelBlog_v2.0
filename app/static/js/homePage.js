@@ -13,5 +13,4 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  updateNavbarAvatar(USER_DATA.avatar_url);
 });
