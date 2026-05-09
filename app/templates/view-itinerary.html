@@ -7,9 +7,13 @@
 
 
 {% block content %}
+<div id="page-background" class="bg-gradient-to-br
+from-[#91ddcf]
+via-[#f7f9f2]
+to-[#e8c5e5]">
 <!-- HERO / HEADER -->
 <section class="max-w-6xl mx-auto px-4 pt-28 pb-8">
-    <div class="overflow-hidden rounded-3xl shadow-lg bg-white border border-slate-200">
+    <div class="glass-card overflow-hidden rounded-3xl shadow-lg border border-slate-200">
         <img id="cover-photo" class="w-full h-[260px] md:h-[380px] object-cover" alt="Itinerary cover photo">
         <div class="p-6 md:p-8 space-y-4">
             <div class="flex flex-wrap items-start justify-between gap-4">
@@ -29,7 +33,7 @@
                 <div class="flex flex-wrap gap-2 justify-start md:justify-end" id="tags"></div>
             </div>
 
-            <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200">
+            <div class="glass-card-soft rounded-2xl p-5 border border-slate-200">
                 <h3 class="text-lg font-semibold mb-2">Overview</h3>
                 <p id="overview" class="text-slate-600 leading-7"></p>
             </div>
@@ -44,7 +48,7 @@
             <div class="flex items-center justify-between mb-5">
                 <h2 class="text-2xl font-bold">Daily Timeline</h2>
                 <div id="current-indicator"
-                    class="inline-flex items-center gap-2 bg-white px-4 py-2 shadow-sm rounded-full border border-slate-200 text-sm text-slate-600">
+                    class="glass-card inline-flex items-center gap-2 px-4 py-2 shadow-sm rounded-full border border-slate-200 text-sm text-slate-600">
                     <span>Now viewing:</span>
                     <span id="current-label" class="font-semibold text-slate-800">Day 1 - Activity 1</span>
                 </div>
@@ -54,7 +58,7 @@
         </section>
 
         <aside class="lg:sticky lg:top-28 space-y-4">
-            <div class="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm">
+            <div class="glass-card border border-slate-200 rounded-3xl p-4 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="text-xl font-bold">Google Map</h2>
                     <div class="text-xs text-slate-500 flex flex-wrap gap-3">
@@ -71,14 +75,14 @@
 
 <!-- INTERACTION -->
 <section class="max-w-6xl mx-auto px-4 pb-16">
-    <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+    <div class="glass-card border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
 
         <div class="flex flex-wrap gap-4">
-            <button id="like-btn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+            <button id="like-btn" class="glass-card-soft px-4 py-2 hover:bg-slate-200 rounded-xl transition">
                 👍 Like <span id="like-count">0</span>
             </button>
 
-            <button id="fav-btn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+            <button id="fav-btn" class="glass-card-soft px-4 py-2 hover:bg-slate-200 rounded-xl transition">
                 ⭐ Favorite <span id="favorite-count">0</span>
             </button>
         </div>
@@ -91,7 +95,7 @@
             <div class="flex flex-col md:flex-row gap-3">
                 <textarea
                     id="comment-box"
-                    class="w-full border border-slate-200 p-3 rounded-2xl min-h-[100px] resize-y"
+                    class="glass-card-soft w-full border border-slate-200 p-3 rounded-2xl min-h-[100px] resize-y"
                     placeholder="Leave a comment..."
                 ></textarea>
 
@@ -119,4 +123,5 @@
   defer
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAFbTlfB_BZlezD2-l2HPvU5mvtKQopBUM&callback=onGoogleMapsReady">
 </script>
+</div>
 {% endblock %}

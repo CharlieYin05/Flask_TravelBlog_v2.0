@@ -103,7 +103,7 @@ function renderTimeline() {
 
     if (days.length === 0) {
         timeline.innerHTML = `
-            <div class="bg-white border border-slate-200 rounded-2xl p-6 text-slate-500">
+            <div class="glass-card border border-slate-200 rounded-2xl p-6 text-slate-500">
                 No daily itinerary details yet.
             </div>
         `;
@@ -748,7 +748,7 @@ function renderComments(comments) {
 
     if (comments.length === 0) {
         commentsList.innerHTML = `
-            <div class="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+            <div class="glass-card-soft text-sm text-slate-500 border border-slate-200 rounded-2xl p-4">
                 No comments yet. Be the first to comment.
             </div>
         `;
@@ -757,7 +757,7 @@ function renderComments(comments) {
 
     comments.forEach((comment) => {
         const item = document.createElement("div");
-        item.className = "comment-card bg-slate-50 border border-slate-200 rounded-2xl p-4";
+        item.className = "comment-card glass-card-soft border border-slate-200 rounded-2xl p-4";
 
         item.innerHTML = `
             <div class="flex items-start justify-between gap-3">
