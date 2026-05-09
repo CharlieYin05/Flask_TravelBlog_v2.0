@@ -29,7 +29,17 @@ function getCsrfToken() {
 }
 
 // ===== DOM RENDER =====
+//change background each time
 document.addEventListener("DOMContentLoaded", () => {
+    const background = document.getElementById("page-background");
+    const themes = ["bg-theme-1", "bg-theme-2", "bg-theme-3","bg-theme-4","bg-theme-5"];
+
+    const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+
+    if (background) {
+        background.classList.add(randomTheme);
+    }
+
     const itineraryId = window.location.pathname.split("/").pop();
 
     fetch(`/api/itinerary/${itineraryId}`)
@@ -103,7 +113,7 @@ function renderTimeline() {
 
     if (days.length === 0) {
         timeline.innerHTML = `
-            <div class="bg-white border border-slate-200 rounded-2xl p-6 text-slate-500">
+            <div class="glass-card border border-slate-200 rounded-2xl p-6 text-slate-500">
                 No daily itinerary details yet.
             </div>
         `;
@@ -748,7 +758,7 @@ function renderComments(comments) {
 
     if (comments.length === 0) {
         commentsList.innerHTML = `
-            <div class="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+            <div class="empty-comments">
                 No comments yet. Be the first to comment.
             </div>
         `;
@@ -757,28 +767,42 @@ function renderComments(comments) {
 
     comments.forEach((comment) => {
         const item = document.createElement("div");
-        item.className = "comment-card bg-slate-50 border border-slate-200 rounded-2xl p-4";
+        item.className = "comment-item";
+
+        const author = escapeHtml(comment.author || "User");
+        const createdAt = escapeHtml(comment.created_at || "");
+        const content = escapeHtml(comment.content || "");
+        const avatarUrl = comment.author_avatar_url || "";
+        const initial = author.charAt(0).toUpperCase();
+
+        const avatarHtml = avatarUrl
+            ? `<img src="${escapeHtml(avatarUrl)}" alt="${author}'s avatar" class="comment-avatar-img">`
+            : `<div class="comment-avatar">${initial}</div>`;
 
         item.innerHTML = `
-            <div class="flex items-start justify-between gap-3">
-                <div>
-                    <div class="font-semibold text-slate-800">${escapeHtml(comment.author)}</div>
-                    <div class="text-xs text-slate-500">${escapeHtml(comment.created_at)}</div>
+            ${avatarHtml}
+
+            <div class="comment-main">
+                <div class="comment-header">
+                    <div>
+                        <div class="comment-author">${author}</div>
+                        <div class="comment-time">${createdAt}</div>
+                    </div>
+
+                    ${
+                        comment.can_delete
+                            ? `<button
+                                class="delete-comment-btn"
+                                data-comment-id="${comment.id}"
+                            >
+                                Delete
+                            </button>`
+                            : ""
+                    }
                 </div>
 
-                ${
-                    comment.can_delete
-                        ? `<button
-                            class="delete-comment-btn text-sm text-red-600 hover:text-red-700"
-                            data-comment-id="${comment.id}"
-                        >
-                            Delete
-                        </button>`
-                        : ""
-                }
+                <p class="comment-content">${content}</p>
             </div>
-
-            <p class="mt-3 text-slate-700 leading-6">${escapeHtml(comment.content)}</p>
         `;
 
         commentsList.appendChild(item);

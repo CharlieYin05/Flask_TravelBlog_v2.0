@@ -606,10 +606,15 @@ def get_itinerary_interactions(id):
         ),
         # Only the front-end know which comments can display the Delete button.
         "comments": [
-        {
+            {
                 "id": comment.id,
                 "content": comment.content,
                 "author": comment.user.username if comment.user else "Unknown",
+                "author_avatar_url": (
+                    "/static/" + comment.user.avatar_url.replace("\\", "/")
+                    if comment.user and comment.user.avatar_url
+                    else ""
+                ),
                 "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M"),
                 "can_delete": bool(current_user and comment.user_id == current_user.id),
             }
@@ -709,6 +714,11 @@ def create_itinerary_comment(id):
             "id": comment.id,
             "content": comment.content,
             "author": current_user.username,
+            "author_avatar_url": (
+                "/static/" + current_user.avatar_url.replace("\\", "/")
+                if current_user.avatar_url
+                else ""
+            ),
             "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M"),
             "can_delete": True,
         },
