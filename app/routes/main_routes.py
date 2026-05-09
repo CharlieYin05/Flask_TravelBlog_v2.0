@@ -94,6 +94,34 @@ def validate_uploaded_image_file(file_storage, label: str):
     return ""
 
 
+def activity_has_content(activity_data):
+    return any(
+        (
+            activity_data["title"],
+            activity_data["place"],
+            activity_data["time"],
+            activity_data["description"],
+            activity_data["photo"] and activity_data["photo"].filename,
+        )
+    )
+
+
+def day_has_content(day_data):
+    return any(
+        (
+            day_data["state"],
+            day_data["city"],
+            day_data["transport"],
+            day_data["transport_other_text"],
+            day_data["restaurants"],
+            day_data["restaurant_specific"],
+            day_data["accommodations"],
+            day_data["accommodation_specific"],
+            day_data["activities"],
+        )
+    )
+
+
 def validate_itinerary_submission(itinerary_data):
     # Validate the main itinerary structure before saving anything.
     if not itinerary_data["trip_title"]:
@@ -124,8 +152,8 @@ def validate_itinerary_submission(itinerary_data):
     if cover_photo_error:
         return cover_photo_error
 
-    if len(itinerary_data["days"]) != itinerary_data["total_days"]:
-        return "Each day must be filled in before submitting."
+    if not itinerary_data["days"]:
+        return "Please fill in at least one day before submitting."
 
     for day in itinerary_data["days"]:
         if not day["city"]:
@@ -446,10 +474,12 @@ def submit_itinerary():
                     "photo_path": activity_photo_path,
                 }
 
-                day_data["activities"].append(activity_data)
+                if activity_has_content(activity_data):
+                    day_data["activities"].append(activity_data)
                 activity_number += 1
 
-            itinerary_data["days"].append(day_data)
+            if day_has_content(day_data):
+                itinerary_data["days"].append(day_data)
 
         # Run one server-side validation pass before creating database rows.
         validation_error = validate_itinerary_submission(itinerary_data)

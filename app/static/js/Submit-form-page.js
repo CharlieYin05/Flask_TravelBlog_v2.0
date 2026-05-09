@@ -5,13 +5,12 @@
  * - Wait until the DOM is fully loaded before accessing page elements
  * - Cache frequently used DOM nodes
  * - Ensure all day containers are wrapped inside #days-wrapper
- * - Initialize activity summary display and total day count
+ * - Initialize activity summary display
  * - Bind the click event for adding a new day
  */
 document.addEventListener("DOMContentLoaded", function () {
     const addDayBtn = document.querySelector(".add-day-btn");
     const submitForm = document.querySelector('form[action$="/submit"]');
-    const totalDaysInput = document.getElementById("total-days");
     const dailyPlanSection = document.querySelector(".daily-plan-section");
     const tripTypeSelect = document.getElementById("trip-type");
 
@@ -29,7 +28,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     initializeActivitySummaries();
-    syncTotalDays();
     applyDynamicRequiredFields(document);
 
     if (submitForm) {
@@ -63,7 +61,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 window.rebuildCustomDropdowns(newDay);
             }
 
-            syncTotalDays();
             initializeActivitySummaries();
             applyDynamicRequiredFields(newDay);
         });
@@ -216,7 +213,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             dayContainer.remove();
             renumberDays();
-            syncTotalDays();
         }
     });
 
@@ -524,21 +520,6 @@ document.addEventListener("DOMContentLoaded", function () {
      */
     function replaceDayNumber(str, newDayNumber) {
         return str.replace(/day\d+/g, "day" + newDayNumber);
-    }
-
-    /**
-     * Synchronize the hidden or visible total day input with the current day count
-     *
-     * Purpose:
-     * - Count the number of .day-container elements inside #days-wrapper
-     * - Write that number into the total-days input field
-     * - Keep the form value accurate after adding or deleting days
-     */
-    function syncTotalDays() {
-        const totalDays = daysWrapper.querySelectorAll(".day-container").length;
-        if (totalDaysInput) {
-            totalDaysInput.value = totalDays;
-        }
     }
 
     /**
