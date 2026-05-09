@@ -29,7 +29,17 @@ function getCsrfToken() {
 }
 
 // ===== DOM RENDER =====
+//change background each time
 document.addEventListener("DOMContentLoaded", () => {
+    const background = document.getElementById("page-background");
+    const themes = ["bg-theme-1", "bg-theme-2", "bg-theme-3","bg-theme-4","bg-theme-5"];
+
+    const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+
+    if (background) {
+        background.classList.add(randomTheme);
+    }
+
     const itineraryId = window.location.pathname.split("/").pop();
 
     fetch(`/api/itinerary/${itineraryId}`)
