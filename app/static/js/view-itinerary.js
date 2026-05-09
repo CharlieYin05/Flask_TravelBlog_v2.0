@@ -748,7 +748,7 @@ function renderComments(comments) {
 
     if (comments.length === 0) {
         commentsList.innerHTML = `
-            <div class="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+            <div class="empty-comments">
                 No comments yet. Be the first to comment.
             </div>
         `;
@@ -757,28 +757,40 @@ function renderComments(comments) {
 
     comments.forEach((comment) => {
         const item = document.createElement("div");
-        item.className = "comment-card bg-slate-50 border border-slate-200 rounded-2xl p-4";
+        item.className = "comment-item";
+
+        const author = escapeHtml(comment.author || "User");
+        const createdAt = escapeHtml(comment.created_at || "");
+        const content = escapeHtml(comment.content || "");
+
+        const initial = author.charAt(0).toUpperCase();
 
         item.innerHTML = `
-            <div class="flex items-start justify-between gap-3">
-                <div>
-                    <div class="font-semibold text-slate-800">${escapeHtml(comment.author)}</div>
-                    <div class="text-xs text-slate-500">${escapeHtml(comment.created_at)}</div>
-                </div>
-
-                ${
-                    comment.can_delete
-                        ? `<button
-                            class="delete-comment-btn text-sm text-red-600 hover:text-red-700"
-                            data-comment-id="${comment.id}"
-                        >
-                            Delete
-                        </button>`
-                        : ""
-                }
+            <div class="comment-avatar">
+                ${initial}
             </div>
 
-            <p class="mt-3 text-slate-700 leading-6">${escapeHtml(comment.content)}</p>
+            <div class="comment-main">
+                <div class="comment-header">
+                    <div>
+                        <div class="comment-author">${author}</div>
+                        <div class="comment-time">${createdAt}</div>
+                    </div>
+
+                    ${
+                        comment.can_delete
+                            ? `<button
+                                class="delete-comment-btn"
+                                data-comment-id="${comment.id}"
+                            >
+                                Delete
+                            </button>`
+                            : ""
+                    }
+                </div>
+
+                <p class="comment-content">${content}</p>
+            </div>
         `;
 
         commentsList.appendChild(item);
