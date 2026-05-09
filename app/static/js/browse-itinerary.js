@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const container = document.getElementById("card-container");
 
-  // 从 Flask API 获取行程数据
+  // 从 Flask API get itineraries data and render cards
   fetch("/api/itineraries")
     .then(res => res.json())
     .then(data => {

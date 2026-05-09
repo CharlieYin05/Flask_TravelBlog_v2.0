@@ -14,8 +14,10 @@
         <section class="login-card">
             <h2>Sign In</h2>
             <form method="POST" action="{{ url_for('main.signin') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input id="username" type="text" placeholder="Enter your username" name="username" required>
                 <input id="password" type="password" placeholder="Enter your password" name="password" required>
+                <input type="password" placeholder="Enter your password" name="password" required>
                 <p class="form-error{% if not error %} is-hidden{% endif %}" id="signin-error">{{ error or "" }}</p>
                 <button id="login-button" type="submit" class="submit">LOGIN</button>
             </form>
