@@ -416,3 +416,197 @@ main p {
 .cover-photo-dropzone .cover-photo-trigger:hover {
     background: rgba(99, 102, 241, 0.16);
 }
+
+@media (max-width: 767px) {
+    body {
+        overflow-x: hidden;
+    }
+
+    body > nav > div {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    body > nav > div > div {
+        min-width: 0;
+        gap: 0.75rem;
+    }
+
+    body > nav span.text-xl {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    body > nav span.text-xl a {
+        display: block;
+        min-width: 0;
+        font-size: clamp(1.2rem, 5.8vw, 1.45rem);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    body > nav > div > div > div:last-child,
+    body > nav > div > div > div:last-child > div {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        min-width: 0;
+    }
+
+    body > nav form button,
+    body > nav a.bg-indigo-600,
+    body > nav a.text-gray-600 {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+        white-space: nowrap;
+    }
+
+    body > nav #nav-avatar-display {
+        width: 2.5rem;
+        height: 2.5rem;
+        flex-shrink: 0;
+    }
+
+    main {
+        overflow-x: hidden;
+    }
+
+    .page-heading {
+        padding-bottom: 1.5rem;
+    }
+
+    .page-heading h1 {
+        font-size: clamp(1.9rem, 9vw, 2.4rem) !important;
+        line-height: 1.1;
+        overflow-wrap: anywhere;
+    }
+
+    .general-info-section,
+    .daily-plan-section {
+        padding: 1.5rem 1rem;
+        border-radius: 1.25rem;
+    }
+
+    .day-header,
+    .activity-header,
+    .form-actions {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: 0.9rem;
+    }
+
+    .form-actions > * {
+        width: 100%;
+    }
+
+    .submit-itinerary-btn,
+    .add-day-btn,
+    .add-activity-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .activity-time-description-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .activity-time-description-grid input[type="time"] {
+        width: 100% !important;
+    }
+
+    .cover-photo-dropzone {
+        min-height: 13rem;
+        padding: 1.25rem 1rem;
+    }
+
+    .cover-photo-dropzone .upload-preview {
+        height: min(14rem, 55vw);
+        min-height: 10rem;
+    }
+
+    .checkbox-group label {
+        align-items: flex-start;
+    }
+
+    .checkbox-group label span:last-child {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 479px) {
+    body > nav > div {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    body > nav > div > div {
+        min-height: auto;
+        padding-top: 0.65rem;
+        padding-bottom: 0.65rem;
+        align-items: center;
+    }
+
+    body > nav form button,
+    body > nav a.bg-indigo-600,
+    body > nav a.text-gray-600 {
+        padding: 0.45rem 0.65rem;
+        font-size: 0.84rem;
+    }
+
+    .general-info-section,
+    .daily-plan-section,
+    .daily-plan-section .day-container,
+    .daily-plan-section .activity-item {
+        padding-left: 0.85rem;
+        padding-right: 0.85rem;
+    }
+
+    .page-heading h1 {
+        font-size: clamp(1.7rem, 10vw, 2.1rem) !important;
+    }
+
+    main h2,
+    main h3,
+    main legend {
+        font-size: 1.05rem !important;
+    }
+
+    main label,
+    main p,
+    main input:not([type="checkbox"]):not([type="file"]),
+    main textarea,
+    main .custom-dropdown-trigger,
+    main .submit-itinerary-btn,
+    main .add-day-btn,
+    main .add-activity-btn {
+        font-size: 0.95rem !important;
+    }
+
+    .delete-day-btn {
+        width: 2.75rem !important;
+        height: 2.75rem !important;
+    }
+
+    .delete-day-btn:hover {
+        width: 2.75rem !important;
+    }
+
+    .delete-day-btn > span {
+        display: none !important;
+    }
+
+    .delete-activity-btn:hover {
+        width: 2.5rem !important;
+    }
+
+    .delete-activity-btn > span {
+        display: none !important;
+    }
+}
