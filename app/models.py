@@ -1,9 +1,19 @@
 from datetime import datetime
 
-from app.extensions import db
+from flask_login import UserMixin
+from app.extensions import db, login
+from werkzeug.security import check_password_hash, generate_password_hash
+
+# Flask-Login uses the stored user id to rebuild current_user on each request.
+@login.user_loader
+def load_user(user_id):
+    try:
+        return db.session.get(User, int(user_id))
+    except (TypeError, ValueError):
+        return None
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
@@ -14,6 +24,14 @@ class User(db.Model):
     likes = db.relationship("ItineraryLike", back_populates="user", cascade="all, delete-orphan")
     favorites = db.relationship("ItineraryFavorite", back_populates="user", cascade="all, delete-orphan")
     comments = db.relationship("ItineraryComment", back_populates="user", cascade="all, delete-orphan")
+
+    def set_password(self, password):
+        # Store only a hash, never the raw password.
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        # Compare a submitted password against the stored hash.
+        return check_password_hash(self.password_hash, password)
 
 class Itinerary(db.Model):
     id = db.Column(db.Integer, primary_key=True)

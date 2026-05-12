@@ -154,7 +154,7 @@
         </div>
 
         <form method="POST" action="{{ url_for('main.submit_itinerary') }}" enctype="multipart/form-data" class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> 
+            {{ form.hidden_tag() }}
             {% if error %}
                 <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                     {{ error }}
@@ -260,7 +260,9 @@
                                 <div class="sm:col-span-3">
                                     <label for="budget-range" class="block text-sm/6 font-medium text-gray-900">Estimated Cost Range</label>
                                     <div class="mt-2">
-                                        <input id="budget-range" type="text" name="budget_range" placeholder="e.g. $1K-$3K" required
+                                        <input id="budget-range" type="text" name="budget_range" placeholder="e.g. $500" required
+                                            pattern="[$€£¥]\s*(0|[1-9][0-9]*)(\.[0-9]{1,2})?"
+                                            title="Enter a currency symbol followed by a number greater than or equal to 0, such as $500."
                                             class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
                                     </div>
                                 </div>

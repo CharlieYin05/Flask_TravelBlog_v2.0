@@ -116,6 +116,29 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function validateRequiredMultiSelects() {
+        document.querySelectorAll('select[name="trip_type"], select[name^="restaurant_dropdown_day"], select[name^="accommodation_dropdown_day"]').forEach(function (select) {
+            const selectedValues = Array.from(select.selectedOptions)
+                .map(function (option) {
+                    return option.value.trim();
+                })
+                .filter(Boolean);
+
+            let message = "";
+            if (selectedValues.length === 0) {
+                if (select.name === "trip_type") {
+                    message = "Please select at least one trip type";
+                } else if (select.name.startsWith("restaurant_dropdown_day")) {
+                    message = "Please select at least one restaurant option";
+                } else if (select.name.startsWith("accommodation_dropdown_day")) {
+                    message = "Please select at least one accommodation option";
+                }
+            }
+
+            select.setCustomValidity(message);
+        });
+    }
+
     function validateTripTypeSelection() {
         if (!tripTypeSelect) {
             return;
@@ -138,6 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function validateSubmitForm() {
         applyDynamicRequiredFields(document);
         validateTripTypeSelection();
+        validateRequiredMultiSelects();
         validateTransportSelections();
 
         if (!submitForm.checkValidity()) {
@@ -272,6 +296,14 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("change", function (e) {
         if (e.target === tripTypeSelect) {
             validateTripTypeSelection();
+        }
+
+        if (
+            e.target.matches('select[name="trip_type"]') ||
+            e.target.matches('select[name^="restaurant_dropdown_day"]') ||
+            e.target.matches('select[name^="accommodation_dropdown_day"]')
+        ) {
+            validateRequiredMultiSelects();
         }
 
         if (e.target.classList.contains("transport-other-checkbox")) {

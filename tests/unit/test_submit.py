@@ -8,7 +8,8 @@ from pathlib import Path
 from flask import Flask
 from werkzeug.security import generate_password_hash
 
-from app.extensions import csrf, db
+from app.extensions import csrf, db, login
+from app.forms import LogoutForm
 from app.models import User
 from app.routes import main_bp
 
@@ -32,7 +33,13 @@ class SubmitTests(unittest.TestCase):
 
         db.init_app(self.app)
         csrf.init_app(self.app)
+        login.init_app(self.app)
+        login.login_view = "main.signin"
         self.app.register_blueprint(main_bp)
+
+        @self.app.context_processor
+        def inject_logout_form():
+            return {"logout_form": LogoutForm()}
 
         with self.app.app_context():
             db.create_all()
@@ -62,8 +69,12 @@ class SubmitTests(unittest.TestCase):
 
     # Put the test user into session so the submit route treats us as logged in.
     def login_user(self):
+        with self.app.app_context():
+            user = User.query.filter_by(username="testuser").first()
+
         with self.client.session_transaction() as session:
-            session["user"] = "testuser"
+            session["_user_id"] = str(user.id)
+            session["_fresh"] = True
 
     # Build a small in-memory image upload for form submission tests.
     def image_upload(self, filename="test.png"):
@@ -78,7 +89,7 @@ class SubmitTests(unittest.TestCase):
             "trip_type": "city",
             "cover_photo": self.image_upload("cover.png"),
             "budget_level": "$$",
-            "budget_range": "$500-$800",
+            "budget_range": "$500",
             "state_day1": "WA",
             "city_day1": "Perth",
             "transport_day1[]": "flight",
@@ -119,6 +130,21 @@ class SubmitTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"City is required for Day 1.", response.data)
+
+    # Estimated cost must start with a currency symbol and use a non-negative number.
+    def test_submit_invalid_budget_range(self):
+        self.login_user()
+        data = self.valid_submit_data()
+        data["budget_range"] = "$-1"
+
+        response = self.client.post("/submit", data=data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Estimated cost range must start with a currency symbol followed by "
+            b"a number greater than or equal to 0.",
+            response.data,
+        )
 
     # Activities exist, but an empty title should still fail validation.
     def test_submit_missing_activity_title(self):

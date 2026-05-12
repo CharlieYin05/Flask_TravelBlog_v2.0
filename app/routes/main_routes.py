@@ -1,7 +1,14 @@
 import re
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from uuid import uuid4
 
+from flask_login import (
+    current_user as flask_current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
 from flask import (
     Blueprint,
     app,
@@ -9,13 +16,12 @@ from flask import (
     render_template,
     request,
     redirect,
-    session,
     url_for,
 )
-from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
+from app.forms import LogoutForm, SignInForm, SignUpForm, SubmitItineraryForm
 from app.models import (
     Itinerary,
     User,
@@ -54,6 +60,9 @@ ALLOWED_TRIP_TYPES = {
     "cultural",
 }
 ALLOWED_BUDGET_LEVELS = {"$", "$$", "$$$"}
+BUDGET_RANGE_PATTERN = re.compile(
+    r"^[\$\u20ac\u00a3\u00a5]\s*((?:0|[1-9]\d*)(?:\.\d{1,2})?)$"
+)
 
 
 
@@ -64,14 +73,14 @@ def allowed_image_file(filename: str) -> bool:
     )
 
 
-def signup_error_response(message: str, is_ajax_request: bool):
+def signup_error_response(message: str, is_ajax_request: bool, form=None):
     if is_ajax_request:
         return jsonify({"success": False, "error": message}), 400
-    return render_template("sign-up.html", error=message)
+    return render_template("sign-up.html", form=form, error=message)
 
 
-def submit_error_response(message: str):
-    return render_template("Submit-form-page.html", error=message)
+def submit_error_response(message: str, form=None):
+    return render_template("Submit-form-page.html", form=form, error=message)
 
 
 def get_uploaded_file_size(file_storage) -> int:
@@ -146,6 +155,27 @@ def validate_itinerary_submission(itinerary_data):
 
     if not itinerary_data["budget_range"]:
         return "Estimated cost range is required."
+
+    budget_range_match = BUDGET_RANGE_PATTERN.fullmatch(itinerary_data["budget_range"])
+    if not budget_range_match:
+        return (
+            "Estimated cost range must start with a currency symbol followed by "
+            "a number greater than or equal to 0."
+        )
+
+    try:
+        budget_range_amount = Decimal(budget_range_match.group(1))
+    except (InvalidOperation, ValueError):
+        return (
+            "Estimated cost range must start with a currency symbol followed by "
+            "a number greater than or equal to 0."
+        )
+
+    if budget_range_amount < 0:
+        return (
+            "Estimated cost range must start with a currency symbol followed by "
+            "a number greater than or equal to 0."
+        )
 
     # Re-check required upload and day/activity fields on the server side
     # so empty submissions cannot bypass the frontend validation rules.
@@ -254,10 +284,9 @@ def save_uploaded_file(file_storage, upload_dir: Path):
 
 
 def get_current_user():
-    username = session.get("user")
-    if not username:
+    if not flask_current_user.is_authenticated:
         return None
-    return User.query.filter_by(username=username).first()
+    return flask_current_user
 
 
 def require_login_json():
@@ -273,14 +302,12 @@ def require_login_json():
 
 @main_bp.route("/")
 def index():
-    user = User.query.get(session.get("user_id"))
-    return render_template("home-page.html", user=user)
+    return render_template("home-page.html", user=get_current_user())
 
 
 @main_bp.route("/search", methods=["GET"])
 def search():
-    user = User.query.get(session.get("user_id"))
-    return render_template("search.html", user=user)
+    return render_template("search.html", user=get_current_user())
 
 
 @main_bp.route("/api/search", methods=["GET"])
@@ -316,10 +343,21 @@ def browse():
 # Handle sign-in page rendering and login form submission.
 @main_bp.route("/signin", methods=["GET", "POST"])
 def signin():
-    if request.method == "POST":
+    form = SignInForm()
+
+    # validate_on_submit() checks both request method and CSRF token validity.
+    if request.method == "POST" and not form.validate_on_submit():
+        error_message = next(
+            iter(form.csrf_token.errors or ["Please check the submitted form and try again."])
+        )
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"success": False, "error": error_message}), 400
+        return render_template("sign-in.html", form=form, error=error_message)
+
+    if form.validate_on_submit():
         # Read the submitted login credentials from the form.
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
+        username = form.username.data.strip()
+        password = form.password.data
         error_message = "Incorrect username or password."
         is_ajax_request = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
@@ -330,16 +368,16 @@ def signin():
         if user is None:
             if is_ajax_request:
                 return jsonify({"success": False, "error": error_message}), 401
-            return render_template("sign-in.html", error=error_message)
+            return render_template("sign-in.html", form=form, error=error_message)
 
         # Compare the submitted password with the stored password hash.
-        if not check_password_hash(user.password_hash, password):
+        if not user.check_password(password):
             if is_ajax_request:
                 return jsonify({"success": False, "error": error_message}), 401
-            return render_template("sign-in.html", error=error_message)
+            return render_template("sign-in.html", form=form, error=error_message)
 
-        # Store the signed-in username in the session.
-        session["user"] = user.username
+        # Let Flask-Login remember the authenticated user in the session.
+        login_user(user)
         redirect_url = url_for("main.index")
 
         # Return JSON for AJAX login requests.
@@ -349,66 +387,80 @@ def signin():
         # Redirect normal form submissions to the home page after login.
         return redirect(redirect_url)
 
-    return render_template("sign-in.html")
+    return render_template("sign-in.html", form=form)
 
 # Handle sign-up page rendering, form validation, and new user creation.
 @main_bp.route("/signup", methods=["GET", "POST"])
 def signup():
-    if request.method == "POST":
+    form = SignUpForm()
+
+    # Reject invalid or forged form submissions before custom signup checks.
+    if request.method == "POST" and not form.validate_on_submit():
+        error_message = next(
+            iter(form.csrf_token.errors or [error for errors in form.errors.values() for error in errors] or ["Please check the submitted form and try again."])
+        )
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"success": False, "error": error_message}), 400
+        return render_template("sign-up.html", form=form, error=error_message)
+
+    if form.validate_on_submit():
         # Read and normalize the submitted registration fields.
-        username = request.form.get("username", "").strip()
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-        confirm_password = request.form.get("confirm-password", "")
+        username = form.username.data.strip()
+        email = form.email.data.strip().lower()
+        password = form.password.data
+        confirm_password = form.confirm_password.data
         is_ajax_request = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
         # Validate the submitted signup data before touching the database.
         if not username:
-            return signup_error_response("Username is required.", is_ajax_request)
+            return signup_error_response("Username is required.", is_ajax_request, form=form)
 
         if not (USERNAME_MIN_LENGTH <= len(username) <= USERNAME_MAX_LENGTH):
             return signup_error_response(
                 f"Username must be between {USERNAME_MIN_LENGTH} and {USERNAME_MAX_LENGTH} characters.",
                 is_ajax_request,
+                form=form,
             )
 
         if not USERNAME_PATTERN.fullmatch(username):
             return signup_error_response(
                 "Username can only contain letters, numbers, and underscores.",
                 is_ajax_request,
+                form=form,
             )
 
         if not email:
-            return signup_error_response("Email is required.", is_ajax_request)
+            return signup_error_response("Email is required.", is_ajax_request, form=form)
 
         if not EMAIL_PATTERN.fullmatch(email):
-            return signup_error_response("Please enter a valid email address.", is_ajax_request)
+            return signup_error_response("Please enter a valid email address.", is_ajax_request, form=form)
 
         if len(password) < PASSWORD_MIN_LENGTH:
             return signup_error_response(
                 f"Password must be at least {PASSWORD_MIN_LENGTH} characters long.",
                 is_ajax_request,
+                form=form,
             )
 
         if password != confirm_password:
-            return signup_error_response("Passwords do not match.", is_ajax_request)
+            return signup_error_response("Passwords do not match.", is_ajax_request, form=form)
 
         # Reject duplicate usernames before creating the new account.
         existing_user = User.query.filter_by(username=username).first()
         if existing_user is not None:
-            return signup_error_response("This username is already taken.", is_ajax_request)
+            return signup_error_response("This username is already taken.", is_ajax_request, form=form)
 
         # Reject duplicate email addresses before creating the new account.
         existing_email = User.query.filter_by(email=email).first()
         if existing_email is not None:
-            return signup_error_response("This email is already registered.", is_ajax_request)
+            return signup_error_response("This email is already registered.", is_ajax_request, form=form)
 
         # Create the new user model with a hashed password.
         new_user = User(
             username=username,
             email=email,
-            password_hash=generate_password_hash(password),
         )
+        new_user.set_password(password)
 
         # Stage the new user record for insertion into the database.
         db.session.add(new_user)
@@ -431,26 +483,37 @@ def signup():
         # Redirect normal form submissions to the sign-in page after registration.
         return redirect(redirect_url)
 
-    return render_template("sign-up.html")
+    return render_template("sign-up.html", form=form)
 
 # Clear the current session and log the user out.
 @main_bp.route("/logout", methods=["POST"])
+@login_required
 def logout():
-    # Remove the logged-in user from the current session.
-    session.pop("user", None)
+    form = LogoutForm()
+
+    if not form.validate_on_submit():
+        return redirect(url_for("main.index"))
+
+    # Reset current_user back to Flask-Login's anonymous user.
+    logout_user()
     return redirect(url_for("main.index"))
 
 
 # Show the itinerary submission form and process submitted itinerary data.
 @main_bp.route("/submit", methods=["GET", "POST"])
+@login_required
 def submit_itinerary():
-    # Block access to the submit page unless the user is signed in.
-    if not session.get("user"):
-        return redirect(url_for("main.signin"))
+    form = SubmitItineraryForm()
 
-    if request.method == "POST":
-        # Load the current signed-in user from the database.
-        current_user = User.query.filter_by(username=session.get("user")).first()
+    if request.method == "POST" and not form.validate_on_submit():
+        error_message = next(
+            iter(form.csrf_token.errors or ["Please check the submitted form and try again."])
+        )
+        return submit_error_response(error_message, form=form)
+
+    if form.validate_on_submit():
+        # Load the current signed-in user from Flask-Login.
+        current_user = get_current_user()
 
         # Redirect back to sign-in if the stored session user no longer exists.
         if current_user is None:
@@ -488,7 +551,7 @@ def submit_itinerary():
 
         # Build one dictionary that collects all submitted itinerary data.
         itinerary_data = {
-            "user": session.get("user"),
+            "user": current_user.username,
             "trip_title": trip_title,
             "trip_country": trip_country,
             "total_days": total_days,
@@ -581,7 +644,7 @@ def submit_itinerary():
         # Run one server-side validation pass before creating database rows.
         validation_error = validate_itinerary_submission(itinerary_data)
         if validation_error:
-            return submit_error_response(validation_error)
+            return submit_error_response(validation_error, form=form)
 
         # Create the top-level itinerary database record after validation passes.
         itinerary = Itinerary(
@@ -637,7 +700,7 @@ def submit_itinerary():
 
         return redirect(url_for("main.browse"))
 
-    return render_template("Submit-form-page.html")
+    return render_template("Submit-form-page.html", form=form)
 
 #Browse itineraries page (can fetch data)
 @main_bp.route("/api/itineraries")
@@ -884,39 +947,33 @@ def view_itinerary(id):
 
 # Portfolio page
 @main_bp.route("/api/upload-avatar", methods=["POST"])
+@login_required
 def upload_avatar():
-    if not session.get("user"):
-        return jsonify({"success": False, "error": "Not logged in"}), 401
     file = request.files.get("avatar")
     path = save_uploaded_file(file, AVATAR_UPLOAD_DIR)
     if not path:
         return jsonify({"success": False, "error": "Invalid file"}), 400
-    user = User.query.filter_by(username=session.get("user")).first()
+    user = get_current_user()
     user.avatar_url = path
     db.session.commit()
     return jsonify({"success": True, "url": "/static/" + path.replace("\\", "/")})
 
 @main_bp.route("/api/upload-banner", methods=["POST"])
+@login_required
 def upload_banner():
-    if not session.get("user"):
-        return jsonify({"success": False, "error": "Not logged in"}), 401
     file = request.files.get("banner")
     path = save_uploaded_file(file, BANNER_UPLOAD_DIR)
     if not path:
         return jsonify({"success": False, "error": "Invalid file"}), 400
-    user = User.query.filter_by(username=session.get("user")).first()
+    user = get_current_user()
     user.banner_url = path
     db.session.commit()
     return jsonify({"success": True, "url": "/static/" + path.replace("\\", "/")})
 
 @main_bp.route("/portfolio")
+@login_required
 def portfolio():
-    if not session.get("user"):
-        return redirect(url_for("main.signin"))
-    
-    current_user = User.query.filter_by(
-        username=session.get("user")
-    ).first()
+    current_user = get_current_user()
     
     itineraries = Itinerary.query.filter_by(
         user_id=current_user.id
