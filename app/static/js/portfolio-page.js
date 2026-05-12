@@ -8,6 +8,16 @@ function getCsrfToken() {
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
     return csrfMeta ? csrfMeta.content : "";
 }
+
+const COUNTRY_CODES = {
+    "Australia": "au", "Canada": "ca", "China": "cn", "France": "fr",
+    "Germany": "de", "Indonesia": "id", "Italy": "it", "Japan": "jp",
+    "Malaysia": "my", "New Zealand": "nz", "Singapore": "sg",
+    "South Korea": "kr", "Spain": "es", "Switzerland": "ch",
+    "Thailand": "th", "United Kingdom": "gb", "United States": "us",
+    "Vietnam": "vn"
+};
+
 function getInitials(n) { if (!n) return "?"; return n.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2); }
 function calcAvg(r) { let t = 0, c = 0; for (let s = 1; s <= 5; s++) { t += s * (r[s] || 0); c += (r[s] || 0); } return c ? t / c : 0; }
 function starsHTML(avg, large = false) {
@@ -211,7 +221,8 @@ function renderCountries(countries) {
         const btn = document.createElement("button");
         btn.className = "country-tag";
         btn.style.setProperty("--expanded-width", (52 + 8 + (country.length * 8.5) + 14) + "px");
-        btn.innerHTML = `<span class="flag-circle">${data.flag}</span><span class="country-name">${country}</span>`;
+        const code = COUNTRY_CODES[country] || "un";
+        btn.innerHTML = `<span class="flag-circle"><img src="https://flagcdn.com/w40/${code}.png" alt="${country}" class="w-7 h-5 object-cover rounded-sm"></span><span class="country-name">${country}</span>`;
         btn.addEventListener("click", () => filterByCountry(country, btn));
         li.appendChild(btn);
         list.appendChild(li);
