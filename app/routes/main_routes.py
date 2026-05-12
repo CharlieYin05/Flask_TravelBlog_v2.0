@@ -12,7 +12,6 @@ from flask import (
     session,
     url_for,
 )
-from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
@@ -333,7 +332,7 @@ def signin():
             return render_template("sign-in.html", error=error_message)
 
         # Compare the submitted password with the stored password hash.
-        if not check_password_hash(user.password_hash, password):
+        if not user.check_password(password):
             if is_ajax_request:
                 return jsonify({"success": False, "error": error_message}), 401
             return render_template("sign-in.html", error=error_message)
@@ -407,8 +406,8 @@ def signup():
         new_user = User(
             username=username,
             email=email,
-            password_hash=generate_password_hash(password),
         )
+        new_user.set_password(password)
 
         # Stage the new user record for insertion into the database.
         db.session.add(new_user)
