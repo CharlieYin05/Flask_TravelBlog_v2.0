@@ -101,21 +101,37 @@ document.getElementById("banner-upload").addEventListener("change", e => {
 });
 
 // ── COUNTRY FILTER ──
-let activeCountry = null;
+let activeCountries = new Set();
+
 function filterByCountry(country, tagEl) {
-    if (activeCountry === country) { clearFilter(); return; }
-    activeCountry = country;
-    document.querySelectorAll(".country-tag").forEach(t => t.classList.remove("active"));
-    tagEl.classList.add("active");
-    document.getElementById("filter-country-name").textContent = country;
+    if (activeCountries.has(country)) {
+        // unselect if already active
+        activeCountries.delete(country);
+        tagEl.classList.remove("active");
+    } else {
+        // add to selection
+        activeCountries.add(country);
+        tagEl.classList.add("active");
+    }
+
+    if (activeCountries.size === 0) {
+        clearFilter();
+        return;
+    }
+
+    // update filter notice
+    document.getElementById("filter-country-name").textContent = [...activeCountries].join(", ");
     document.getElementById("filter-notice").classList.remove("hidden");
     document.getElementById("filter-notice").classList.add("flex");
+
+    // show/hide cards
     document.querySelectorAll(".itinerary-card").forEach(card => {
-        card.closest("li").style.display = card.dataset.country !== country ? "none" : "";
+        card.closest("li").style.display = activeCountries.has(card.dataset.country) ? "" : "none";
     });
 }
+
 function clearFilter() {
-    activeCountry = null;
+    activeCountries.clear();
     document.querySelectorAll(".country-tag").forEach(t => t.classList.remove("active"));
     document.getElementById("filter-notice").classList.add("hidden");
     document.getElementById("filter-notice").classList.remove("flex");
