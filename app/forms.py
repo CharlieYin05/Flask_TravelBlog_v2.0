@@ -31,3 +31,8 @@ class SignUpForm(FlaskForm):
             EqualTo("password", message="Passwords do not match."),
         ],
     )
+
+
+class LogoutForm(FlaskForm):
+    # A minimal protected form for logout requests.
+    pass

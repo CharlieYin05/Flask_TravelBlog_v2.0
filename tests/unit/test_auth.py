@@ -64,7 +64,7 @@ class AuthTests(unittest.TestCase):
                 "username": "newuser",
                 "email": "newuser@example.com",
                 "password": "password123",
-                "confirm-password": "different123",
+                "confirm_password": "different123",
             },
         )
 
@@ -79,7 +79,7 @@ class AuthTests(unittest.TestCase):
                 "username": "newuser",
                 "email": "not-an-email",
                 "password": "password123",
-                "confirm-password": "password123",
+                "confirm_password": "password123",
             },
         )
 
@@ -96,7 +96,7 @@ class AuthTests(unittest.TestCase):
                 "username": "existinguser",
                 "email": "another@example.com",
                 "password": "password123",
-                "confirm-password": "password123",
+                "confirm_password": "password123",
             },
         )
 
@@ -111,7 +111,7 @@ class AuthTests(unittest.TestCase):
                 "username": "newuser",
                 "email": "newuser@example.com",
                 "password": "password123",
-                "confirm-password": "password123",
+                "confirm_password": "password123",
             },
             follow_redirects=False,
         )

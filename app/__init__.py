@@ -2,6 +2,7 @@ from flask import Flask
 
 from app.config import Config
 from app.extensions import db, migrate, csrf, login
+from app.forms import LogoutForm
 from app.routes import main_bp
 
 
@@ -18,5 +19,9 @@ def create_app() -> Flask:
     from app import models
 
     app.register_blueprint(main_bp)
+
+    @app.context_processor
+    def inject_logout_form():
+        return {"logout_form": LogoutForm()}
 
     return app

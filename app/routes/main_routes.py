@@ -20,7 +20,7 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
-from app.forms import SignInForm, SignUpForm
+from app.forms import LogoutForm, SignInForm, SignUpForm
 from app.models import (
     Itinerary,
     User,
@@ -464,6 +464,11 @@ def signup():
 @main_bp.route("/logout", methods=["POST"])
 @login_required
 def logout():
+    form = LogoutForm()
+
+    if not form.validate_on_submit():
+        return redirect(url_for("main.index"))
+
     # Reset current_user back to Flask-Login's anonymous user.
     logout_user()
     return redirect(url_for("main.index"))
