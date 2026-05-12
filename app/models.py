@@ -1,7 +1,12 @@
 from datetime import datetime
 
-from app.extensions import db
+from app.extensions import db, login
 from werkzeug.security import check_password_hash, generate_password_hash
+
+
+@login.user_loader
+def load_user(user_id):
+    return db.session.get(User, int(user_id))
 
 
 class User(db.Model):
