@@ -8,13 +8,16 @@ from pathlib import Path
 from flask import Flask
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.edge.options import Options
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from werkzeug.security import generate_password_hash
 from werkzeug.serving import make_server
 
-from app.extensions import csrf, db
+from app.extensions import csrf, db, login
+from app.forms import LogoutForm
 from app.models import User
 from app.routes import main_bp
 
@@ -42,9 +45,70 @@ class LiveServerThread(threading.Thread):
 
 # End-to-end auth tests that use a real browser.
 class AuthSystemTests(unittest.TestCase):
+    # Helper to create a Selenium webdriver based on environment or availability.
+    def create_webdriver(self):
+        browser = os.environ.get("SELENIUM_BROWSER", "").lower().strip()
+
+        def make_chrome():
+            options = ChromeOptions()
+            options.add_argument("--headless=new")
+            options.add_argument("--window-size=1400,1000")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument(
+                f"--user-data-dir={os.path.join(self.browser_profile_dir, 'chrome')}"
+            )
+            return webdriver.Chrome(options=options)
+
+        def make_edge():
+            options = EdgeOptions()
+            options.add_argument("--headless=new")
+            options.add_argument("--window-size=1400,1000")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument(
+                f"--user-data-dir={os.path.join(self.browser_profile_dir, 'edge')}"
+            )
+            return webdriver.Edge(options=options)
+
+        def make_firefox():
+            options = FirefoxOptions()
+            options.add_argument("--headless")
+            return webdriver.Firefox(options=options)
+
+        browsers = {
+            "chrome": make_chrome,
+            "edge": make_edge,
+            "firefox": make_firefox,
+        }
+
+        if browser:
+            if browser not in browsers:
+                raise RuntimeError(
+                    "SELENIUM_BROWSER must be one of: chrome, edge, firefox"
+                )
+            return browsers[browser]()
+
+        last_error = None
+
+        for make_browser in (make_chrome, make_edge, make_firefox):
+            try:
+                return make_browser()
+            except Exception as error:
+                last_error = error
+
+        raise RuntimeError(
+            "Could not start Chrome, Edge, or Firefox for Selenium tests. "
+            "Install one supported browser, or set SELENIUM_BROWSER=chrome/edge/firefox."
+        ) from last_error
+
     # Build a temporary app, database, live server, and browser for each test.
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
+        self.browser_profile_dir = os.path.join(self.temp_dir, "browser-profile")
+        os.environ["SE_CACHE_PATH"] = os.path.join(self.temp_dir, "selenium-cache")
         self.db_path = os.path.join(self.temp_dir, "test.db")
         project_root = Path(__file__).resolve().parents[2]
 
@@ -60,7 +124,13 @@ class AuthSystemTests(unittest.TestCase):
 
         db.init_app(self.app)
         csrf.init_app(self.app)
+        login.init_app(self.app)
+        login.login_view = "main.signin"
         self.app.register_blueprint(main_bp)
+
+        @self.app.context_processor
+        def inject_logout_form():
+            return {"logout_form": LogoutForm()}
 
         with self.app.app_context():
             db.create_all()
@@ -70,11 +140,7 @@ class AuthSystemTests(unittest.TestCase):
         self.server.start()
         self.base_url = f"http://{self.server.host}:{self.server.port}"
 
-        # Edge matches the course setup and Selenium can manage the driver automatically.
-        options = Options()
-        options.add_argument("--headless=new")
-        options.add_argument("--window-size=1400,1000")
-        self.driver = webdriver.Edge(options=options)
+        self.driver = self.create_webdriver()
         self.wait = WebDriverWait(self.driver, 10)
 
     # Close the browser and delete all temporary test data.

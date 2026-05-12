@@ -7,7 +7,8 @@ from pathlib import Path
 from flask import Flask
 from werkzeug.security import generate_password_hash
 
-from app.extensions import csrf, db
+from app.extensions import csrf, db, login
+from app.forms import LogoutForm
 from app.models import (
     Itinerary,
     ItineraryActivity,
@@ -38,7 +39,13 @@ class BrowseViewTests(unittest.TestCase):
 
         db.init_app(self.app)
         csrf.init_app(self.app)
+        login.init_app(self.app)
+        login.login_view = "main.signin"
         self.app.register_blueprint(main_bp)
+
+        @self.app.context_processor
+        def inject_logout_form():
+            return {"logout_form": LogoutForm()}
 
         with self.app.app_context():
             db.create_all()
@@ -74,8 +81,12 @@ class BrowseViewTests(unittest.TestCase):
 
     # Put a user into session so protected interaction APIs treat us as logged in.
     def login_user(self, username="testuser"):
+        with self.app.app_context():
+            user = User.query.filter_by(username=username).first()
+
         with self.client.session_transaction() as session:
-            session["user"] = username
+            session["_user_id"] = str(user.id)
+            session["_fresh"] = True
 
     # Create a full itinerary with one day and one activity.
     def create_itinerary(self, title="Perth Weekend", country="Australia"):

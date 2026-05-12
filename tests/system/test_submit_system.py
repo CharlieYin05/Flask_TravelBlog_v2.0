@@ -15,7 +15,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from werkzeug.security import generate_password_hash
 from werkzeug.serving import make_server
 
-from app.extensions import csrf, db
+from app.extensions import csrf, db, login
+from app.forms import LogoutForm
 from app.models import Itinerary, User
 from app.routes import main_bp
 
@@ -41,6 +42,10 @@ class SubmitSystemTests(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
         self.db_path = os.path.join(self.temp_dir, "test.db")
+        self.cover_photo_path = os.path.join(self.temp_dir, "cover.png")
+        self.activity_photo_path = os.path.join(self.temp_dir, "activity.png")
+        Path(self.cover_photo_path).write_bytes(b"fake cover image")
+        Path(self.activity_photo_path).write_bytes(b"fake activity image")
         project_root = Path(__file__).resolve().parents[2]
 
         self.app = Flask(
@@ -55,7 +60,13 @@ class SubmitSystemTests(unittest.TestCase):
 
         db.init_app(self.app)
         csrf.init_app(self.app)
+        login.init_app(self.app)
+        login.login_view = "main.signin"
         self.app.register_blueprint(main_bp)
+
+        @self.app.context_processor
+        def inject_logout_form():
+            return {"logout_form": LogoutForm()}
 
         with self.app.app_context():
             db.create_all()
@@ -131,14 +142,35 @@ class SubmitSystemTests(unittest.TestCase):
     def fill_minimum_valid_submit_form(self):
         self.driver.find_element(By.ID, "trip-title").send_keys("Perth Weekend")
         self.select_country("Australia")
+        self.driver.find_element(By.ID, "cover-photo").send_keys(self.cover_photo_path)
+        self.driver.find_element(By.ID, "total-days").send_keys("1")
+        Select(self.driver.find_element(By.ID, "state-day1")).select_by_value(
+            "Western Australia"
+        )
         Select(self.driver.find_element(By.ID, "trip-type")).select_by_value("city")
         Select(self.driver.find_element(By.ID, "budget-level")).select_by_value("$$")
         self.driver.find_element(By.ID, "budget-range").send_keys("$500-$800")
         self.driver.find_element(By.ID, "city-day1").send_keys("Perth")
+        self.driver.execute_script(
+            """
+            const transport = document.getElementById('transport-flight-day1');
+            transport.checked = true;
+            transport.dispatchEvent(new Event('change', { bubbles: true }));
+            """
+        )
+        Select(self.driver.find_element(By.ID, "restaurant-dropdown-day1")).select_by_value(
+            "Cafe"
+        )
+        Select(self.driver.find_element(By.ID, "accommodation-dropdown-day1")).select_by_value(
+            "Hotel"
+        )
         self.driver.find_element(By.ID, "activity-title-day1-1").send_keys(
             "Kings Park Visit"
         )
         self.driver.find_element(By.ID, "activity-place-day1-1").send_keys("Kings Park")
+        self.driver.find_element(By.ID, "activity-photo-day1-1").send_keys(
+            self.activity_photo_path
+        )
         self.driver.find_element(By.ID, "time-day1-1").send_keys("09:00")
         self.driver.find_element(By.ID, "activity-day1-1").send_keys(
             "Walk around the park and city lookout."
@@ -148,6 +180,13 @@ class SubmitSystemTests(unittest.TestCase):
         self.driver.find_element(By.ID, "submit-itinerary-button").click()
         confirmation = self.wait.until(EC.alert_is_present())
         confirmation.accept()
+
+    def submit_form_without_client_validation(self):
+        self.driver.execute_script(
+            """
+            document.querySelector('form[action$="/submit"]').submit();
+            """
+        )
 
     def test_submit_page_requires_login(self):
         self.driver.get(f"{self.base_url}/submit")
@@ -183,7 +222,7 @@ class SubmitSystemTests(unittest.TestCase):
             """,
         )
 
-        self.submit_form_and_accept_confirmation()
+        self.submit_form_without_client_validation()
 
         error_box = self.wait.until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, ".bg-red-50"))

@@ -7,7 +7,8 @@ from pathlib import Path
 from flask import Flask
 from werkzeug.security import generate_password_hash
 
-from app.extensions import db
+from app.extensions import db, login
+from app.forms import LogoutForm
 from app.models import User
 from app.routes import main_bp
 
@@ -27,9 +28,16 @@ class AuthTests(unittest.TestCase):
         self.app.config["SECRET_KEY"] = "test-secret-key"
         self.app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{self.db_path}"
         self.app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+        self.app.config["WTF_CSRF_ENABLED"] = False
 
         db.init_app(self.app)
+        login.init_app(self.app)
+        login.login_view = "main.signin"
         self.app.register_blueprint(main_bp)
+
+        @self.app.context_processor
+        def inject_logout_form():
+            return {"logout_form": LogoutForm()}
 
         with self.app.app_context():
             db.create_all()

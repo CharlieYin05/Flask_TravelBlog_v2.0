@@ -8,7 +8,8 @@ from pathlib import Path
 from flask import Flask
 from werkzeug.security import generate_password_hash
 
-from app.extensions import csrf, db
+from app.extensions import csrf, db, login
+from app.forms import LogoutForm
 from app.models import User
 from app.routes import main_bp
 
@@ -32,7 +33,13 @@ class SubmitTests(unittest.TestCase):
 
         db.init_app(self.app)
         csrf.init_app(self.app)
+        login.init_app(self.app)
+        login.login_view = "main.signin"
         self.app.register_blueprint(main_bp)
+
+        @self.app.context_processor
+        def inject_logout_form():
+            return {"logout_form": LogoutForm()}
 
         with self.app.app_context():
             db.create_all()
@@ -62,8 +69,12 @@ class SubmitTests(unittest.TestCase):
 
     # Put the test user into session so the submit route treats us as logged in.
     def login_user(self):
+        with self.app.app_context():
+            user = User.query.filter_by(username="testuser").first()
+
         with self.client.session_transaction() as session:
-            session["user"] = "testuser"
+            session["_user_id"] = str(user.id)
+            session["_fresh"] = True
 
     # Build a small in-memory image upload for form submission tests.
     def image_upload(self, filename="test.png"):
