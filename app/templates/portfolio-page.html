@@ -92,7 +92,7 @@
         banner_url: "{{ url_for('static', filename=user.banner_url) if user and user.banner_url else '' }}",
         countries: {
             {% for it in itineraries %}
-                "{{ it.country }}": { flag: "{{ it.country | flag }}"}{% if not loop.last %}, {% endif %}
+                "{{ it.country }}": { flag: ""}{% if not loop.last %}, {% endif %}
             {% endfor %}
         },
          itineraries: [
