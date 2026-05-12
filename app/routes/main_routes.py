@@ -1,4 +1,5 @@
 import re
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from uuid import uuid4
 
@@ -59,6 +60,9 @@ ALLOWED_TRIP_TYPES = {
     "cultural",
 }
 ALLOWED_BUDGET_LEVELS = {"$", "$$", "$$$"}
+BUDGET_RANGE_PATTERN = re.compile(
+    r"^[\$\u20ac\u00a3\u00a5]\s*((?:0|[1-9]\d*)(?:\.\d{1,2})?)$"
+)
 
 
 
@@ -151,6 +155,27 @@ def validate_itinerary_submission(itinerary_data):
 
     if not itinerary_data["budget_range"]:
         return "Estimated cost range is required."
+
+    budget_range_match = BUDGET_RANGE_PATTERN.fullmatch(itinerary_data["budget_range"])
+    if not budget_range_match:
+        return (
+            "Estimated cost range must start with a currency symbol followed by "
+            "a number greater than or equal to 0."
+        )
+
+    try:
+        budget_range_amount = Decimal(budget_range_match.group(1))
+    except (InvalidOperation, ValueError):
+        return (
+            "Estimated cost range must start with a currency symbol followed by "
+            "a number greater than or equal to 0."
+        )
+
+    if budget_range_amount < 0:
+        return (
+            "Estimated cost range must start with a currency symbol followed by "
+            "a number greater than or equal to 0."
+        )
 
     # Re-check required upload and day/activity fields on the server side
     # so empty submissions cannot bypass the frontend validation rules.

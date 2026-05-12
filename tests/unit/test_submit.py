@@ -89,7 +89,7 @@ class SubmitTests(unittest.TestCase):
             "trip_type": "city",
             "cover_photo": self.image_upload("cover.png"),
             "budget_level": "$$",
-            "budget_range": "$500-$800",
+            "budget_range": "$500",
             "state_day1": "WA",
             "city_day1": "Perth",
             "transport_day1[]": "flight",
@@ -130,6 +130,21 @@ class SubmitTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"City is required for Day 1.", response.data)
+
+    # Estimated cost must start with a currency symbol and use a non-negative number.
+    def test_submit_invalid_budget_range(self):
+        self.login_user()
+        data = self.valid_submit_data()
+        data["budget_range"] = "$-1"
+
+        response = self.client.post("/submit", data=data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Estimated cost range must start with a currency symbol followed by "
+            b"a number greater than or equal to 0.",
+            response.data,
+        )
 
     # Activities exist, but an empty title should still fail validation.
     def test_submit_missing_activity_title(self):

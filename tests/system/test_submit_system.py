@@ -149,7 +149,7 @@ class SubmitSystemTests(unittest.TestCase):
         )
         Select(self.driver.find_element(By.ID, "trip-type")).select_by_value("city")
         Select(self.driver.find_element(By.ID, "budget-level")).select_by_value("$$")
-        self.driver.find_element(By.ID, "budget-range").send_keys("$500-$800")
+        self.driver.find_element(By.ID, "budget-range").send_keys("$500")
         self.driver.find_element(By.ID, "city-day1").send_keys("Perth")
         self.driver.execute_script(
             """
