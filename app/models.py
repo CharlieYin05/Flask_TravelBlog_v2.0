@@ -4,10 +4,13 @@ from flask_login import UserMixin
 from app.extensions import db, login
 from werkzeug.security import check_password_hash, generate_password_hash
 
-"uses the user ID stored in the session to load the currently logged-in user from the database."
+# Uses the user ID stored in the session to load the logged-in user.
 @login.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))
+    try:
+        return db.session.get(User, int(user_id))
+    except (TypeError, ValueError):
+        return None
 
 
 class User(UserMixin, db.Model):
