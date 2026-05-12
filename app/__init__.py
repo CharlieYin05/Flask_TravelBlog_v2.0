@@ -1,7 +1,7 @@
 from flask import Flask, session
 
 from app.config import Config
-from app.extensions import db, migrate, csrf
+from app.extensions import db, migrate, csrf, login
 from app.routes import main_bp
 
 
@@ -12,6 +12,8 @@ def create_app() -> Flask:
     db.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
+    login.init_app(app)
+    login.login_view = "main.signin"
 
     from app import models
 
