@@ -35,6 +35,30 @@ from app.models import (
 
 main_bp = Blueprint("main", __name__)
 
+#country flags
+def country_to_flag(country_name: str) -> str:
+    FLAGS = {
+        "australia": "🇦🇺",
+        "canada": "🇨🇦",
+        "china": "🇨🇳",
+        "france": "🇫🇷",
+        "germany": "🇩🇪",
+        "indonesia": "🇮🇩",
+        "italy": "🇮🇹",
+        "japan": "🇯🇵",
+        "malaysia": "🇲🇾",
+        "new zealand": "🇳🇿",
+        "singapore": "🇸🇬",
+        "south korea": "🇰🇷",
+        "spain": "🇪🇸",
+        "switzerland": "🇨🇭",
+        "thailand": "🇹🇭",
+        "united kingdom": "🇬🇧",
+        "united states": "🇺🇸",
+        "vietnam": "🇻🇳",
+    }
+    return FLAGS.get(country_name.lower().strip(), "🌍")
+
 # Static upload folders
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 COVER_UPLOAD_DIR = STATIC_DIR / "uploads" / "cover_photos"

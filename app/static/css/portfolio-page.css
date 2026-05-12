@@ -21,21 +21,23 @@
     font-weight: 600;
     color: #1F3A5F;
     transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                background 0.15s,
-                border-color 0.15s,
-                box-shadow 0.15s;
+                background 0.2s,
+                border-color 0.2s,
+                box-shadow 0.2s,
+                transform 0.15s;
 }
+
 
 .country-tag:hover,
 .country-tag.active {
     width: var(--expanded-width, 160px);
-    background: #d0e8fb;
+    background: #b3d7f4;
     box-shadow: 0 2px 8px rgba(30, 115, 216, 0.18);
 }
 
 .country-tag.active {
-    background: #1E73D8;
-    border-color: #1E73D8;
+    background: #184377;
+    border-color: #184377;
     color: #ffffff;
 }
 
@@ -60,10 +62,12 @@
     pointer-events: none;
 }
 
+
 .country-tag:hover .country-name,
 .country-tag.active .country-name {
     opacity: 1;
 }
+
 
 /* Avatar wrapper needs relative positioning for the overlay */
 .avatar-wrapper {
