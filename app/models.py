@@ -1,15 +1,16 @@
 from datetime import datetime
 
+from flask_login import UserMixin
 from app.extensions import db, login
 from werkzeug.security import check_password_hash, generate_password_hash
 
-
+"uses the user ID stored in the session to load the currently logged-in user from the database."
 @login.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
