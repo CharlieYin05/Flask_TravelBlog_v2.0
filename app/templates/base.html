@@ -32,7 +32,7 @@
 
         <!-- Nav Links -->
         <div class="hidden md:flex items-center space-x-8">
-          {% if session.get('user') %}
+          {% if current_user.is_authenticated %}
             <a href="{{ url_for('main.submit_itinerary') }}" class="hover:text-indigo-600">Post</a>
           {% else %}
             <a href="{{ url_for('main.signin') }}" class="hover:text-indigo-600">Post</a>
@@ -45,12 +45,12 @@
         <!-- Auth / Profile -->
         <div class="flex items-center space-x-4">
 
-          {% if session.get('user') %}
+          {% if current_user.is_authenticated %}
             <div class="flex items-center space-x-4">
 
               <!-- Profile Icon -->
               <a href="{{ url_for('main.portfolio') }}">
-                {% if current_user and current_user.avatar_url %}
+                {% if current_user.avatar_url %}
                   <img
                     id="nav-avatar-display"
                     src="/static/{{ current_user.avatar_url }}"
@@ -58,7 +58,7 @@
                   />
                 {% else %}
                   <div id="nav-avatar-display" class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-900 flex items-center justify-center text-sm font-bold text-white border border-gray-300 hover:ring-2 hover:ring-indigo-500 transition">
-                    {{ current_user.username[0].upper() if current_user else '?' }}
+                    {{ current_user.username[0].upper() }}
                   </div>
                 {% endif %}
               </a>

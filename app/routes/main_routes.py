@@ -2,6 +2,12 @@ import re
 from pathlib import Path
 from uuid import uuid4
 
+from flask_login import (
+    current_user as flask_current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
 from flask import (
     Blueprint,
     app,
@@ -9,7 +15,6 @@ from flask import (
     render_template,
     request,
     redirect,
-    session,
     url_for,
 )
 from werkzeug.utils import secure_filename
@@ -253,10 +258,9 @@ def save_uploaded_file(file_storage, upload_dir: Path):
 
 
 def get_current_user():
-    username = session.get("user")
-    if not username:
+    if not flask_current_user.is_authenticated:
         return None
-    return User.query.filter_by(username=username).first()
+    return flask_current_user
 
 
 def require_login_json():
@@ -272,14 +276,12 @@ def require_login_json():
 
 @main_bp.route("/")
 def index():
-    user = User.query.get(session.get("user_id"))
-    return render_template("home-page.html", user=user)
+    return render_template("home-page.html", user=get_current_user())
 
 
 @main_bp.route("/search", methods=["GET"])
 def search():
-    user = User.query.get(session.get("user_id"))
-    return render_template("search.html", user=user)
+    return render_template("search.html", user=get_current_user())
 
 
 @main_bp.route("/api/search", methods=["GET"])
@@ -337,8 +339,8 @@ def signin():
                 return jsonify({"success": False, "error": error_message}), 401
             return render_template("sign-in.html", error=error_message)
 
-        # Store the signed-in username in the session.
-        session["user"] = user.username
+        # Let Flask-Login remember the authenticated user in the session.
+        login_user(user)
         redirect_url = url_for("main.index")
 
         # Return JSON for AJAX login requests.
@@ -435,21 +437,18 @@ def signup():
 # Clear the current session and log the user out.
 @main_bp.route("/logout", methods=["POST"])
 def logout():
-    # Remove the logged-in user from the current session.
-    session.pop("user", None)
+    # Reset current_user back to Flask-Login's anonymous user.
+    logout_user()
     return redirect(url_for("main.index"))
 
 
 # Show the itinerary submission form and process submitted itinerary data.
 @main_bp.route("/submit", methods=["GET", "POST"])
+@login_required
 def submit_itinerary():
-    # Block access to the submit page unless the user is signed in.
-    if not session.get("user"):
-        return redirect(url_for("main.signin"))
-
     if request.method == "POST":
-        # Load the current signed-in user from the database.
-        current_user = User.query.filter_by(username=session.get("user")).first()
+        # Load the current signed-in user from Flask-Login.
+        current_user = get_current_user()
 
         # Redirect back to sign-in if the stored session user no longer exists.
         if current_user is None:
@@ -487,7 +486,7 @@ def submit_itinerary():
 
         # Build one dictionary that collects all submitted itinerary data.
         itinerary_data = {
-            "user": session.get("user"),
+            "user": current_user.username,
             "trip_title": trip_title,
             "trip_country": trip_country,
             "total_days": total_days,
@@ -883,39 +882,33 @@ def view_itinerary(id):
 
 # Portfolio page
 @main_bp.route("/api/upload-avatar", methods=["POST"])
+@login_required
 def upload_avatar():
-    if not session.get("user"):
-        return jsonify({"success": False, "error": "Not logged in"}), 401
     file = request.files.get("avatar")
     path = save_uploaded_file(file, AVATAR_UPLOAD_DIR)
     if not path:
         return jsonify({"success": False, "error": "Invalid file"}), 400
-    user = User.query.filter_by(username=session.get("user")).first()
+    user = get_current_user()
     user.avatar_url = path
     db.session.commit()
     return jsonify({"success": True, "url": "/static/" + path.replace("\\", "/")})
 
 @main_bp.route("/api/upload-banner", methods=["POST"])
+@login_required
 def upload_banner():
-    if not session.get("user"):
-        return jsonify({"success": False, "error": "Not logged in"}), 401
     file = request.files.get("banner")
     path = save_uploaded_file(file, BANNER_UPLOAD_DIR)
     if not path:
         return jsonify({"success": False, "error": "Invalid file"}), 400
-    user = User.query.filter_by(username=session.get("user")).first()
+    user = get_current_user()
     user.banner_url = path
     db.session.commit()
     return jsonify({"success": True, "url": "/static/" + path.replace("\\", "/")})
 
 @main_bp.route("/portfolio")
+@login_required
 def portfolio():
-    if not session.get("user"):
-        return redirect(url_for("main.signin"))
-    
-    current_user = User.query.filter_by(
-        username=session.get("user")
-    ).first()
+    current_user = get_current_user()
     
     itineraries = Itinerary.query.filter_by(
         user_id=current_user.id
