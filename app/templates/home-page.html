@@ -67,7 +67,7 @@
 
 <script>
   const USER_DATA = {
-    avatar_url: "{{ url_for('static', filename=current_user.avatar_url) if current_user and current_user.avatar_url else '' }}"
+    avatar_url: "{{ url_for('static', filename=current_user.avatar_url) if current_user.is_authenticated and current_user.avatar_url else '' }}"
   };
 </script>
 

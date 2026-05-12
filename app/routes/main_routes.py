@@ -436,6 +436,7 @@ def signup():
 
 # Clear the current session and log the user out.
 @main_bp.route("/logout", methods=["POST"])
+@login_required
 def logout():
     # Reset current_user back to Flask-Login's anonymous user.
     logout_user()
