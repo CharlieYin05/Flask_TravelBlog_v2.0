@@ -4,7 +4,7 @@ from flask_login import UserMixin
 from app.extensions import db, login
 from werkzeug.security import check_password_hash, generate_password_hash
 
-# Uses the user ID stored in the session to load the logged-in user.
+# Flask-Login uses the stored user id to rebuild current_user on each request.
 @login.user_loader
 def load_user(user_id):
     try:
@@ -26,9 +26,11 @@ class User(UserMixin, db.Model):
     comments = db.relationship("ItineraryComment", back_populates="user", cascade="all, delete-orphan")
 
     def set_password(self, password):
+        # Store only a hash, never the raw password.
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
+        # Compare a submitted password against the stored hash.
         return check_password_hash(self.password_hash, password)
 
 class Itinerary(db.Model):

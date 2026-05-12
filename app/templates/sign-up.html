@@ -14,13 +14,13 @@
         <section class="signup-card">
             <h2>Sign Up</h2>
             <form method="POST" action="{{ url_for('main.signup') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input id="username" type="text" placeholder="Choose a username" name="username" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+"
+                {{ form.hidden_tag() }}
+                <input id="username" type="text" placeholder="Choose a username" name="username" value="{{ form.username.data or '' }}" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+"
                     title="Username must be 3-20 characters and use only letters, numbers, or underscores.">
-                <input id="email" type="email" placeholder="Enter your email" name="email" required>
+                <input id="email" type="email" placeholder="Enter your email" name="email" value="{{ form.email.data or '' }}" required>
                 <input type="password" id="password" placeholder="Create a password" name="password" required minlength="8"
                     title="Password must be at least 8 characters long.">
-                <input type="password" id="confirm-password" placeholder="Confirm your password" name="confirm-password"
+                <input type="password" id="confirm-password" placeholder="Confirm your password" name="confirm_password"
                     required>
                 <p class="form-error{% if not error %} is-hidden{% endif %}" id="signup-error">{{ error or "" }}</p>
                 <button id="signup-button" type="submit" class="submit">SIGN UP</button>

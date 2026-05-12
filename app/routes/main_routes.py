@@ -20,6 +20,7 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
+from app.forms import SignInForm, SignUpForm
 from app.models import (
     Itinerary,
     User,
@@ -68,10 +69,10 @@ def allowed_image_file(filename: str) -> bool:
     )
 
 
-def signup_error_response(message: str, is_ajax_request: bool):
+def signup_error_response(message: str, is_ajax_request: bool, form=None):
     if is_ajax_request:
         return jsonify({"success": False, "error": message}), 400
-    return render_template("sign-up.html", error=message)
+    return render_template("sign-up.html", form=form, error=message)
 
 
 def submit_error_response(message: str):
@@ -317,10 +318,21 @@ def browse():
 # Handle sign-in page rendering and login form submission.
 @main_bp.route("/signin", methods=["GET", "POST"])
 def signin():
-    if request.method == "POST":
+    form = SignInForm()
+
+    # validate_on_submit() checks both request method and CSRF token validity.
+    if request.method == "POST" and not form.validate_on_submit():
+        error_message = next(
+            iter(form.csrf_token.errors or ["Please check the submitted form and try again."])
+        )
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"success": False, "error": error_message}), 400
+        return render_template("sign-in.html", form=form, error=error_message)
+
+    if form.validate_on_submit():
         # Read the submitted login credentials from the form.
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
+        username = form.username.data.strip()
+        password = form.password.data
         error_message = "Incorrect username or password."
         is_ajax_request = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
@@ -331,13 +343,13 @@ def signin():
         if user is None:
             if is_ajax_request:
                 return jsonify({"success": False, "error": error_message}), 401
-            return render_template("sign-in.html", error=error_message)
+            return render_template("sign-in.html", form=form, error=error_message)
 
         # Compare the submitted password with the stored password hash.
         if not user.check_password(password):
             if is_ajax_request:
                 return jsonify({"success": False, "error": error_message}), 401
-            return render_template("sign-in.html", error=error_message)
+            return render_template("sign-in.html", form=form, error=error_message)
 
         # Let Flask-Login remember the authenticated user in the session.
         login_user(user)
@@ -350,59 +362,73 @@ def signin():
         # Redirect normal form submissions to the home page after login.
         return redirect(redirect_url)
 
-    return render_template("sign-in.html")
+    return render_template("sign-in.html", form=form)
 
 # Handle sign-up page rendering, form validation, and new user creation.
 @main_bp.route("/signup", methods=["GET", "POST"])
 def signup():
-    if request.method == "POST":
+    form = SignUpForm()
+
+    # Reject invalid or forged form submissions before custom signup checks.
+    if request.method == "POST" and not form.validate_on_submit():
+        error_message = next(
+            iter(form.csrf_token.errors or [error for errors in form.errors.values() for error in errors] or ["Please check the submitted form and try again."])
+        )
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"success": False, "error": error_message}), 400
+        return render_template("sign-up.html", form=form, error=error_message)
+
+    if form.validate_on_submit():
         # Read and normalize the submitted registration fields.
-        username = request.form.get("username", "").strip()
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-        confirm_password = request.form.get("confirm-password", "")
+        username = form.username.data.strip()
+        email = form.email.data.strip().lower()
+        password = form.password.data
+        confirm_password = form.confirm_password.data
         is_ajax_request = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
         # Validate the submitted signup data before touching the database.
         if not username:
-            return signup_error_response("Username is required.", is_ajax_request)
+            return signup_error_response("Username is required.", is_ajax_request, form=form)
 
         if not (USERNAME_MIN_LENGTH <= len(username) <= USERNAME_MAX_LENGTH):
             return signup_error_response(
                 f"Username must be between {USERNAME_MIN_LENGTH} and {USERNAME_MAX_LENGTH} characters.",
                 is_ajax_request,
+                form=form,
             )
 
         if not USERNAME_PATTERN.fullmatch(username):
             return signup_error_response(
                 "Username can only contain letters, numbers, and underscores.",
                 is_ajax_request,
+                form=form,
             )
 
         if not email:
-            return signup_error_response("Email is required.", is_ajax_request)
+            return signup_error_response("Email is required.", is_ajax_request, form=form)
 
         if not EMAIL_PATTERN.fullmatch(email):
-            return signup_error_response("Please enter a valid email address.", is_ajax_request)
+            return signup_error_response("Please enter a valid email address.", is_ajax_request, form=form)
 
         if len(password) < PASSWORD_MIN_LENGTH:
             return signup_error_response(
                 f"Password must be at least {PASSWORD_MIN_LENGTH} characters long.",
                 is_ajax_request,
+                form=form,
             )
 
         if password != confirm_password:
-            return signup_error_response("Passwords do not match.", is_ajax_request)
+            return signup_error_response("Passwords do not match.", is_ajax_request, form=form)
 
         # Reject duplicate usernames before creating the new account.
         existing_user = User.query.filter_by(username=username).first()
         if existing_user is not None:
-            return signup_error_response("This username is already taken.", is_ajax_request)
+            return signup_error_response("This username is already taken.", is_ajax_request, form=form)
 
         # Reject duplicate email addresses before creating the new account.
         existing_email = User.query.filter_by(email=email).first()
         if existing_email is not None:
-            return signup_error_response("This email is already registered.", is_ajax_request)
+            return signup_error_response("This email is already registered.", is_ajax_request, form=form)
 
         # Create the new user model with a hashed password.
         new_user = User(
@@ -432,7 +458,7 @@ def signup():
         # Redirect normal form submissions to the sign-in page after registration.
         return redirect(redirect_url)
 
-    return render_template("sign-up.html")
+    return render_template("sign-up.html", form=form)
 
 # Clear the current session and log the user out.
 @main_bp.route("/logout", methods=["POST"])
