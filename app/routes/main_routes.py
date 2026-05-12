@@ -20,7 +20,7 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
-from app.forms import LogoutForm, SignInForm, SignUpForm
+from app.forms import LogoutForm, SignInForm, SignUpForm, SubmitItineraryForm
 from app.models import (
     Itinerary,
     User,
@@ -75,8 +75,8 @@ def signup_error_response(message: str, is_ajax_request: bool, form=None):
     return render_template("sign-up.html", form=form, error=message)
 
 
-def submit_error_response(message: str):
-    return render_template("Submit-form-page.html", error=message)
+def submit_error_response(message: str, form=None):
+    return render_template("Submit-form-page.html", form=form, error=message)
 
 
 def get_uploaded_file_size(file_storage) -> int:
@@ -478,7 +478,15 @@ def logout():
 @main_bp.route("/submit", methods=["GET", "POST"])
 @login_required
 def submit_itinerary():
-    if request.method == "POST":
+    form = SubmitItineraryForm()
+
+    if request.method == "POST" and not form.validate_on_submit():
+        error_message = next(
+            iter(form.csrf_token.errors or ["Please check the submitted form and try again."])
+        )
+        return submit_error_response(error_message, form=form)
+
+    if form.validate_on_submit():
         # Load the current signed-in user from Flask-Login.
         current_user = get_current_user()
 
@@ -611,7 +619,7 @@ def submit_itinerary():
         # Run one server-side validation pass before creating database rows.
         validation_error = validate_itinerary_submission(itinerary_data)
         if validation_error:
-            return submit_error_response(validation_error)
+            return submit_error_response(validation_error, form=form)
 
         # Create the top-level itinerary database record after validation passes.
         itinerary = Itinerary(
@@ -667,7 +675,7 @@ def submit_itinerary():
 
         return redirect(url_for("main.browse"))
 
-    return render_template("Submit-form-page.html")
+    return render_template("Submit-form-page.html", form=form)
 
 #Browse itineraries page (can fetch data)
 @main_bp.route("/api/itineraries")

@@ -36,3 +36,8 @@ class SignUpForm(FlaskForm):
 class LogoutForm(FlaskForm):
     # A minimal protected form for logout requests.
     pass
+
+
+class SubmitItineraryForm(FlaskForm):
+    # A minimal protected form for itinerary submissions.
+    pass
