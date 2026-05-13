@@ -117,3 +117,86 @@ class HomeSearchSystemTests(unittest.TestCase):
             "Could not start Chrome, Edge, or Firefox "
             "for Selenium tests."
         ) from last_error
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+
+        self.browser_profile_dir = os.path.join(
+            self.temp_dir,
+            "browser-profile"
+        )
+
+        os.environ["SE_CACHE_PATH"] = os.path.join(
+            self.temp_dir,
+            "selenium-cache"
+        )
+
+        self.db_path = os.path.join(
+            self.temp_dir,
+            "test.db"
+        )
+
+        project_root = Path(__file__).resolve().parents[2]
+
+        self.app = Flask(
+            __name__,
+            template_folder=str(
+                project_root / "app" / "templates"
+            ),
+            static_folder=str(
+                project_root / "app" / "static"
+            ),
+        )
+
+        self.app.config["TESTING"] = True
+        self.app.config["SECRET_KEY"] = "test-secret-key"
+
+        self.app.config["SQLALCHEMY_DATABASE_URI"] = (
+            f"sqlite:///{self.db_path}"
+        )
+
+        self.app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+        db.init_app(self.app)
+        csrf.init_app(self.app)
+        login.init_app(self.app)
+
+        login.login_view = "main.signin"
+
+        self.app.register_blueprint(main_bp)
+
+        @self.app.context_processor
+        def inject_globals():
+            from flask import session
+            from app.models import User as UserModel
+
+            username = session.get("user")
+
+            user = (
+                UserModel.query
+                .filter_by(username=username)
+                .first()
+                if username else None
+            )
+
+            return {
+                "logout_form": LogoutForm(),
+                "current_user": user
+            }
+
+        with self.app.app_context():
+            db.create_all()
+
+        self.server = LiveServerThread(self.app)
+        self.server.start()
+
+        self.base_url = (
+            f"http://{self.server.host}:{self.server.port}"
+        )
+
+        self.driver = self.create_webdriver()
+
+        self.wait = WebDriverWait(
+            self.driver,
+            10
+        )
