@@ -205,11 +205,39 @@ function renderItineraries(itineraries) {
             <div class="px-3 pb-3 pt-2 border-t border-gray-200 flex items-center gap-2 text-xs text-gray-500">
                 <span>👍🏼 ${it.likes}</span>
                 <span>${it.favorited_by_me ? '⭐️' : '☆'} ${it.saves}</span>
+                <button class="delete-btn ml-auto text-xs text-red-400 hover:text-red-600 hover:bg-red-50 px-2 py-0.5 rounded transition-colors" data-id="${it.id}">🗑 Delete</button>
              </div>`;
         li.appendChild(link);
         grid.appendChild(li);
     });
 }
+
+function deleteItinerary(id) {
+    if (!confirm("Are you sure you want to delete this itinerary?")) return;
+
+    fetch(`/api/itinerary/${id}/delete`, {
+        method: "DELETE",
+        headers: { "X-CSRFToken": getCsrfToken() }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            PORTFOLIO_DATA.itineraries = PORTFOLIO_DATA.itineraries.filter(it => it.id !== id);
+            renderItineraries(PORTFOLIO_DATA.itineraries);
+            renderCountries(PORTFOLIO_DATA.countries);
+            document.getElementById("stat-posts").textContent = PORTFOLIO_DATA.itineraries.length;
+        } else {
+            alert(data.error);
+        }
+    });
+
+        li.querySelector(".delete-btn").addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+        deleteItinerary(it.id);
+    });
+}
+
 
 // Restore saved avatar and banner on page load
 if (PORTFOLIO_DATA.avatar_url) {
