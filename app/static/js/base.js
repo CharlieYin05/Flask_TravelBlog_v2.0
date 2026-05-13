@@ -9,13 +9,41 @@ function getCsrfToken() {
 }
 
 // ─────────────────────────────
-// NAVBAR AVATAR HANDLING
+// MOBILE MENU TOGGLE
 // ─────────────────────────────
 
-function updateNavbarAvatar(url) {
-  const avatar = document.getElementById("avatar-img");
-  if (avatar && url) avatar.src = url;
-}
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("mobile-menu-btn");
+  const menu = document.getElementById("mobile-menu");
+  const lines = btn ? btn.querySelectorAll(".hamburger-line") : [];
+
+  if (btn && menu) {
+    btn.addEventListener("click", () => {
+      const isOpen = !menu.classList.contains("hidden");
+
+      if (isOpen) {
+        menu.classList.add("hidden");
+        lines[0].style.transform = "";
+        lines[1].style.opacity = "";
+        lines[2].style.transform = "";
+      } else {
+        menu.classList.remove("hidden");
+        lines[0].style.transform = "translateY(8px) rotate(45deg)";
+        lines[1].style.opacity = "0";
+        lines[2].style.transform = "translateY(-8px) rotate(-45deg)";
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.add("hidden");
+        lines[0].style.transform = "";
+        lines[1].style.opacity = "";
+        lines[2].style.transform = "";
+      }
+    });
+  }
+});
 
 // Optional: fallback if image fails to load
 document.addEventListener("DOMContentLoaded", () => {
