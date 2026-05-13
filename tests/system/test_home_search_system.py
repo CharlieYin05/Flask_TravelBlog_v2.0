@@ -20,6 +20,10 @@ from app.routes import main_bp
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from datetime import datetime
+from werkzeug.security import generate_password_hash
+
+from app.models import Itinerary, ItineraryDay, User
 
 class LiveServerThread(threading.Thread):
     def __init__(self, app, host="127.0.0.1", port=0):
@@ -200,3 +204,69 @@ class HomeSearchSystemTests(unittest.TestCase):
             self.driver,
             10
         )
+    def tearDown(self):
+        self.driver.quit()
+
+        self.server.shutdown()
+
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+        shutil.rmtree(
+            self.temp_dir,
+            ignore_errors=True
+        )
+
+    def create_user(
+        self,
+        username="testuser",
+        email="test@example.com",
+        password="password123"
+    ):
+        with self.app.app_context():
+            user = User(
+                username=username,
+                email=email,
+                password_hash=generate_password_hash(password),
+            )
+
+            db.session.add(user)
+            db.session.commit()
+
+            return user.id
+
+    def create_itinerary(
+        self,
+        title="Tokyo Adventure",
+        country="Japan"
+    ):
+        with self.app.app_context():
+            user = User.query.first()
+
+            itinerary = Itinerary(
+                title=title,
+                country=country,
+                trip_types=["adventure"],
+                user_id=user.id,
+                cover_image_url="uploads/cover_photos/test.png",
+                total_days=3,
+                budget_level="$$",
+                budget_range="$1000-$1500",
+                created_at=datetime.utcnow(),
+            )
+
+            day = ItineraryDay(
+                day_number=1,
+                state="Tokyo",
+                city="Shinjuku",
+                transport=["train"],
+                restaurants=["Ramen Bar"],
+                accommodations=["Hostel"],
+            )
+
+            itinerary.days.append(day)
+
+            db.session.add(itinerary)
+            db.session.commit()
