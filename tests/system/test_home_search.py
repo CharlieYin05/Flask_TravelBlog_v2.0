@@ -22,3 +22,44 @@ class HomeSearchTests(unittest.TestCase):
             template_folder=str(project_root / "app" / "templates"),
             static_folder=str(project_root / "app" / "static"),
         )
+        self.app.config["TESTING"] = True
+        self.app.config["SECRET_KEY"] = "test-secret-key"
+        self.app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{self.db_path}"
+        self.app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+        self.app.config["WTF_CSRF_ENABLED"] = False
+
+        db.init_app(self.app)
+        csrf.init_app(self.app)
+        login.init_app(self.app)
+        login.login_view = "main.signin"
+
+        self.app.register_blueprint(main_bp)
+
+        @self.app.context_processor
+        def inject_globals():
+            from flask import session
+            from app.models import User as UserModel
+
+            username = session.get("user")
+            user = (
+                UserModel.query.filter_by(username=username).first()
+                if username else None
+            )
+
+            return {
+                "logout_form": LogoutForm(),
+                "current_user": user
+            }
+
+        with self.app.app_context():
+            db.create_all()
+
+        self.client = self.app.test_client()
+
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
