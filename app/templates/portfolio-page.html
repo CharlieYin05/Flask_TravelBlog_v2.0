@@ -90,19 +90,19 @@
                 "{{ it.country }}": { flag: ""}{% if not loop.last %}, {% endif %}
             {% endfor %}
         },
-         itineraries: [
-            {% for it in itineraries %}
-            {
-                id: {{ it.id }},
-                title: {{ it.title | tojson }},
-                location: {{ it.country | tojson }},
-                cover_image_url: {{ (('/static/' + it.cover_image_url) if it.cover_image_url else '') | tojson }},
-                total_days: {{ it.total_days }},
-                trip_types: {{ it.trip_types | tojson }},
-                likes: 0,
-                saves: 0,
-                ratings: {}
-            }{% if not loop.last %},{% endif %}
+        itineraries: [
+             {% for it in itineraries %}
+                {
+                    id: {{ it.id }},
+                    title: {{ it.title | tojson }},
+                    location: {{ it.country | tojson }},
+                    cover_image_url: {{ (('/static/' + it.cover_image_url) if it.cover_image_url else '') | tojson }},
+                    total_days: {{ it.total_days }},
+                    trip_types: {{ it.trip_types | tojson }},
+                    likes: {{ it.likes | length }},
+                    saves: {{ it.favorites | length }},
+                    favorited_by_me: {{ (current_user in it.favorites | map(attribute='user')) | tojson }}
+                }{% if not loop.last %},{% endif %}
             {% endfor %}
         ]
     };

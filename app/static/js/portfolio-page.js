@@ -203,9 +203,9 @@ function renderItineraries(itineraries) {
                 <div class="text-xs text-gray-500">📍 ${it.location}</div>
             </div>
             <div class="px-3 pb-3 pt-2 border-t border-gray-200 flex items-center gap-2 text-xs text-gray-500">
-                <span>❤️ ${it.likes}</span>
-                <span>🔖 ${it.saves}</span>
-            </div>`;
+                <span>👍🏼 ${it.likes}</span>
+                <span>${it.favorited_by_me ? '⭐️' : '☆'} ${it.saves}</span>
+             </div>`;
         li.appendChild(link);
         grid.appendChild(li);
     });
