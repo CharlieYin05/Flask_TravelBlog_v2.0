@@ -19,11 +19,6 @@ const COUNTRY_CODES = {
 };
 
 function getInitials(n) { if (!n) return "?"; return n.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2); }
-function calcAvg(r) { let t = 0, c = 0; for (let s = 1; s <= 5; s++) { t += s * (r[s] || 0); c += (r[s] || 0); } return c ? t / c : 0; }
-function starsHTML(avg, large = false) {
-    const cls = large ? "text-xl text-yellow-400" : "text-xs text-gray-300";
-    return [1, 2, 3, 4, 5].map(i => `<span class="${cls} ${i <= Math.round(avg) ? "!text-yellow-400" : ""}">★</span>`).join("");
-}
 
 // ── UPLOAD VALIDATION ──
 const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
@@ -148,41 +143,6 @@ function clearFilter() {
     document.querySelectorAll("#itineraries-grid li").forEach(li => li.style.display = "");
 }
 
-// ── RATING POPUP ──
-const overlay = document.getElementById("rating-overlay");
-const popup = document.getElementById("rating-popup");
-function closePopup() {
-    overlay.classList.remove("opacity-100", "pointer-events-auto");
-    overlay.classList.add("opacity-0", "pointer-events-none");
-    popup.classList.add("translate-y-3");
-}
-const popupClose = document.getElementById("popup-close");
-if (popupClose) popupClose.addEventListener("click", closePopup);
-if (overlay) overlay.addEventListener("click", e => { if (e.target === overlay) closePopup(); });
-
-function openRatingPopup(it) {
-    const avg = calcAvg(it.ratings || {}), total = Object.values(it.ratings || {}).reduce((s, n) => s + n, 0);
-    document.getElementById("popup-trip-title").textContent = it.title;
-    document.getElementById("popup-avg-score").textContent = avg.toFixed(1);
-    document.getElementById("popup-total-ratings").textContent = total + " ratings";
-    document.getElementById("popup-stars-large").innerHTML = starsHTML(avg, true);
-    const bars = document.getElementById("rating-bars");
-    bars.innerHTML = "";
-    for (let s = 5; s >= 1; s--) {
-        const n = it.ratings?.[s] || 0, pct = total ? Math.round(n / total * 100) : 0;
-        bars.innerHTML += `
-            <div class="flex items-center gap-2 text-xs">
-                <span class="w-5 text-right text-gray-500 font-semibold">${s}★</span>
-                <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-yellow-400 rounded-full" style="width:${pct}%"></div>
-                </div>
-                <span class="w-5 text-gray-500">${n}</span>
-            </div>`;
-    }
-    overlay.classList.remove("opacity-0", "pointer-events-none");
-    overlay.classList.add("opacity-100", "pointer-events-auto");
-    popup.classList.remove("translate-y-3");
-}
 
 // ── RENDER ──
 function renderProfile(user) {
@@ -198,17 +158,6 @@ function renderProfile(user) {
     document.getElementById("stat-countries").textContent = Object.keys(user.countries).length;
     document.getElementById("stat-posts").textContent = user.itineraries.length;
 
-    // Overall average rating across all itineraries
-    const allRatings = user.itineraries.flatMap(it => {
-        const r = it.ratings || {};
-        return Object.entries(r).flatMap(([stars, count]) => Array(count).fill(Number(stars)));
-    });
-    const avgRating = allRatings.length ? allRatings.reduce((a, b) => a + b, 0) / allRatings.length : 0;
-    document.getElementById("stat-rating").textContent = allRatings.length ? avgRating.toFixed(1) : "—";
-    document.getElementById("stat-rating-stars").innerHTML = allRatings.length ? starsHTML(avgRating) : "";
-
-    renderCountries(user.countries);
-    renderItineraries(user.itineraries);
 }
 
 function renderCountries(countries) {
@@ -238,7 +187,6 @@ function renderItineraries(itineraries) {
     }
     const colors = ["#DBEAFE", "#FEF3C7", "#D1FAE5", "#FCE7F3"];
     itineraries.forEach((it, i) => {
-        const avg = calcAvg(it.ratings || {});
         const li = document.createElement("li");
         const link = document.createElement("a");
         link.href = `/itinerary/${it.id}`;
@@ -257,13 +205,7 @@ function renderItineraries(itineraries) {
             <div class="px-3 pb-3 pt-2 border-t border-gray-200 flex items-center gap-2 text-xs text-gray-500">
                 <span>❤️ ${it.likes}</span>
                 <span>🔖 ${it.saves}</span>
-                <span class="ml-auto card-stars cursor-pointer px-1 py-0.5 rounded hover:bg-yellow-50 transition-colors" title="See ratings">
-                    ${starsHTML(avg)}<span class="text-yellow-500 font-bold ml-0.5">${avg.toFixed(1)}</span>
-                </span>
             </div>`;
-        link.querySelector(".card-stars").addEventListener("click", e => {
-            e.preventDefault(); e.stopPropagation(); openRatingPopup(it);
-        });
         li.appendChild(link);
         grid.appendChild(li);
     });
@@ -288,3 +230,5 @@ if (PORTFOLIO_DATA.banner_url) {
 }
 
 renderProfile(PORTFOLIO_DATA);
+renderCountries(PORTFOLIO_DATA.countries);
+renderItineraries(PORTFOLIO_DATA.itineraries);
