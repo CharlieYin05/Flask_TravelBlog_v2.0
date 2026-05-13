@@ -10,6 +10,10 @@ from app.extensions import csrf, db, login
 from app.forms import LogoutForm
 from app.models import User
 from app.routes import main_bp
+from datetime import datetime
+from werkzeug.security import generate_password_hash
+
+from app.models import Itinerary, ItineraryDay, User
 
 class HomeSearchTests(unittest.TestCase):
     def setUp(self):
@@ -63,3 +67,22 @@ class HomeSearchTests(unittest.TestCase):
             db.engine.dispose()
 
         shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def create_user(
+        self,
+        username="testuser",
+        email="test@example.com",
+        password="password123"
+    ):
+        with self.app.app_context():
+            user = User(
+                username=username,
+                email=email,
+                password_hash=generate_password_hash(password),
+            )
+
+            db.session.add(user)
+            db.session.commit()
+
+            return user.id
+
