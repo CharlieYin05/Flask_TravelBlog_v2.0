@@ -76,3 +76,72 @@
     left: 50%;
     transform: translateX(-50%);
 }
+
+/* Edit button + delete overlay on itinerary cards */
+.card-edit-wrapper {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+}
+
+.card-edit-btn {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+}
+
+.card-edit-btn.active {
+    background: #1e3a5f;
+    border-color: #1e3a5f;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(30, 58, 95, 0.4);
+}
+
+/* Delete overlay — sits over the cover image */
+.card-delete-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 96px;
+    background: rgba(0, 0, 0, 0.45);
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px 12px 0 0;
+    transition: background 0.2s;
+    z-index: 5;
+}
+
+.card-delete-overlay:hover {
+    background: rgba(0, 0, 0, 0.62);
+}
+
+.card-delete-overlay.active {
+    display: flex;
+}
+
+.card-delete-btn {
+    background: rgba(239, 68, 68, 0.9);
+    border: none;
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+}
+
+.card-delete-btn:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+}
