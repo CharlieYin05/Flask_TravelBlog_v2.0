@@ -242,9 +242,9 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        const activitySummary = e.target.closest(".activity-summary");
-        if (activitySummary) {
-            const activityItem = activitySummary.closest(".activity-item");
+        const activityHeader = e.target.closest(".activity-header");
+        if (activityHeader && !e.target.closest(".delete-activity-btn")) {
+            const activityItem = activityHeader.closest(".activity-item");
             if (activityItem) {
                 activityItem.classList.toggle("collapsed");
             }
