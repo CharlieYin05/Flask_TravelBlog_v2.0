@@ -85,4 +85,43 @@ class HomeSearchTests(unittest.TestCase):
             db.session.commit()
 
             return user.id
+            
+    def create_itinerary(
+        self,
+        title="Tokyo Adventure",
+        country="Japan",
+        user_id=None
+    ):
+        with self.app.app_context():
+            if user_id is None:
+                user = User.query.first()
+                user_id = user.id
+
+            itinerary = Itinerary(
+                title=title,
+                country=country,
+                trip_types=["adventure"],
+                user_id=user_id,
+                cover_image_url="uploads/cover_photos/test.png",
+                total_days=3,
+                budget_level="$$",
+                budget_range="$1000-$1500",
+                created_at=datetime.utcnow(),
+            )
+
+            day = ItineraryDay(
+                day_number=1,
+                state="Tokyo",
+                city="Shinjuku",
+                transport=["train"],
+                restaurants=["Ramen Bar"],
+                accommodations=["Hostel"],
+            )
+
+            itinerary.days.append(day)
+
+            db.session.add(itinerary)
+            db.session.commit()
+
+            return itinerary.id
 
