@@ -188,15 +188,20 @@ function renderItineraries(itineraries) {
     const colors = ["#DBEAFE", "#FEF3C7", "#D1FAE5", "#FCE7F3"];
     itineraries.forEach((it, i) => {
         const li = document.createElement("li");
+        li.style.position = "relative";
+
         const link = document.createElement("a");
         link.href = `/itinerary/${it.id}`;
         link.className = "itinerary-card block bg-white border border-gray-200 rounded-xl overflow-hidden no-underline text-inherit flex flex-col shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-200";
         link.dataset.country = it.location;
         link.innerHTML = `
-            <div class="h-24 overflow-hidden" style="background:${colors[i % colors.length]}">
-                ${it.cover_image_url 
-                    ? `<img src="${it.cover_image_url}" class="w-full h-full object-cover">` 
+            <div class="h-24 overflow-hidden relative" style="background:${colors[i % colors.length]}">
+                ${it.cover_image_url
+                    ? `<img src="${it.cover_image_url}" class="w-full h-full object-cover">`
                     : `<div class="w-full h-full flex items-center justify-center text-4xl">✈️</div>`}
+                <div class="card-delete-overlay">
+                    <button class="card-delete-btn">🗑 Delete</button>
+                </div>
             </div>
             <div class="p-3 flex-1">
                 <h3 class="text-xs font-bold text-blue-900 mb-1 leading-snug">${it.title}</h3>
@@ -205,38 +210,50 @@ function renderItineraries(itineraries) {
             <div class="px-3 pb-3 pt-2 border-t border-gray-200 flex items-center gap-2 text-xs text-gray-500">
                 <span>👍🏼 ${it.likes}</span>
                 <span>${it.favorited_by_me ? '⭐️' : '☆'} ${it.saves}</span>
-                <button class="delete-btn ml-auto text-xs text-red-400 hover:text-red-600 hover:bg-red-50 px-2 py-0.5 rounded transition-colors" data-id="${it.id}">🗑 Delete</button>
-             </div>`;
+            </div>`;
+
+        // Delete with confirmation
+        link.querySelector(".card-delete-btn").addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!confirm(`Are you sure you want to delete "${it.title}"? This cannot be undone.`)) return;
+
+            fetch(`/api/itinerary/${it.id}/delete`, {
+                method: "DELETE",
+                headers: { "X-CSRFToken": getCsrfToken() }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    li.remove();
+                    PORTFOLIO_DATA.itineraries = PORTFOLIO_DATA.itineraries.filter(x => x.id !== it.id);
+                    const remaining = PORTFOLIO_DATA.itineraries;
+                    const countries = {};
+                    remaining.forEach(x => { countries[x.location] = { flag: "🌍" }; });
+                    renderCountries(countries);
+                    document.getElementById("stat-posts").textContent = remaining.length;
+                    document.getElementById("stat-countries").textContent = Object.keys(countries).length;
+                } else {
+                    alert(data.error || "Failed to delete.");
+                }
+            })
+            .catch(() => alert("Something went wrong."));
+        });
+
         li.appendChild(link);
         grid.appendChild(li);
     });
 }
 
-function deleteItinerary(id) {
-    if (!confirm("Are you sure you want to delete this itinerary?")) return;
-
-    fetch(`/api/itinerary/${id}/delete`, {
-        method: "DELETE",
-        headers: { "X-CSRFToken": getCsrfToken() }
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            PORTFOLIO_DATA.itineraries = PORTFOLIO_DATA.itineraries.filter(it => it.id !== id);
-            renderItineraries(PORTFOLIO_DATA.itineraries);
-            renderCountries(PORTFOLIO_DATA.countries);
-            document.getElementById("stat-posts").textContent = PORTFOLIO_DATA.itineraries.length;
-        } else {
-            alert(data.error);
-        }
+// ── GLOBAL EDIT MODE ──
+document.getElementById("global-edit-btn").addEventListener("click", () => {
+    const editBtn = document.getElementById("global-edit-btn");
+    const isActive = editBtn.classList.toggle("active");
+    document.querySelectorAll(".card-delete-overlay").forEach(overlay => {
+        overlay.classList.toggle("active", isActive);
     });
+});
 
-        li.querySelector(".delete-btn").addEventListener("click", e => {
-        e.preventDefault();
-        e.stopPropagation();
-        deleteItinerary(it.id);
-    });
-}
 
 
 // Restore saved avatar and banner on page load
