@@ -33,13 +33,13 @@
         <!-- Nav Links (desktop) -->
         <div class="hidden md:flex items-center space-x-8">
           {% if current_user and current_user.is_authenticated %}
-            <a href="{{ url_for('main.submit_itinerary') }}" class="hover:text-indigo-600">Post</a>
+            <a href="{{ url_for('main.submit_itinerary') }}" class="font-bold hover:text-indigo-600">Post</a>
           {% else %}
-            <a href="{{ url_for('main.signin') }}" class="hover:text-indigo-600">Post</a>
+            <a href="{{ url_for('main.signin') }}" class="font-bold hover:text-indigo-600">Post</a>
           {% endif %}
 
-          <a href="{{ url_for('main.search') }}" class="hover:text-indigo-600">Search</a>
-          <a href="{{ url_for('main.browse') }}" class="hover:text-indigo-600">Browse</a>
+          <a href="{{ url_for('main.search') }}" class="font-bold hover:text-indigo-600">Search</a>
+          <a href="{{ url_for('main.browse') }}" class="font-bold hover:text-indigo-600">Browse</a>
         </div>
 
         <!-- Auth / Profile (desktop) -->
@@ -66,9 +66,21 @@
               <!-- Logout -->
               <form method="POST" action="{{ url_for('main.logout') }}">
                 {{ logout_form.hidden_tag() }}
-                <button type="submit"
-                        class="text-red-600 hover:text-red-700 text-sm bg-red-100 px-3 py-1 rounded-lg">
-                  Sign out
+                <button
+                  type="submit"
+                  aria-label="Logout"
+                  class="group relative flex h-9 w-9 cursor-pointer items-center justify-start overflow-hidden rounded-full bg-red-600 shadow-lg transition-all duration-200 hover:w-28 hover:rounded-lg active:translate-x-1 active:translate-y-1"
+                >
+                  <div class="flex w-full items-center justify-center transition-all duration-300 group-hover:justify-start group-hover:px-3">
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 512 512" fill="white" aria-hidden="true">
+                      <path
+                        d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"
+                      ></path>
+                    </svg>
+                  </div>
+                  <div class="absolute right-4 translate-x-full text-sm font-semibold text-white opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
+                    Logout
+                  </div>
                 </button>
               </form>
 
