@@ -5,6 +5,19 @@
     align-items: center;
 }
 
+.activity-header {
+    cursor: pointer;
+}
+
+.activity-summary {
+    color: #111827;
+    transition: color 0.2s ease;
+}
+
+.activity-header:hover .activity-summary {
+    color: #2563eb;
+}
+
 .activities-list {
     display: flex;
     flex-direction: column;
