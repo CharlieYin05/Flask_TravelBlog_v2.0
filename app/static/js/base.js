@@ -8,15 +8,6 @@ function getCsrfToken() {
     return meta ? meta.getAttribute("content") : "";
 }
 
-// ─────────────────────────────
-// NAVBAR AVATAR HANDLING
-// ─────────────────────────────
-
-function updateNavbarAvatar(url) {
-  const avatar = document.getElementById("avatar-img");
-  if (avatar && url) avatar.src = url;
-}
-
 // Optional: fallback if image fails to load
 document.addEventListener("DOMContentLoaded", () => {
     const avatar = document.getElementById("avatar-img");
