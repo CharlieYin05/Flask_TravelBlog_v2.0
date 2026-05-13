@@ -9,6 +9,17 @@ function getCsrfToken() {
     return csrfMeta ? csrfMeta.content : "";
 }
 
+// ── XSS PROTECTION ──
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 const COUNTRY_CODES = {
     "Australia": "au", "Canada": "ca", "China": "cn", "France": "fr",
     "Germany": "de", "Indonesia": "id", "Italy": "it", "Japan": "jp",
@@ -171,7 +182,7 @@ function renderCountries(countries) {
         btn.className = "country-tag";
         btn.style.setProperty("--expanded-width", (52 + 8 + (country.length * 8.5) + 14) + "px");
         const code = COUNTRY_CODES[country] || "un";
-        btn.innerHTML = `<span class="flag-circle"><img src="https://flagcdn.com/w40/${code}.png" alt="${country}" class="w-7 h-5 object-cover rounded-sm"></span><span class="country-name">${country}</span>`;
+        btn.innerHTML = `<span class="flag-circle"><img src="https://flagcdn.com/w40/${code}.png" alt="${escapeHtml(country)}" class="w-7 h-5 object-cover rounded-sm"></span><span class="country-name">${escapeHtml(country)}</span>`;
         btn.addEventListener("click", () => filterByCountry(country, btn));
         li.appendChild(btn);
         list.appendChild(li);
@@ -199,8 +210,8 @@ function renderItineraries(itineraries) {
                     : `<div class="w-full h-full flex items-center justify-center text-4xl">✈️</div>`}
             </div>
             <div class="p-3 flex-1">
-                <h3 class="text-xs font-bold text-blue-900 mb-1 leading-snug">${it.title}</h3>
-                <div class="text-xs text-gray-500">📍 ${it.location}</div>
+                <h3 class="text-xs font-bold text-blue-900 mb-1 leading-snug">${escapeHtml(it.title)}</h3>
+                <div class="text-xs text-gray-500">📍 ${escapeHtml(it.location)}</div>
             </div>
             <div class="px-3 pb-3 pt-2 border-t border-gray-200 flex items-center gap-2 text-xs text-gray-500">
                 <span>👍🏼 ${it.likes}</span>
