@@ -270,3 +270,104 @@ class HomeSearchSystemTests(unittest.TestCase):
 
             db.session.add(itinerary)
             db.session.commit()
+
+
+    # The homepage hero heading should be visible on load.
+    def test_homepage_hero_heading_visible(self):
+        self.driver.get(self.base_url)
+
+        heading = self.wait.until(
+            EC.visibility_of_element_located(
+                (By.TAG_NAME, "h1")
+            )
+        )
+
+        self.assertIn(
+            "Discover, Plan",
+            heading.text
+        )
+
+    # The three "How it works" cards should all be present.
+    def test_homepage_how_it_works_cards_visible(self):
+        self.driver.get(self.base_url)
+
+        self.wait.until(
+            EC.visibility_of_element_located(
+                (By.TAG_NAME, "h2")
+            )
+        )
+
+        page = self.driver.page_source
+
+        self.assertIn("Explore", page)
+        self.assertIn("Share", page)
+        self.assertIn("Plan", page)
+
+    # The search page should render the search input field.
+    def test_search_page_input_is_present(self):
+        self.driver.get(f"{self.base_url}/search")
+
+        search_input = self.wait.until(
+            EC.visibility_of_element_located(
+                (By.ID, "search-input")
+            )
+        )
+
+        self.assertTrue(
+            search_input.is_displayed()
+        )
+
+    # Clicking "By Country" should activate the button.
+    def test_search_country_toggle_becomes_active(self):
+        self.driver.get(f"{self.base_url}/search")
+
+        country_btn = self.wait.until(
+            EC.element_to_be_clickable(
+                (By.ID, "toggle-country")
+            )
+        )
+
+        country_btn.click()
+
+        classes = country_btn.get_attribute("class")
+
+        self.assertIn("bg-white", classes)
+        self.assertIn("text-indigo-600", classes)
+
+    # Typing a query should render matching result cards.
+    def test_search_returns_results_for_matching_query(self):
+        self.create_user()
+
+        self.create_itinerary(
+            title="Tokyo Adventure",
+            country="Japan"
+        )
+
+        self.driver.get(
+            f"{self.base_url}/search"
+        )
+
+        search_input = self.wait.until(
+            EC.element_to_be_clickable(
+                (By.ID, "search-input")
+            )
+        )
+
+        search_input.send_keys("Tokyo")
+
+        result = self.wait.until(
+            EC.visibility_of_element_located(
+                (By.CLASS_NAME, "result-box")
+            )
+        )
+
+        self.assertIn(
+            "Tokyo Adventure",
+            self.driver.find_element(
+                By.ID,
+                "search-results"
+            ).text
+        )
+
+if __name__ == "__main__":
+    unittest.main()
