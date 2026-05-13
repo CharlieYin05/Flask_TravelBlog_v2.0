@@ -355,7 +355,9 @@ def search_api():
         'title': r.title,
         'country': r.country,
         'cover_image_url': r.cover_image_url,
-        'total_days': r.total_days
+        'total_days': r.total_days,
+        'likes_count': len(r.likes),
+        'created_at': r.created_at.isoformat() if r.created_at else ''
     } for r in results])
 
 

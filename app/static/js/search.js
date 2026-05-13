@@ -20,8 +20,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("search-input");
   const resultsContainer = document.getElementById("search-results");
   const toggleButtons = document.querySelectorAll(".search-toggle");
+  const sortSelect = document.getElementById("sort-select");
   let searchTimeout;
   let activeSearchType = "title";
+  let activeSortOrder = "default";
+  let lastResults = [];
 
   // Toggle button behaviour
   toggleButtons.forEach(btn => {
@@ -70,12 +73,30 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error('Search failed');
       }
 
-      const results = await response.json();
-      renderResults(results, query);
+      lastResults = await response.json();
+      renderResults(sortResults(lastResults), query);
     } catch (error) {
       console.error('Search error:', error);
       resultsContainer.innerHTML = '<p class="error-message">Search failed. Please try again.</p>';
     }
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener("change", () => {
+      activeSortOrder = sortSelect.value;
+      const query = searchInput ? searchInput.value.trim() : "";
+      if (lastResults.length) renderResults(sortResults(lastResults), query);
+    });
+  }
+
+  function sortResults(results) {
+    const sorted = [...results];
+    if (activeSortOrder === "likes") {
+      sorted.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
+    } else if (activeSortOrder === "recent") {
+      sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+    return sorted;
   }
 
   /**
@@ -107,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="result-content">
           <h3 class="result-title">${escapeHtml(itinerary.title)}</h3>
           <p class="result-country">${escapeHtml(itinerary.country)}</p>
-          <p class="result-duration">${itinerary.total_days} days</p>
+          <p class="result-duration">${itinerary.total_days} days &nbsp;·&nbsp; ♥ ${itinerary.likes_count || 0}</p>
           <a href="/itinerary/${itinerary.id}" class="result-link">View Itinerary</a>
         </div>
       </div>
