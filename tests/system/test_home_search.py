@@ -164,7 +164,7 @@ class HomeSearchTests(unittest.TestCase):
 
         self.assertIn("likes_count", data[0])
         self.assertIn("created_at", data[0])
-        
+
     def test_search_api_by_country_returns_match(self):
         self.create_user()
 
@@ -187,3 +187,6 @@ class HomeSearchTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["country"], "Japan")
+
+if __name__ == "__main__":
+    unittest.main()
