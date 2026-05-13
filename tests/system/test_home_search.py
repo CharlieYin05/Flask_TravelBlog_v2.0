@@ -139,3 +139,8 @@ class HomeSearchTests(unittest.TestCase):
         self.assertIn(b"Sign in", response.data)
         self.assertIn(b"Sign up", response.data)
 
+    def test_search_page_loads_with_input(self):
+        response = self.client.get("/search")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"search-input", response.data)
