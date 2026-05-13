@@ -85,7 +85,7 @@ class HomeSearchTests(unittest.TestCase):
             db.session.commit()
 
             return user.id
-            
+
     def create_itinerary(
         self,
         title="Tokyo Adventure",
@@ -124,4 +124,18 @@ class HomeSearchTests(unittest.TestCase):
             db.session.commit()
 
             return itinerary.id
+
+    def test_homepage_loads_with_hero_text(self):
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Discover, Plan", response.data)
+
+    # Unauthenticated visitors should see Sign in and Sign up links.
+    def test_homepage_unauthenticated_shows_auth_links(self):
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Sign in", response.data)
+        self.assertIn(b"Sign up", response.data)
 
