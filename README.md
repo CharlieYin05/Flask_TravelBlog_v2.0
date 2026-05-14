@@ -187,7 +187,6 @@ Then commit and push the updated `requirements.txt`.
 ```bash
 pip install -r requirements.txt
 ```
-
 ---
 
 ## 🚀 Tech Stack
