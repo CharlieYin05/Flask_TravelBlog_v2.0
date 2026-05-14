@@ -71,10 +71,8 @@
 
 /* Avatar wrapper needs relative positioning for the overlay */
 .avatar-wrapper {
-    position: absolute;
-    top: -48px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
+    flex-shrink: 0;
 }
 
 /* Edit button + delete overlay on itinerary cards */
