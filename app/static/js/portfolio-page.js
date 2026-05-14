@@ -245,7 +245,7 @@ function renderItineraries(itineraries) {
         link.className = "itinerary-card block bg-white border border-gray-200 rounded-xl overflow-hidden no-underline text-inherit flex flex-col shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-200";
         link.dataset.country = it.location;
         link.innerHTML = `
-            <div class="overflow-hidden relative" style="background:${colors[i % colors.length]}; max-height:230px;">
+            <div class="overflow-hidden relative" style="background:${colors[i % colors.length]}; height:230px;">
                 ${it.cover_image_url
                     ? `<img src="${it.cover_image_url}" class="w-full h-full object-cover">`
                     : `<div class="w-full h-full flex items-center justify-center text-4xl">✈️</div>`}
