@@ -21,10 +21,10 @@
     font-weight: 600;
     color: #1F3A5F;
     transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                background 0.2s,
-                border-color 0.2s,
-                box-shadow 0.2s,
-                transform 0.15s;
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.15s;
 }
 
 
@@ -55,7 +55,7 @@
 
 .country-name {
     padding-right: 14px;
-    padding-left: 4px;
+    padding-left: 2px;
     font-size: 14px;
     opacity: 0;
     transition: opacity 0.2s 0.1s;
@@ -144,4 +144,22 @@
 .card-delete-btn:hover {
     background: #dc2626;
     transform: scale(1.05);
+}
+
+#favourites-filter-btn {
+    padding-left: 0px;
+}
+
+#favourites-filter-btn .flag-circle {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#favourites-filter-btn .country-name {
+    padding-left: 0;
+    padding-right: 10px;
 }
