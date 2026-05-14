@@ -73,8 +73,14 @@
 .avatar-wrapper {
     position: relative;
     flex-shrink: 0;
+    width: 90px;
+    height: 90px;
 }
 
+.avatar-wrapper .avatar {
+    width: 100% !important;
+    height: 100% !important;
+}
 /* Edit button + delete overlay on itinerary cards */
 .card-edit-wrapper {
     position: absolute;
