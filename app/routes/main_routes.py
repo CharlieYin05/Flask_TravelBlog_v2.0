@@ -1028,12 +1028,16 @@ def portfolio():
     itineraries = Itinerary.query.filter_by(
         user_id=current_user.id
     ).all()
+
+    favourited_ids = [f.itinerary_id for f in current_user.favorites]
     
     return render_template(
         "portfolio-page.html",
         user=current_user,
-        itineraries=itineraries
+        itineraries=itineraries,
+        favourited_ids=favourited_ids
     )
+
 
 @main_bp.route("/api/itinerary/<int:id>/delete", methods=["DELETE"])
 @login_required
