@@ -51,9 +51,14 @@
         </div>
 
         <!-- COUNTRIES -->
-         <div class ="bg-gray-100 border border-gray-200 rounded-lg p-5 mb-9">
-            <ul id="countries-list" class="flex flex-wrap gap-3 justify-center list-none"></ul>
-         </div>
+        <ul id="countries-list" class="flex flex-wrap gap-3 justify-center list-none mb-9">
+            <li>
+                <button class="country-tag" id="favourites-filter-btn" style="--expanded-width: 130px;">
+                    <span class="flag-circle"> 🌟 </span>
+                    <span class="country-name">Favourites</span>
+                </button>
+            </li>
+        </ul>
 
          <!-- MY ITINERARIES -->
           <div class="flex items-center gap-2 mb-5">
@@ -89,6 +94,7 @@
         username: "{{ user.username if user else '' }}",
         avatar_url: "{{ url_for('static', filename=user.avatar_url) if user and user.avatar_url else '' }}",
         banner_url: "{{ url_for('static', filename=user.banner_url) if user and user.banner_url else '' }}",
+        favourited_ids: {{ favourited_ids | tojson }},
         countries: {
             {% for it in itineraries %}
                 "{{ it.country }}": { flag: ""}{% if not loop.last %}, {% endif %}
