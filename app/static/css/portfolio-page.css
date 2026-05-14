@@ -93,13 +93,31 @@
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid #e5e7eb;
     border-radius: 999px;
-    padding: 3px 10px;
+    padding: 0px 10px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
     font-size: 11px;
     font-weight: 600;
     color: #374151;
     cursor: pointer;
     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.card-edit-btn .edit-label {
+    max-width: 0;
+    overflow: hidden;
+    display: inline-block;
+    opacity: 0;
+    transition: max-width 0.4s ease, opacity 0.4s ease;
+}
+
+.card-edit-btn:hover .edit-label {
+    max-width: 60px;
+    opacity: 1;
+    transition: max-width 0.5s ease-in-out, opacity 0.5s ease-in-out;
 }
 
 .card-edit-btn.active {
