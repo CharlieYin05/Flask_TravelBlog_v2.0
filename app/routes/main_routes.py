@@ -1004,7 +1004,6 @@ def upload_banner():
 
 # Portfolio page — delete own itinerary
 @main_bp.route("/api/itinerary/<int:id>/delete", methods=["DELETE"])
-@login_required
 def delete_itinerary(id):
     current_user, error_response = require_login_json()
     if error_response:
