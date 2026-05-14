@@ -103,6 +103,7 @@ Or run a specific unit test file:
 python -m unittest tests.unit.test_auth -v
 python -m unittest tests.unit.test_submit -v
 python -m unittest tests.unit.test_browse_view -v
+python -m unittest tests.unit.test_home_search -v
 ```
 
 ### Run Selenium system tests only
@@ -117,6 +118,7 @@ Or run a specific Selenium test file:
 python -m unittest tests.system.test_auth_system -v
 python -m unittest tests.system.test_submit_system -v
 python -m unittest tests.system.test_browse_view_system -v
+python -m unittest tests.system.test_home_search_system -v
 ```
 
 ### Selenium browser setup
