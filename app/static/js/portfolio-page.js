@@ -203,6 +203,15 @@ function renderItineraries(itineraries) {
 
         const link = document.createElement("a");
         link.href = `/itinerary/${it.id}`;
+        link.addEventListener("click", (e) => {
+            if (document.getElementById("global-edit-btn").classList.contains("active")) {
+                e.preventDefault();
+                const msg = document.getElementById("edit-mode-msg");
+                msg.classList.remove("hidden");
+                clearTimeout(msg._hideTimer);
+                msg._hideTimer = setTimeout(() => msg.classList.add("hidden"), 2500);
+            }
+        });
         link.className = "itinerary-card block bg-white border border-gray-200 rounded-xl overflow-hidden no-underline text-inherit flex flex-col shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-200";
         link.dataset.country = it.location;
         link.innerHTML = `
