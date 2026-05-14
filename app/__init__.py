@@ -29,7 +29,10 @@ def create_app() -> Flask:
     app.register_blueprint(main_bp)
 
     @app.context_processor
-    def inject_logout_form():
-        return {"logout_form": LogoutForm()}
-
+    def inject_template_vars():
+        return {
+            "logout_form": LogoutForm(),
+            "google_maps_api_key": app.config.get("GOOGLE_MAPS_API_KEY"),
+        }
+    
     return app
