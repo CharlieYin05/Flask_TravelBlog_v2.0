@@ -25,7 +25,7 @@
         <!-- PROFILE CARD-->
          <div class="relative -mt-28 mx-auto max-w-lg bg-white/25 backdrop-blur-md border border-white/50 rounded-xl px-7 py-6 text-center shadow-lg z-10">
             <div class="avatar-wrapper absolute -top-12 left-1/2 -translate-x-1/2">
-                <div class="avatar w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-900 flex items-center justify-center text-3xl font-bold text-white overflow-hidden border-3 border-white shadow-md" id="avatar-display">
+                <div class="avatar w-24 h-24 rounded-full bg-transparent flex items-center justify-center text-3xl font-bold text-white overflow-hidden border-3 border-white shadow-md" id="avatar-display">
                     <span id="avatar-initials">{{ user.username[0].upper() if user else '?' }}</span>
                 </div>
             <div class="avatar-overlay absolute inset-0 rounded-full bg-black/45 flex flex-col items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200 cursor-pointer text-white text-xs gap-1" id="avatar-overlay-btn">
