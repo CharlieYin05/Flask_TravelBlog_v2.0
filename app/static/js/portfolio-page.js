@@ -215,12 +215,12 @@ function renderItineraries(itineraries) {
         link.className = "itinerary-card block bg-white border border-gray-200 rounded-xl overflow-hidden no-underline text-inherit flex flex-col shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-200";
         link.dataset.country = it.location;
         link.innerHTML = `
-            <div class="h-24 overflow-hidden relative" style="background:${colors[i % colors.length]}">
+            <div class="overflow-hidden relative" style="background:${colors[i % colors.length]}; max-height:230px;">
                 ${it.cover_image_url
                     ? `<img src="${it.cover_image_url}" class="w-full h-full object-cover">`
                     : `<div class="w-full h-full flex items-center justify-center text-4xl">✈️</div>`}
                 <div class="card-delete-overlay">
-                    <button class="card-delete-btn">🗑 Delete</button>
+                    <button class="card-delete-btn"> X DELETE </button>
                 </div>
             </div>
             <div class="p-3 flex-1">
@@ -272,8 +272,19 @@ document.getElementById("global-edit-btn").addEventListener("click", () => {
     document.querySelectorAll(".card-delete-overlay").forEach(overlay => {
         overlay.classList.toggle("active", isActive);
     });
+    document.querySelectorAll(".itinerary-card").forEach(card => {
+        if (isActive) {
+            card.addEventListener("click", blockClick);
+        } else {
+            card.removeEventListener("click", blockClick);
+        }
+    });
 });
 
+function blockClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
 
 
 // Restore saved avatar and banner on page load
