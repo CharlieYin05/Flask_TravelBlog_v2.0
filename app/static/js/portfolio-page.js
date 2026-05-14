@@ -211,7 +211,7 @@ function renderItineraries(itineraries) {
                     ? `<img src="${it.cover_image_url}" class="w-full h-full object-cover">`
                     : `<div class="w-full h-full flex items-center justify-center text-4xl">✈️</div>`}
                 <div class="card-delete-overlay">
-                    <button class="card-delete-btn">🗑 Delete</button>
+                    <button class="card-delete-btn"> X DELETE </button>
                 </div>
             </div>
             <div class="p-3 flex-1">
