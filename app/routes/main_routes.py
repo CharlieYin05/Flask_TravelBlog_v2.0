@@ -1028,26 +1028,13 @@ def portfolio():
     itineraries = Itinerary.query.filter_by(
         user_id=current_user.id
     ).all()
+
+    favourited_ids = [f.itinerary_id for f in current_user.favorites]
     
     return render_template(
         "portfolio-page.html",
         user=current_user,
-        itineraries=itineraries
+        itineraries=itineraries,
+        favourited_ids=favourited_ids
     )
 
-@main_bp.route("/api/itinerary/<int:id>/delete", methods=["DELETE"])
-@login_required
-def delete_itinerary(id):
-    current_user, error_response = require_login_json()
-    if error_response:
-        return error_response
-
-    itinerary = Itinerary.query.get_or_404(id)
-
-    if itinerary.user_id != current_user.id:
-        return jsonify({"success": False, "error": "You can only delete your own itineraries."}), 403
-
-    db.session.delete(itinerary)
-    db.session.commit()
-
-    return jsonify({"success": True})
