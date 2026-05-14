@@ -127,6 +127,11 @@
     box-shadow: 0 2px 8px rgba(30, 58, 95, 0.4);
 }
 
+.card-edit-btn.active .edit-label {
+    max-width: 60px;
+    opacity: 1;
+}
+
 /* Delete overlay — sits over the cover image */
 .card-delete-overlay {
     display: none;
