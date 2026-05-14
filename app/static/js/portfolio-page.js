@@ -263,7 +263,19 @@ document.getElementById("global-edit-btn").addEventListener("click", () => {
     document.querySelectorAll(".card-delete-overlay").forEach(overlay => {
         overlay.classList.toggle("active", isActive);
     });
+    document.querySelectorAll(".itinerary-card").forEach(card => {
+        if (isActive) {
+            card.addEventListener("click", blockClick);
+        } else {
+            card.removeEventListener("click", blockClick);
+        }
+    });
 });
+
+function blockClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
 
 
 // Restore saved avatar and banner on page load
