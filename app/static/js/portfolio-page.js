@@ -148,11 +148,38 @@ function filterByCountry(country, tagEl) {
 
 function clearFilter() {
     activeCountries.clear();
-    document.querySelectorAll(".country-tag").forEach(t => t.classList.remove("active"));
+    favouritesActive = false;
+    document.querySelectorAll(".country-tag").forEach(t => {
+        if (t.id !== "favourites-filter-btn") t.classList.remove("active");
+    });
     document.getElementById("filter-notice").classList.add("hidden");
     document.getElementById("filter-notice").classList.remove("flex");
     document.querySelectorAll("#itineraries-grid li").forEach(li => li.style.display = "");
 }
+
+// -- FAVOURITES FILTER --
+let favouritesActive = false;
+document.getElementById("favourites-filter-btn").addEventListener("click", () => {
+    favouritesActive = !favouritesActive;
+    const btn = document.getElementById("favourites-filter-btn");
+
+    if (favouritesActive) {
+        // deactivate country filters
+        activeCountries.clear();
+        document.querySelectorAll(".country-tag").forEach(t => t.classList.remove("active"));
+        document.getElementById("filter-notice").classList.add("hidden");
+        document.getElementById("filter-notice").classList.remove("flex");
+        // activate favourites
+        btn.classList.add("active");
+        document.querySelectorAll("#itineraries-grid li").forEach(li => {
+            const id = parseInt(li.dataset.itineraryId);
+            li.style.display = PORTFOLIO_DATA.favourited_ids.includes(id) ? "" : "none";
+        });
+    } else {
+        btn.classList.remove("active");
+        document.querySelectorAll("#itineraries-grid li").forEach(li => li.style.display = "");
+    }
+});
 
 
 // ── RENDER ──
@@ -173,7 +200,9 @@ function renderProfile(user) {
 
 function renderCountries(countries) {
     const list = document.getElementById("countries-list");
-    list.innerHTML = "";
+    Array.from(list.querySelectorAll("li")).forEach(li => {
+        if (!li.querySelector("#favourites-filter-btn")) li.remove();
+    });
     const entries = Object.entries(countries);
     if (!entries.length) return;
     entries.forEach(([country, data]) => {
@@ -200,6 +229,7 @@ function renderItineraries(itineraries) {
     itineraries.forEach((it, i) => {
         const li = document.createElement("li");
         li.style.position = "relative";
+        li.dataset.itineraryId = it.id;
 
         const link = document.createElement("a");
         link.href = `/itinerary/${it.id}`;
