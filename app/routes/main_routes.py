@@ -107,6 +107,18 @@ def submit_error_response(message: str, form=None):
     return render_template("Submit-form-page.html", form=form, error=message)
 
 
+def get_form_error_message(form, default_message="Please check the submitted form and try again."):
+    csrf_token = getattr(form, "csrf_token", None)
+    if csrf_token and getattr(csrf_token, "errors", None):
+        return csrf_token.errors[0]
+
+    all_errors = [error for errors in form.errors.values() for error in errors]
+    if all_errors:
+        return all_errors[0]
+
+    return default_message
+
+
 def get_uploaded_file_size(file_storage) -> int:
     stream = file_storage.stream
     current_position = stream.tell()
@@ -373,9 +385,7 @@ def signin():
 
     # validate_on_submit() checks both request method and CSRF token validity.
     if request.method == "POST" and not form.validate_on_submit():
-        error_message = next(
-            iter(form.csrf_token.errors or ["Please check the submitted form and try again."])
-        )
+        error_message = get_form_error_message(form)
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return jsonify({"success": False, "error": error_message}), 400
         return render_template("sign-in.html", form=form, error=error_message)
@@ -422,9 +432,7 @@ def signup():
 
     # Reject invalid or forged form submissions before custom signup checks.
     if request.method == "POST" and not form.validate_on_submit():
-        error_message = next(
-            iter(form.csrf_token.errors or [error for errors in form.errors.values() for error in errors] or ["Please check the submitted form and try again."])
-        )
+        error_message = get_form_error_message(form)
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return jsonify({"success": False, "error": error_message}), 400
         return render_template("sign-up.html", form=form, error=error_message)
@@ -532,9 +540,7 @@ def submit_itinerary():
     form = SubmitItineraryForm()
 
     if request.method == "POST" and not form.validate_on_submit():
-        error_message = next(
-            iter(form.csrf_token.errors or ["Please check the submitted form and try again."])
-        )
+        error_message = get_form_error_message(form)
         return submit_error_response(error_message, form=form)
 
     if form.validate_on_submit():
@@ -995,6 +1001,24 @@ def upload_banner():
     user.banner_url = path
     db.session.commit()
     return jsonify({"success": True, "url": "/static/" + path.replace("\\", "/")})
+
+# Portfolio page — delete own itinerary
+@main_bp.route("/api/itinerary/<int:id>/delete", methods=["DELETE"])
+@login_required
+def delete_itinerary(id):
+    current_user, error_response = require_login_json()
+    if error_response:
+        return error_response
+
+    it = Itinerary.query.get_or_404(id)
+
+    if it.user_id != current_user.id:
+        return jsonify({"success": False, "error": "You can only delete your own itineraries."}), 403
+
+    db.session.delete(it)
+    db.session.commit()
+
+    return jsonify({"success": True})
 
 @main_bp.route("/portfolio")
 @login_required
