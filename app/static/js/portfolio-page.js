@@ -259,7 +259,6 @@ function renderItineraries(itineraries) {
                     <button class="card-delete-btn"> X DELETE </button>
                 </div>` : ''}
             </div>
-            </div>
             <div class="p-3 flex-1">
                 <h3 class="text-xs font-bold text-blue-900 mb-1 leading-snug">${escapeHtml(it.title)}</h3>
                 <div class="text-xs text-gray-500">📍 ${escapeHtml(it.location)}</div>
@@ -330,6 +329,17 @@ function blockClick(e) {
     e.stopPropagation();
 }
 
+// ── SETTINGS DROPDOWN ──
+document.getElementById("settings-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    document.getElementById("settings-dropdown").classList.toggle("hidden");
+});
+
+document.addEventListener("click", () => {
+    document.getElementById("settings-dropdown").classList.add("hidden");
+});
+
+
 // ── CHANGE PASSWORD MODAL ──
 document.getElementById("change-password-btn").addEventListener("click", () => {
     document.getElementById("change-password-modal").classList.remove("hidden");
@@ -389,6 +399,62 @@ document.getElementById("save-password-btn").addEventListener("click", () => {
                 document.getElementById("current-password").value = "";
                 document.getElementById("new-password").value = "";
                 document.getElementById("confirm-password").value = "";
+                successEl.classList.add("hidden");
+            }, 1500);
+        } else {
+            errorEl.textContent = data.error;
+            errorEl.classList.remove("hidden");
+        }
+    })
+    .catch(() => {
+        errorEl.textContent = "Something went wrong.";
+        errorEl.classList.remove("hidden");
+    });
+});
+
+// ── CHANGE USERNAME MODAL ──
+document.getElementById("change-username-btn").addEventListener("click", () => {
+    document.getElementById("change-username-modal").classList.remove("hidden");
+    document.getElementById("settings-dropdown").classList.add("hidden");
+});
+
+document.getElementById("cancel-username-btn").addEventListener("click", () => {
+    document.getElementById("change-username-modal").classList.add("hidden");
+    document.getElementById("new-username").value = "";
+    document.getElementById("username-error").classList.add("hidden");
+    document.getElementById("username-success").classList.add("hidden");
+});
+
+document.getElementById("save-username-btn").addEventListener("click", () => {
+    const newUsername = document.getElementById("new-username").value.trim();
+    const errorEl = document.getElementById("username-error");
+    const successEl = document.getElementById("username-success");
+
+    errorEl.classList.add("hidden");
+    successEl.classList.add("hidden");
+
+    if (!newUsername) {
+        errorEl.textContent = "Please fill out the username field.";
+        errorEl.classList.remove("hidden");
+        return;
+    }
+
+    fetch("/api/change-username", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCsrfToken()
+        },
+        body: JSON.stringify({ new_username: newUsername })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            successEl.classList.remove("hidden");
+            document.getElementById("username").textContent = newUsername;
+            setTimeout(() => {
+                document.getElementById("change-username-modal").classList.add("hidden");
+                document.getElementById("new-username").value = "";
                 successEl.classList.add("hidden");
             }, 1500);
         } else {
