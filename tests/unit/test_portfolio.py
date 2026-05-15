@@ -105,3 +105,69 @@ class PortfolioTests(unittest.TestCase):
         response = self.client.get("/portfolio")
 
         self.assertEqual(response.status_code, 200)
+
+    # Change password should fail when current password is wrong.
+    def test_change_password_wrong_current(self):
+        self.login_user()
+        response = self.client.post(
+            "/api/change-password",
+            json={
+                "current_password": "wrongpassword",
+                "new_password": "newpassword123",
+                "confirm_password": "newpassword123",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertFalse(data["success"])
+        self.assertIn("incorrect", data["error"].lower())
+
+    # Change password should fail when new password is same as current.
+    def test_change_password_same_password(self):
+        self.login_user()
+        response = self.client.post(
+            "/api/change-password",
+            json={
+                "current_password": "password123",
+                "new_password": "password123",
+                "confirm_password": "password123",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertFalse(data["success"])
+        self.assertIn("different", data["error"].lower())
+
+    # Change password should fail when passwords do not match.
+    def test_change_password_mismatch(self):
+        self.login_user()
+        response = self.client.post(
+            "/api/change-password",
+            json={
+                "current_password": "password123",
+                "new_password": "newpassword123",
+                "confirm_password": "differentpassword",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertFalse(data["success"])
+
+    # Change password should succeed with correct inputs.
+    def test_change_password_success(self):
+        self.login_user()
+        response = self.client.post(
+            "/api/change-password",
+            json={
+                "current_password": "password123",
+                "new_password": "newpassword123",
+                "confirm_password": "newpassword123",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["success"])
