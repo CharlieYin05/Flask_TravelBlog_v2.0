@@ -270,3 +270,57 @@ class PortfolioSystemTests(unittest.TestCase):
             if c.is_displayed()
         ]
         self.assertEqual(len(visible_cards), 0)
+
+    # The edit button should be visible on the portfolio page.
+    def test_edit_button_visible(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        btn = self.wait.until(EC.presence_of_element_located((By.ID, "global-edit-btn")))
+        self.assertIsNotNone(btn)
+
+    # Clicking the edit button should show delete overlays on itinerary cards.
+    def test_edit_mode_shows_delete_overlays(self):
+        self.create_user()
+        with self.app.app_context():
+            user = User.query.filter_by(username="testuser").first()
+            self.create_itinerary(user.id, "Trip to Delete", "Canada")
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "itinerary-card")))
+
+        self.click_element_by_id("global-edit-btn")
+
+        self.wait.until(
+            lambda driver: any(
+                o.is_displayed()
+                for o in driver.find_elements(By.CLASS_NAME, "card-delete-overlay")
+            )
+        )
+
+        overlays = [
+            o for o in self.driver.find_elements(By.CLASS_NAME, "card-delete-overlay")
+            if o.is_displayed()
+        ]
+        self.assertGreater(len(overlays), 0)
+
+    # Edit mode should be blocked when favourites filter is active.
+    def test_edit_blocked_when_favourites_active(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.wait.until(EC.presence_of_element_located((By.ID, "favourites-filter-btn")))
+
+        # Activate favourites filter
+        self.click_element_by_id("favourites-filter-btn")
+
+        # Try clicking edit — should trigger alert
+        self.driver.execute_script(
+            "document.getElementById('global-edit-btn').click();"
+        )
+
+        # Check alert appeared
+        self.wait.until(EC.alert_is_present())
+        alert = self.driver.switch_to.alert
+        self.assertIsNotNone(alert.text)
+        alert.accept()
