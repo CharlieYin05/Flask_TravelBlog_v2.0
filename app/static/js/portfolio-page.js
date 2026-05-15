@@ -200,8 +200,7 @@ function renderProfile(user) {
 
     // Stats
     document.getElementById("stat-countries").textContent = Object.keys(user.countries).length;
-    document.getElementById("stat-posts").textContent = user.itineraries.length;
-
+    document.getElementById("stat-posts").textContent = PORTFOLIO_DATA.own_itinerary_ids.length;
 }
 
 function renderCountries(countries) {
