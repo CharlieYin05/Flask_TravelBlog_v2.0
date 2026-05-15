@@ -209,3 +209,49 @@ class PortfolioTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
         self.assertTrue(data["success"])
+
+    # Delete itinerary should succeed for the owner.
+    def test_delete_own_itinerary(self):
+        self.login_user()
+        with self.app.app_context():
+            user = User.query.filter_by(username="testuser").first()
+            it_id = self.create_itinerary(user.id)
+
+        response = self.client.delete(
+            f"/api/itinerary/{it_id}/delete",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["success"])
+
+    # Delete itinerary should fail when trying to delete someone else's.
+    def test_delete_other_users_itinerary(self):
+        self.create_user(username="otheruser", email="other@example.com")
+        self.login_user()
+        with self.app.app_context():
+            other = User.query.filter_by(username="otheruser").first()
+            it_id = self.create_itinerary(other.id)
+
+        response = self.client.delete(
+            f"/api/itinerary/{it_id}/delete",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        data = response.get_json()
+        self.assertFalse(data["success"])
+
+    # Guests should not be able to delete an itinerary.
+    def test_delete_itinerary_requires_login(self):
+        with self.app.app_context():
+            user = User.query.filter_by(username="testuser").first()
+            it_id = self.create_itinerary(user.id)
+
+        response = self.client.delete(f"/api/itinerary/{it_id}/delete")
+
+        data = response.get_json()
+        self.assertFalse(data["success"])
+
+
+if __name__ == "__main__":
+    unittest.main()
