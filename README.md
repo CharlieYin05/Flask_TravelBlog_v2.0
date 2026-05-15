@@ -37,6 +37,7 @@ To relate these pages to the required project views:
 - HTML
 - CSS
 - JavaScript
+- jQuery
 - AJAX / Fetch API
 - Google Maps JavaScript API
 
