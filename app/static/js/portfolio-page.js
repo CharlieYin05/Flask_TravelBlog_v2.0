@@ -330,6 +330,17 @@ function blockClick(e) {
     e.stopPropagation();
 }
 
+// ── SETTINGS DROPDOWN ──
+document.getElementById("settings-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    document.getElementById("settings-dropdown").classList.toggle("hidden");
+});
+
+document.addEventListener("click", () => {
+    document.getElementById("settings-dropdown").classList.add("hidden");
+});
+
+
 // ── CHANGE PASSWORD MODAL ──
 document.getElementById("change-password-btn").addEventListener("click", () => {
     document.getElementById("change-password-modal").classList.remove("hidden");
