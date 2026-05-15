@@ -214,3 +214,11 @@ class PortfolioSystemTests(unittest.TestCase):
         self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "itinerary-card")))
         cards = self.driver.find_elements(By.CLASS_NAME, "itinerary-card")
         self.assertGreater(len(cards), 0)
+
+    # The favourites filter button should be visible on the portfolio page.
+    def test_favourites_filter_btn_visible(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        btn = self.wait.until(EC.presence_of_element_located((By.ID, "favourites-filter-btn")))
+        self.assertIsNotNone(btn)
