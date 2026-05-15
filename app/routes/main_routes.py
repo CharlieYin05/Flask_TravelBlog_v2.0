@@ -1047,3 +1047,27 @@ def portfolio():
         favourited_ids=favourited_ids,
         own_itinerary_ids=[it.id for it in own_itineraries]
     )
+# Change password
+@main_bp.route("/api/change-password", methods=["POST"])
+@login_required
+def change_password():
+    current_user = get_current_user()
+    payload = request.get_json(silent=True) or {}
+    
+    current_password = payload.get("current_password", "")
+    new_password = payload.get("new_password", "")
+    confirm_password = payload.get("confirm_password", "")
+
+    if not current_user.check_password(current_password):
+        return jsonify({"success": False, "error": "Current password is incorrect."}), 400
+
+    if len(new_password) < PASSWORD_MIN_LENGTH:
+        return jsonify({"success": False, "error": f"Password must be at least {PASSWORD_MIN_LENGTH} characters."}), 400
+
+    if new_password != confirm_password:
+        return jsonify({"success": False, "error": "Passwords do not match."}), 400
+
+    current_user.set_password(new_password)
+    db.session.commit()
+
+    return jsonify({"success": True})

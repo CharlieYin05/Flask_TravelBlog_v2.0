@@ -35,8 +35,10 @@
             <input type="file" id="avatar-upload" accept="image/*" class="hidden">
         </div>
         <div>
-            <div class="text-xl font-bold text-gray-900 mb-0.5" id="username">{{ user.username if user else '' }}</div>
+        <div class="text-xl font-bold text-gray-900 mb-0.5" id="username">{{ user.username if user else '' }}</div>
             <span class="inline-block bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-0.5 rounded-full" id="uid"></span>
+            <br>
+            <button id="change-password-btn" class="text-xs text-blue-600 hover:underline mt-1">Change password</button>
         </div>
     </div>
 
@@ -86,6 +88,24 @@
             + Write a new itinerary
         </a>
 
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="change-password-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
+            <h2 class="text-lg font-bold text-blue-900 mb-4">Change Password</h2>
+            <div class="flex flex-col gap-3">
+                <input id="current-password" type="password" placeholder="Current password" class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full">
+                <input id="new-password" type="password" placeholder="New password" class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full">
+                <input id="confirm-password" type="password" placeholder="Confirm new password" class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full">
+                <p id="password-error" class="text-red-500 text-xs hidden"></p>
+                <p id="password-success" class="text-green-500 text-xs hidden">Password changed successfully!</p>
+            </div>
+            <div class="flex gap-2 mt-4">
+                <button id="cancel-password-btn" class="flex-1 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+                <button id="save-password-btn" class="flex-1 py-2 rounded-lg bg-blue-900 text-white text-sm hover:bg-blue-800">Save</button>
+            </div>
+        </div>
     </div>
 </main>
 {% endblock %}
