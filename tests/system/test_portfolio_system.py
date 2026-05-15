@@ -38,11 +38,11 @@ class LiveServerThread(threading.Thread):
         self.server.shutdown()
         self.context.pop()
 
-# End-to-end portfolio page tests that use a real browser.
-class PortfolioSystemTests(unittest.TestCase):
+    # End-to-end portfolio page tests that use a real browser.
+    class PortfolioSystemTests(unittest.TestCase):
     # Helper to create a Selenium webdriver based on environment or availability.
-    def create_webdriver(self):
-        browser = os.environ.get("SELENIUM_BROWSER", "").lower().strip()
+        def create_webdriver(self):
+            browser = os.environ.get("SELENIUM_BROWSER", "").lower().strip()
 
         def make_chrome():
             options = ChromeOptions()
@@ -61,15 +61,15 @@ class PortfolioSystemTests(unittest.TestCase):
             options.add_argument("--headless")
             return webdriver.Firefox(options=options)
 
-        browsers = {
-            "chrome": make_chrome,
-            "edge": make_edge,
-            "firefox": make_firefox,
-        }
+            browsers = {
+                "chrome": make_chrome,
+                "edge": make_edge,
+                "firefox": make_firefox,
+            }
 
-        if browser:
-            if browser not in browsers:
-                raise RuntimeError(
+            if browser:
+                if browser not in browsers:
+                    raise RuntimeError(
                     "SELENIUM_BROWSER must be one of: chrome, edge, firefox"
                 )
             return browsers[browser]()
@@ -86,3 +86,52 @@ class PortfolioSystemTests(unittest.TestCase):
             "Could not start Chrome, Edge, or Firefox for Selenium tests. "
             "Install one supported browser, or set SELENIUM_BROWSER=chrome/edge/firefox."
         ) from last_error
+    
+    # Build a temporary app, database, live server, and browser for each test.
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+        self.db_path = os.path.join(self.temp_dir, "test.db")
+        project_root = Path(__file__).resolve().parents[2]
+
+        self.app = Flask(
+            __name__,
+            template_folder=str(project_root / "app" / "templates"),
+            static_folder=str(project_root / "app" / "static"),
+        )
+        self.app.config["TESTING"] = True
+        self.app.config["SECRET_KEY"] = "test-secret-key"
+        self.app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{self.db_path}"
+        self.app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+        self.app.config["WTF_CSRF_ENABLED"] = False
+
+        db.init_app(self.app)
+        csrf.init_app(self.app)
+        login.init_app(self.app)
+        login.login_view = "main.signin"
+        self.app.register_blueprint(main_bp)
+
+        @self.app.context_processor
+        def inject_logout_form():
+            return {"logout_form": LogoutForm()}
+
+        with self.app.app_context():
+            db.create_all()
+
+        self.server = LiveServerThread(self.app)
+        self.server.start()
+        self.base_url = f"http://{self.server.host}:{self.server.port}"
+
+        self.driver = self.create_webdriver()
+        self.wait = WebDriverWait(self.driver, 10)
+
+    # Close the browser and delete all temporary test data.
+    def tearDown(self):
+        self.driver.quit()
+        self.server.shutdown()
+
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
