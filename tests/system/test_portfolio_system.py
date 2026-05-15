@@ -194,3 +194,11 @@ class PortfolioSystemTests(unittest.TestCase):
         self.driver.get(f"{self.base_url}/portfolio")
         self.wait.until(EC.url_contains("/signin"))
         self.assertIn("/signin", self.driver.current_url)
+
+   # Portfolio page should load successfully for a logged-in user.
+    def test_portfolio_loads_for_logged_in_user(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.wait.until(EC.presence_of_element_located((By.ID, "username")))
+        self.assertIn("/portfolio", self.driver.current_url)
