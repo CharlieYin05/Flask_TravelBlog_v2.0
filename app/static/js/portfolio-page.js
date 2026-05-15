@@ -338,3 +338,11 @@ if (PORTFOLIO_DATA.banner_url) {
 renderProfile(PORTFOLIO_DATA);
 renderCountries(PORTFOLIO_DATA.countries);
 renderItineraries(PORTFOLIO_DATA.itineraries);
+
+// Hide other people's favourited itineraries by default
+document.querySelectorAll("#itineraries-grid li").forEach(li => {
+    const id = parseInt(li.dataset.itineraryId);
+    if (!PORTFOLIO_DATA.own_itinerary_ids.includes(id)) {
+        li.style.display = "none";
+    }
+});

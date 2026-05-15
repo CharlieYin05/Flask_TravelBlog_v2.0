@@ -1024,16 +1024,26 @@ def delete_itinerary(id):
 def portfolio():
     current_user = get_current_user()
     
-    itineraries = Itinerary.query.filter_by(
+    # User's own itineraries only (shown by default)
+    own_itineraries = Itinerary.query.filter_by(
         user_id=current_user.id
     ).all()
 
+    # Itineraries favourited by the user (including other people's)
     favourited_ids = [f.itinerary_id for f in current_user.favorites]
-    
+    favourited_itineraries = Itinerary.query.filter(
+        Itinerary.id.in_(favourited_ids),
+        Itinerary.user_id != current_user.id
+    ).all()
+
+    # All itineraries to pass to template (own + favourited others)
+    own_ids = {it.id for it in own_itineraries}
+    all_itineraries = own_itineraries + [it for it in favourited_itineraries if it.id not in own_ids]
+
     return render_template(
         "portfolio-page.html",
         user=current_user,
-        itineraries=itineraries,
-        favourited_ids=favourited_ids
+        itineraries=all_itineraries,
+        favourited_ids=favourited_ids,
+        own_itinerary_ids=[it.id for it in own_itineraries]
     )
-
