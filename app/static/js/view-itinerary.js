@@ -82,8 +82,8 @@ function renderItineraryHeader() {
     if (countryEl) countryEl.innerText = itinerary.country;
     if (overviewEl) overviewEl.innerText = itinerary.overview;
     if (coverEl) {
-        coverEl.src = itinerary.coverPhoto;
-        coverEl.alt = itinerary.title;
+        coverEl.src = sanitizeUploadImageUrl(itinerary.coverPhoto);
+        coverEl.alt = String(itinerary.title || "Itinerary cover");
     }
 
     if (tagsContainer) {
@@ -315,9 +315,9 @@ function createLocationCard({
 
     const typeBadgeClass = getBadgeClass(type);
 
-    const safeImage = escapeHtml(image || "");
     const safeLabel = escapeHtml(label || "");
     const safeTitle = escapeHtml(title || "Untitled");
+    const safeImage = sanitizeUploadImageUrl(image || "");
     const safeDescription = escapeHtml(description || "");
     const safePlace = escapeHtml(place || "");
     const safeTime = escapeHtml(time || "");
@@ -325,7 +325,7 @@ function createLocationCard({
     const safeCity = escapeHtml(city || "");
 
     content.innerHTML = `
-        ${safeImage ? `<img src="${safeImage}" class="card-image">` : ""}
+        ${safeImage ? `<img src="${safeImage}" class="card-image" alt="${safeTitle}">` : ""}
 
         <div class="card-body">
             <div class="flex justify-between items-center">
@@ -714,9 +714,24 @@ async function deleteComment(commentId) {
     }
 }
 
+function safeRedirect(url) {
+    const fallbackUrl = "/";
+
+    if (typeof url !== "string") {
+        window.location.href = fallbackUrl;
+        return;
+    }
+
+    if (!url.startsWith("/") || url.startsWith("//")) {
+        window.location.href = fallbackUrl;
+        return;
+    }
+
+    window.location.href = url;
+}
 function handleLoginRequired(data) {
     if (data && data.redirect_url) {
-        window.location.href = data.redirect_url;
+        safeRedirect(data.redirect_url);
         return true;
     }
 
@@ -792,11 +807,14 @@ function renderComments(comments) {
         const author = escapeHtml(comment.author || "User");
         const createdAt = escapeHtml(comment.created_at || "");
         const content = escapeHtml(comment.content || "");
-        const avatarUrl = comment.author_avatar_url || "";
+        const avatarUrl = sanitizeUploadImageUrl(comment.author_avatar_url || "");
         const initial = author.charAt(0).toUpperCase();
 
+        const commentId = Number.parseInt(comment.id, 10);
+        const canDelete = comment.can_delete && Number.isInteger(commentId) && commentId > 0;
+
         const avatarHtml = avatarUrl
-            ? `<img src="${escapeHtml(avatarUrl)}" alt="${author}'s avatar" class="comment-avatar-img">`
+            ? `<img src="${avatarUrl}" alt="${author}'s avatar" class="comment-avatar-img">`
             : `<div class="comment-avatar">${initial}</div>`;
 
         item.innerHTML = `
@@ -809,15 +827,15 @@ function renderComments(comments) {
                         <div class="comment-time">${createdAt}</div>
                     </div>
 
-                    ${comment.can_delete
-                ? `<button
+                    ${canDelete
+                        ? `<button
                                 class="delete-comment-btn"
-                                data-comment-id="${comment.id}"
+                                data-comment-id="${commentId}"
                             >
                                 Delete
                             </button>`
-                : ""
-            }
+                        : ""
+                    }
                 </div>
 
                 <p class="comment-content">${content}</p>
@@ -850,4 +868,51 @@ function escapeHtml(value) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+function safeRedirect(url) {
+    const fallbackUrl = "/";
+
+    if (typeof url !== "string") {
+        window.location.href = fallbackUrl;
+        return;
+    }
+
+    if (!url.startsWith("/") || url.startsWith("//")) {
+        window.location.href = fallbackUrl;
+        return;
+    }
+
+    window.location.href = url;
+}
+
+function sanitizeUploadImageUrl(url) {
+    if (!url || typeof url !== "string") {
+        return "";
+    }
+
+    let value = url.trim();
+
+    // 兼容 uploads/activity_photos/a.jpg
+    if (value.startsWith("uploads/")) {
+        value = "/static/" + value;
+    }
+
+    // 兼容 static/uploads/activity_photos/a.jpg
+    if (value.startsWith("static/uploads/")) {
+        value = "/" + value;
+    }
+
+    // 兼容 /uploads/activity_photos/a.jpg
+    if (value.startsWith("/uploads/")) {
+        value = "/static" + value;
+    }
+
+    const pattern = /^\/static\/uploads\/(activity_photos|avatar_photos|banner_photos|cover_photos)\/[a-zA-Z0-9_\-.]+\.(jpg|jpeg|png|webp|gif)$/i;
+
+    if (pattern.test(value)) {
+        return value;
+    }
+
+    return "";
 }
