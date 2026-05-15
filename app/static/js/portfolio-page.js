@@ -179,12 +179,12 @@ document.getElementById("favourites-filter-btn").addEventListener("click", () =>
             li.style.display = PORTFOLIO_DATA.favourited_ids.includes(id) ? "" : "none";
         });
     } else {
-    btn.classList.remove("active");
-    document.querySelectorAll("#itineraries-grid li").forEach(li => {
+        btn.classList.remove("active");
+        document.querySelectorAll("#itineraries-grid li").forEach(li => {
         const id = parseInt(li.dataset.itineraryId);
         li.style.display = PORTFOLIO_DATA.own_itinerary_ids.includes(id) ? "" : "none";
-    });
-}
+        });
+    }
 });
 
 
@@ -254,10 +254,9 @@ function renderItineraries(itineraries) {
                 ${it.cover_image_url
                     ? `<img src="${it.cover_image_url}" class="w-full h-full object-cover">`
                     : `<div class="w-full h-full flex items-center justify-center text-4xl">✈️</div>`}
-                ${PORTFOLIO_DATA.own_itinerary_ids.includes(it.id) ? `
                 <div class="card-delete-overlay">
                     <button class="card-delete-btn"> X DELETE </button>
-                </div>` : ''}
+                </div>
             </div>
             <div class="p-3 flex-1">
                 <h3 class="text-xs font-bold text-blue-900 mb-1 leading-snug">${escapeHtml(it.title)}</h3>
@@ -269,8 +268,7 @@ function renderItineraries(itineraries) {
             </div>`;
 
         // Delete with confirmation
-        const deleteBtn = link.querySelector(".card-delete-btn");
-        if (deleteBtn) deleteBtn.addEventListener("click", (e) => {
+        link.querySelector(".card-delete-btn").addEventListener("click", (e) => {
             e.preventDefault();
             e.stopPropagation();
             if (!confirm(`Are you sure you want to delete "${it.title}"? This cannot be undone.`)) return;
@@ -284,10 +282,8 @@ function renderItineraries(itineraries) {
                 if (data.success) {
                     li.remove();
                     PORTFOLIO_DATA.itineraries = PORTFOLIO_DATA.itineraries.filter(x => x.id !== it.id);
-                    PORTFOLIO_DATA.own_itinerary_ids = PORTFOLIO_DATA.own_itinerary_ids.filter(x => x !== it.id);
-                    const remaining = PORTFOLIO_DATA.itineraries.filter(x => PORTFOLIO_DATA.own_itinerary_ids.includes(x.id));
+                    const remaining = PORTFOLIO_DATA.itineraries;
                     const countries = {};
-
                     remaining.forEach(x => { countries[x.location] = { flag: "🌍" }; });
                     renderCountries(countries);
                     document.getElementById("stat-posts").textContent = remaining.length;
