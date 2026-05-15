@@ -169,7 +169,7 @@ The Google Maps API key is required because the itinerary detail page loads the 
 ### 6. Run the application
 
 ```bash
-python app.py
+python run.py
 ```
 
 ### 7. Open the website
