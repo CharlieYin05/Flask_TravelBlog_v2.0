@@ -35,8 +35,10 @@
             <input type="file" id="avatar-upload" accept="image/*" class="hidden">
         </div>
         <div>
-            <div class="text-xl font-bold text-gray-900 mb-0.5" id="username">{{ user.username if user else '' }}</div>
+        <div class="text-xl font-bold text-gray-900 mb-0.5" id="username">{{ user.username if user else '' }}</div>
             <span class="inline-block bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-0.5 rounded-full" id="uid"></span>
+            <br>
+            <button id="change-password-btn" class="text-xs text-blue-600 hover:underline mt-1">Change password</button>
         </div>
     </div>
 
