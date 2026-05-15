@@ -254,9 +254,11 @@ function renderItineraries(itineraries) {
                 ${it.cover_image_url
                     ? `<img src="${it.cover_image_url}" class="w-full h-full object-cover">`
                     : `<div class="w-full h-full flex items-center justify-center text-4xl">✈️</div>`}
+                ${PORTFOLIO_DATA.own_itinerary_ids.includes(it.id) ? `
                 <div class="card-delete-overlay">
                     <button class="card-delete-btn"> X DELETE </button>
-                </div>
+                </div>` : ''}
+            </div>
             </div>
             <div class="p-3 flex-1">
                 <h3 class="text-xs font-bold text-blue-900 mb-1 leading-snug">${escapeHtml(it.title)}</h3>
@@ -268,7 +270,8 @@ function renderItineraries(itineraries) {
             </div>`;
 
         // Delete with confirmation
-        link.querySelector(".card-delete-btn").addEventListener("click", (e) => {
+        const deleteBtn = link.querySelector(".card-delete-btn");
+        if (deleteBtn) deleteBtn.addEventListener("click", (e) => {
             e.preventDefault();
             e.stopPropagation();
             if (!confirm(`Are you sure you want to delete "${it.title}"? This cannot be undone.`)) return;
@@ -302,6 +305,10 @@ function renderItineraries(itineraries) {
 
 // ── GLOBAL EDIT MODE ──
 document.getElementById("global-edit-btn").addEventListener("click", () => {
+    if (favouritesActive) {
+        alert("You can't edit while in Favourites view!");
+        return;
+    }
     const editBtn = document.getElementById("global-edit-btn");
     const isActive = editBtn.classList.toggle("active");
     document.querySelectorAll(".card-delete-overlay").forEach(overlay => {
