@@ -47,4 +47,47 @@ class PortfolioTests(unittest.TestCase):
         self.client = self.app.test_client()
         self.create_user()
 
-    
+    # Clean up the temporary database after each test.
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    # Helper to create a user in the database.
+    def create_user(self, username="testuser", email="test@example.com", password="password123"):
+        with self.app.app_context():
+            user = User(
+                username=username,
+                email=email,
+                password_hash=generate_password_hash(password),
+            )
+            db.session.add(user)
+            db.session.commit()
+
+    # Put the test user into session so routes treat us as logged in.
+    def login_user(self, username="testuser"):
+        with self.app.app_context():
+            user = User.query.filter_by(username=username).first()
+
+        with self.client.session_transaction() as session:
+            session["_user_id"] = str(user.id)
+            session["_fresh"] = True
+
+    # Helper to create an itinerary for a given user.
+    def create_itinerary(self, user_id, title="Test Trip", country="Australia"):
+        with self.app.app_context():
+            it = Itinerary(
+                title=title,
+                country=country,
+                trip_types=["city"],
+                user_id=user_id,
+                total_days=1,
+                budget_level="$",
+                budget_range="$100",
+            )
+            db.session.add(it)
+            db.session.commit()
+            return it.id
