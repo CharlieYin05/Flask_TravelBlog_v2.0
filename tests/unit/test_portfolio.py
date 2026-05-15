@@ -171,3 +171,41 @@ class PortfolioTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
         self.assertTrue(data["success"])
+
+    # Change username should fail when username is already taken.
+    def test_change_username_already_taken(self):
+        self.create_user(username="takenuser", email="taken@example.com")
+        self.login_user()
+        response = self.client.post(
+            "/api/change-username",
+            json={"new_username": "takenuser"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertFalse(data["success"])
+        self.assertIn("taken", data["error"].lower())
+
+    # Change username should fail when new username is same as current.
+    def test_change_username_same_as_current(self):
+        self.login_user()
+        response = self.client.post(
+            "/api/change-username",
+            json={"new_username": "testuser"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.get_json()
+        self.assertFalse(data["success"])
+
+    # Change username should succeed with a valid new username.
+    def test_change_username_success(self):
+        self.login_user()
+        response = self.client.post(
+            "/api/change-username",
+            json={"new_username": "newusername123"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertTrue(data["success"])
