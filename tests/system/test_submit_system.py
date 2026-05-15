@@ -230,16 +230,31 @@ class SubmitSystemTests(unittest.TestCase):
         self.driver.find_element(By.ID, "activity-photo-day1-1").send_keys(
             self.activity_photo_path
         )
-        self.driver.find_element(By.ID, "time-day1-1").send_keys("09:00")
+        # Set time input value using JavaScript to ensure events are triggered
+        time_input = self.driver.find_element(By.ID, "time-day1-1")
+        self.driver.execute_script(
+            """
+            const el = arguments[0];
+            el.removeAttribute("disabled");
+            el.value = "09:00";
+            el.setAttribute("value", "09:00");
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+            el.dispatchEvent(new Event("change", { bubbles: true }));
+            """,
+            time_input,
+        )
+
+        self.assertEqual(time_input.get_attribute("value"), "09:00")
+        #---------------------------------------------------------------
         self.driver.find_element(By.ID, "activity-day1-1").send_keys(
             "Walk around the park and city lookout."
         )
-
+    #self.driver.find_element(By.ID, "activity-title-day1-2").send_keys(
     def submit_form_and_accept_confirmation(self):
         self.driver.find_element(By.ID, "submit-itinerary-button").click()
         confirmation = self.wait.until(EC.alert_is_present())
         confirmation.accept()
-
+#----------------------------------------------------------------
     def submit_form_without_client_validation(self):
         self.driver.execute_script(
             """

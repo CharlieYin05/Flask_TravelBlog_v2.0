@@ -48,7 +48,7 @@ class BrowseViewSystemTests(unittest.TestCase):
 
         def make_chrome():
             options = ChromeOptions()
-            options.add_argument("--headless=new")
+            #options.add_argument("--headless=new")
             options.add_argument("--window-size=1400,1000")
             return webdriver.Chrome(options=options)
 
