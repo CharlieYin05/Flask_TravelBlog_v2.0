@@ -1071,3 +1071,34 @@ def change_password():
     db.session.commit()
 
     return jsonify({"success": True})
+
+
+# Change username
+@main_bp.route("/api/change-username", methods=["POST"])
+@login_required
+def change_username():
+    current_user = get_current_user()
+    payload = request.get_json(silent=True) or {}
+
+    new_username = payload.get("new_username", "").strip()
+
+    if not new_username:
+        return jsonify({"success": False, "error": "Username is required."}), 400
+
+    if not (USERNAME_MIN_LENGTH <= len(new_username) <= USERNAME_MAX_LENGTH):
+        return jsonify({"success": False, "error": f"Username must be between {USERNAME_MIN_LENGTH} and {USERNAME_MAX_LENGTH} characters."}), 400
+
+    if not USERNAME_PATTERN.fullmatch(new_username):
+        return jsonify({"success": False, "error": "Username can only contain letters, numbers, and underscores."}), 400
+
+    if new_username == current_user.username:
+        return jsonify({"success": False, "error": "New username must be different from your current one."}), 400
+
+    existing = User.query.filter_by(username=new_username).first()
+    if existing:
+        return jsonify({"success": False, "error": "This username is already taken."}), 400
+
+    current_user.username = new_username
+    db.session.commit()
+
+    return jsonify({"success": True})
