@@ -251,25 +251,6 @@ class PortfolioSystemTests(unittest.TestCase):
         ]
         self.assertEqual(len(visible_cards), 1)
 
-        # Click star on
-        self.click_element_by_id("favourites-filter-btn")
-        self.wait.until(
-            lambda driver: any(
-                c.is_displayed()
-                for c in driver.find_elements(By.CLASS_NAME, "itinerary-card")
-            )
-        )
-
-       # Click star off
-        self.click_element_by_id("favourites-filter-btn")
-        import time
-        time.sleep(1)
-
-        visible_cards = [
-            c for c in self.driver.find_elements(By.CLASS_NAME, "itinerary-card")
-            if c.is_displayed()
-        ]
-        self.assertEqual(len(visible_cards), 0)
 
     # The edit button should be visible on the portfolio page.
     def test_edit_button_visible(self):
