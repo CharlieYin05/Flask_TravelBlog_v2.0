@@ -340,6 +340,13 @@ document.getElementById("save-password-btn").addEventListener("click", () => {
     errorEl.classList.add("hidden");
     successEl.classList.add("hidden");
 
+     // Empty field validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        errorEl.textContent = "Please fill out all fields.";
+        errorEl.classList.remove("hidden");
+        return;
+    }
+
     fetch("/api/change-password", {
         method: "POST",
         headers: {
