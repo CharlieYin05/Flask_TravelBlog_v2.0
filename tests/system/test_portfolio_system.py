@@ -177,3 +177,20 @@ class PortfolioSystemTests(unittest.TestCase):
         self.driver.find_element(By.ID, "password").send_keys(password)
         self.driver.find_element(By.ID, "login-button").click()
         self.wait.until(EC.url_to_be(f"{self.base_url}/"))
+
+    # Scroll to and click an element by ID using JavaScript.
+    def click_element_by_id(self, element_id):
+        element = self.wait.until(
+            EC.presence_of_element_located((By.ID, element_id))
+        )
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'});", element
+        )
+        self.driver.execute_script("arguments[0].click();", element)
+        return element
+    
+    # Portfolio page should redirect guests to sign in.
+    def test_portfolio_requires_login(self):
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.wait.until(EC.url_contains("/signin"))
+        self.assertIn("/signin", self.driver.current_url)
