@@ -1060,6 +1060,9 @@ def change_password():
 
     if not current_user.check_password(current_password):
         return jsonify({"success": False, "error": "Current password is incorrect."}), 400
+    
+    if current_password == new_password:
+        return jsonify({"success": False, "error": "New password must be different from your current password."}), 400
 
     if len(new_password) < PASSWORD_MIN_LENGTH:
         return jsonify({"success": False, "error": f"Password must be at least {PASSWORD_MIN_LENGTH} characters."}), 400
