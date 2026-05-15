@@ -162,3 +162,12 @@ class PortfolioSystemTests(unittest.TestCase):
             db.session.add(it)
             db.session.commit()
             return it.id
+        
+    # Insert a favourite link between a user and an itinerary.
+    def create_favourite(self, user_id, itinerary_id):
+        with self.app.app_context():
+            fav = ItineraryFavorite(user_id=user_id, itinerary_id=itinerary_id)
+            db.session.add(fav)
+            db.session.commit()
+
+    
