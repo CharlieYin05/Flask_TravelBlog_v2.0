@@ -222,3 +222,31 @@ class PortfolioSystemTests(unittest.TestCase):
         self.driver.get(f"{self.base_url}/portfolio")
         btn = self.wait.until(EC.presence_of_element_located((By.ID, "favourites-filter-btn")))
         self.assertIsNotNone(btn)
+
+    # Clicking the favourites filter should show only favourited itineraries.
+    def test_favourites_filter_shows_only_favourites(self):
+        self.create_user()
+        with self.app.app_context():
+            user = User.query.filter_by(username="testuser").first()
+            it1_id = self.create_itinerary(user.id, "Favourited Trip", "Canada")
+            self.create_itinerary(user.id, "Not Favourited", "Japan")
+            self.create_favourite(user.id, it1_id)
+
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "itinerary-card")))
+
+        self.click_element_by_id("favourites-filter-btn")
+
+        self.wait.until(
+            lambda driver: len([
+                c for c in driver.find_elements(By.CLASS_NAME, "itinerary-card")
+                if c.is_displayed()
+            ]) == 1
+        )
+
+        visible_cards = [
+            c for c in self.driver.find_elements(By.CLASS_NAME, "itinerary-card")
+            if c.is_displayed()
+        ]
+        self.assertEqual(len(visible_cards), 1)
