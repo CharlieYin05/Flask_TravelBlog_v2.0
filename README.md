@@ -18,7 +18,7 @@ The main pages of the application include:
 - **Browse Itineraries**: A page where users can explore travel itineraries posted by others.
 - **View Itinerary**: A detailed itinerary page showing the trip overview, daily timeline, activity cards, photos, comments, likes, favourites, and an interactive Google Map.
 - **Search**: A page that allows users to search for itineraries by title or other supported search types.
-- **Portfolio / Profile**: A user profile page for viewing a user's posted itineraries and saved travel-related information.
+- **Portfolio / Profile**: A user profile page for viewing a user's posted itineraries and saved travel-related information. And allows users to change their username and password.
 - **Like, Favourite, and Comment Features**: Users can interact with itineraries and share feedback.
 
 To relate these pages to the required project views:
