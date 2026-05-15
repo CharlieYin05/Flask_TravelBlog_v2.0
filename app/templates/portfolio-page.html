@@ -118,8 +118,10 @@
         avatar_url: "{{ url_for('static', filename=user.avatar_url) if user and user.avatar_url else '' }}",
         banner_url: "{{ url_for('static', filename=user.banner_url) if user and user.banner_url else '' }}",
         favourited_ids: {{ favourited_ids | tojson }},
+        own_itinerary_ids: {{ own_itinerary_ids | tojson }},
         countries: {
-            {% for it in itineraries %}
+            {% set own = itineraries | selectattr('user_id', 'equalto', user.id) | list %}
+            {% for it in own %}
                 "{{ it.country }}": { flag: ""}{% if not loop.last %}, {% endif %}
             {% endfor %}
         },
