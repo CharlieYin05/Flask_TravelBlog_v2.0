@@ -236,8 +236,15 @@ class PortfolioSystemTests(unittest.TestCase):
         self.driver.get(f"{self.base_url}/portfolio")
         self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "itinerary-card")))
 
-        self.click_element_by_id("favourites-filter-btn")
+        # Initial state: both itineraries are visible
+        visible_cards = [
+            c for c in self.driver.find_elements(By.CLASS_NAME, "itinerary-card")
+            if c.is_displayed()
+        ]
+        self.assertEqual(len(visible_cards), 2)
 
+        # Turn favourites filter on: only favourited itinerary should be visible
+        self.click_element_by_id("favourites-filter-btn")
         self.wait.until(
             lambda driver: len([
                 c for c in driver.find_elements(By.CLASS_NAME, "itinerary-card")
@@ -250,7 +257,23 @@ class PortfolioSystemTests(unittest.TestCase):
             if c.is_displayed()
         ]
         self.assertEqual(len(visible_cards), 1)
+        self.assertIn("Favourited Trip", visible_cards[0].text)
+        self.assertNotIn("Not Favourited", visible_cards[0].text)
 
+        # Turn favourites filter off: all itineraries should be visible again
+        self.click_element_by_id("favourites-filter-btn")
+        self.wait.until(
+            lambda driver: len([
+                c for c in driver.find_elements(By.CLASS_NAME, "itinerary-card")
+                if c.is_displayed()
+            ]) == 2
+        )
+
+        visible_cards = [
+            c for c in self.driver.find_elements(By.CLASS_NAME, "itinerary-card")
+            if c.is_displayed()
+        ]
+        self.assertEqual(len(visible_cards), 2)
 
     # The edit button should be visible on the portfolio page.
     def test_edit_button_visible(self):
