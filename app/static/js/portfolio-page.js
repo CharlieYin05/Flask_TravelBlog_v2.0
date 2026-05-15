@@ -316,6 +316,77 @@ function blockClick(e) {
     e.stopPropagation();
 }
 
+// ── CHANGE PASSWORD MODAL ──
+document.getElementById("change-password-btn").addEventListener("click", () => {
+    document.getElementById("change-password-modal").classList.remove("hidden");
+});
+
+document.getElementById("cancel-password-btn").addEventListener("click", () => {
+    document.getElementById("change-password-modal").classList.add("hidden");
+    document.getElementById("current-password").value = "";
+    document.getElementById("new-password").value = "";
+    document.getElementById("confirm-password").value = "";
+    document.getElementById("password-error").classList.add("hidden");
+    document.getElementById("password-success").classList.add("hidden");
+});
+
+document.getElementById("save-password-btn").addEventListener("click", () => {
+    const currentPassword = document.getElementById("current-password").value;
+    const newPassword = document.getElementById("new-password").value;
+    const confirmPassword = document.getElementById("confirm-password").value;
+    const errorEl = document.getElementById("password-error");
+    const successEl = document.getElementById("password-success");
+
+    errorEl.classList.add("hidden");
+    successEl.classList.add("hidden");
+
+     // Empty field validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        errorEl.textContent = "Please fill out all fields.";
+        errorEl.classList.remove("hidden");
+        return;
+    }
+
+    // Same password validation
+    if (currentPassword === newPassword) {
+        errorEl.textContent = "New password must be different from your current password.";
+        errorEl.classList.remove("hidden");
+        return;
+    }
+
+    fetch("/api/change-password", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCsrfToken()
+        },
+        body: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword,
+            confirm_password: confirmPassword
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            successEl.classList.remove("hidden");
+            setTimeout(() => {
+                document.getElementById("change-password-modal").classList.add("hidden");
+                document.getElementById("current-password").value = "";
+                document.getElementById("new-password").value = "";
+                document.getElementById("confirm-password").value = "";
+                successEl.classList.add("hidden");
+            }, 1500);
+        } else {
+            errorEl.textContent = data.error;
+            errorEl.classList.remove("hidden");
+        }
+    })
+    .catch(() => {
+        errorEl.textContent = "Something went wrong.";
+        errorEl.classList.remove("hidden");
+    });
+});
 
 // Restore saved avatar and banner on page load
 if (PORTFOLIO_DATA.avatar_url) {
