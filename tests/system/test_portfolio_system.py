@@ -325,7 +325,7 @@ class PortfolioSystemTests(unittest.TestCase):
         self.assertIsNotNone(alert.text)
         alert.accept()
 
-        # Change password button should be visible on portfolio page.
+    # Change password button should be visible on portfolio page.
     def test_change_password_btn_visible(self):
         self.create_user()
         self.login_through_ui()
@@ -400,3 +400,64 @@ class PortfolioSystemTests(unittest.TestCase):
         self.click_element_by_id("save-password-btn")
         success = self.wait.until(EC.visibility_of_element_located((By.ID, "password-success")))
         self.assertIn("successfully", success.text.lower())
+
+    # Change username button should be visible in settings dropdown.
+    def test_change_username_btn_visible(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.click_element_by_id("settings-btn")
+        btn = self.wait.until(EC.visibility_of_element_located((By.ID, "change-username-btn")))
+        self.assertIsNotNone(btn)
+
+    # Change username modal should open when button is clicked.
+    def test_change_username_modal_opens(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.click_element_by_id("settings-btn")
+        self.click_element_by_id("change-username-btn")
+        modal = self.wait.until(EC.visibility_of_element_located((By.ID, "change-username-modal")))
+        self.assertTrue(modal.is_displayed())
+
+    # Change username should show error when field is empty.
+    def test_change_username_empty_field(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.click_element_by_id("settings-btn")
+        self.click_element_by_id("change-username-btn")
+        self.wait.until(EC.visibility_of_element_located((By.ID, "change-username-modal")))
+        self.click_element_by_id("save-username-btn")
+        error = self.wait.until(EC.visibility_of_element_located((By.ID, "username-error")))
+        self.assertIn("fill out", error.text.lower())
+
+    # Change username should show error when username is already taken.
+    def test_change_username_already_taken(self):
+        self.create_user()
+        self.create_user(username="takenuser", email="taken@example.com")
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.click_element_by_id("settings-btn")
+        self.click_element_by_id("change-username-btn")
+        self.wait.until(EC.visibility_of_element_located((By.ID, "change-username-modal")))
+        self.driver.find_element(By.ID, "new-username").send_keys("takenuser")
+        self.click_element_by_id("save-username-btn")
+        error = self.wait.until(EC.visibility_of_element_located((By.ID, "username-error")))
+        self.assertIn("taken", error.text.lower())
+
+    # Change username should succeed with a valid new username.
+    def test_change_username_success(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.click_element_by_id("settings-btn")
+        self.click_element_by_id("change-username-btn")
+        self.wait.until(EC.visibility_of_element_located((By.ID, "change-username-modal")))
+        self.driver.find_element(By.ID, "new-username").send_keys("newusername123")
+        self.click_element_by_id("save-username-btn")
+        success = self.wait.until(EC.visibility_of_element_located((By.ID, "username-success")))
+        self.assertIn("successfully", success.text.lower())
+
+if __name__ == "__main__":
+    unittest.main()
