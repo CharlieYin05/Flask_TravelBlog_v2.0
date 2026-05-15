@@ -202,3 +202,15 @@ class PortfolioSystemTests(unittest.TestCase):
         self.driver.get(f"{self.base_url}/portfolio")
         self.wait.until(EC.presence_of_element_located((By.ID, "username")))
         self.assertIn("/portfolio", self.driver.current_url)
+
+    # Itinerary cards should appear on the portfolio page.
+    def test_itinerary_cards_visible(self):
+        self.create_user()
+        with self.app.app_context():
+            user = User.query.filter_by(username="testuser").first()
+            self.create_itinerary(user.id, "My Canada Trip", "Canada")
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "itinerary-card")))
+        cards = self.driver.find_elements(By.CLASS_NAME, "itinerary-card")
+        self.assertGreater(len(cards), 0)
