@@ -154,7 +154,10 @@ function clearFilter() {
     });
     document.getElementById("filter-notice").classList.add("hidden");
     document.getElementById("filter-notice").classList.remove("flex");
-    document.querySelectorAll("#itineraries-grid li").forEach(li => li.style.display = "");
+    document.querySelectorAll("#itineraries-grid li").forEach(li => {
+        const id = parseInt(li.dataset.itineraryId);
+        li.style.display = PORTFOLIO_DATA.own_itinerary_ids.includes(id) ? "" : "none";
+    });
 }
 
 // -- FAVOURITES FILTER --
@@ -176,9 +179,12 @@ document.getElementById("favourites-filter-btn").addEventListener("click", () =>
             li.style.display = PORTFOLIO_DATA.favourited_ids.includes(id) ? "" : "none";
         });
     } else {
-        btn.classList.remove("active");
-        document.querySelectorAll("#itineraries-grid li").forEach(li => li.style.display = "");
-    }
+    btn.classList.remove("active");
+    document.querySelectorAll("#itineraries-grid li").forEach(li => {
+        const id = parseInt(li.dataset.itineraryId);
+        li.style.display = PORTFOLIO_DATA.own_itinerary_ids.includes(id) ? "" : "none";
+    });
+}
 });
 
 
