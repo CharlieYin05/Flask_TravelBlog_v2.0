@@ -30,58 +30,58 @@ class LiveServerThread(threading.Thread):
         self.port = self.server.server_port
         self.context = app.app_context()
         self.context.push()
-
+ 
     def run(self):
         self.server.serve_forever()
-
+ 
     def shutdown(self):
         self.server.shutdown()
         self.context.pop()
 
-    # End-to-end portfolio page tests that use a real browser.
-    class PortfolioSystemTests(unittest.TestCase):
+  # End-to-end portfolio page tests that use a real browser.
+class PortfolioSystemTests(unittest.TestCase):
     # Helper to create a Selenium webdriver based on environment or availability.
-        def create_webdriver(self):
-            browser = os.environ.get("SELENIUM_BROWSER", "").lower().strip()
-
+    def create_webdriver(self):
+        browser = os.environ.get("SELENIUM_BROWSER", "").lower().strip()
+ 
         def make_chrome():
             options = ChromeOptions()
             options.add_argument("--headless=new")
             options.add_argument("--window-size=1400,1000")
             return webdriver.Chrome(options=options)
-
+ 
         def make_edge():
             options = EdgeOptions()
             options.add_argument("--headless=new")
             options.add_argument("--window-size=1400,1000")
             return webdriver.Edge(options=options)
-
+ 
         def make_firefox():
             options = FirefoxOptions()
             options.add_argument("--headless")
             return webdriver.Firefox(options=options)
-
-            browsers = {
-                "chrome": make_chrome,
-                "edge": make_edge,
-                "firefox": make_firefox,
-            }
-
-            if browser:
-                if browser not in browsers:
-                    raise RuntimeError(
+ 
+        browsers = {
+            "chrome": make_chrome,
+            "edge": make_edge,
+            "firefox": make_firefox,
+        }
+ 
+        if browser:
+            if browser not in browsers:
+                raise RuntimeError(
                     "SELENIUM_BROWSER must be one of: chrome, edge, firefox"
                 )
             return browsers[browser]()
-
+ 
         last_error = None
-
+ 
         for make_browser in (make_chrome, make_edge, make_firefox):
             try:
                 return make_browser()
             except Exception as error:
                 last_error = error
-
+ 
         raise RuntimeError(
             "Could not start Chrome, Edge, or Firefox for Selenium tests. "
             "Install one supported browser, or set SELENIUM_BROWSER=chrome/edge/firefox."
@@ -135,3 +135,30 @@ class LiveServerThread(threading.Thread):
             db.engine.dispose()
 
         shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+ # Insert a user directly into the test database.
+    def create_user(self, username="testuser", email="test@example.com", password="password123"):
+        with self.app.app_context():
+            user = User(
+                username=username,
+                email=email,
+                password_hash=generate_password_hash(password),
+            )
+            db.session.add(user)
+            db.session.commit()
+
+    # Insert an itinerary for a given user.
+    def create_itinerary(self, user_id, title="Test Trip", country="Canada"):
+        with self.app.app_context():
+            it = Itinerary(
+                title=title,
+                country=country,
+                trip_types=["city"],
+                user_id=user_id,
+                total_days=2,
+                budget_level="$",
+                budget_range="$200",
+            )
+            db.session.add(it)
+            db.session.commit()
+            return it.id
