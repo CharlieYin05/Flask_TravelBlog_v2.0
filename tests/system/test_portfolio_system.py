@@ -170,4 +170,10 @@ class PortfolioSystemTests(unittest.TestCase):
             db.session.add(fav)
             db.session.commit()
 
-    
+     # Sign in through the browser UI.
+    def login_through_ui(self, username="testuser", password="password123"):
+        self.driver.get(f"{self.base_url}/signin")
+        self.driver.find_element(By.ID, "username").send_keys(username)
+        self.driver.find_element(By.ID, "password").send_keys(password)
+        self.driver.find_element(By.ID, "login-button").click()
+        self.wait.until(EC.url_to_be(f"{self.base_url}/"))
