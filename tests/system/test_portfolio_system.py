@@ -324,3 +324,79 @@ class PortfolioSystemTests(unittest.TestCase):
         alert = self.driver.switch_to.alert
         self.assertIsNotNone(alert.text)
         alert.accept()
+
+        # Change password button should be visible on portfolio page.
+    def test_change_password_btn_visible(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.click_element_by_id("settings-btn")
+        btn = self.wait.until(EC.presence_of_element_located((By.ID, "change-password-btn")))
+        self.assertIsNotNone(btn)
+
+    # Change password modal should open when button is clicked.
+    def test_change_password_modal_opens(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.click_element_by_id("settings-btn") 
+        self.click_element_by_id("change-password-btn")
+        modal = self.wait.until(EC.visibility_of_element_located((By.ID, "change-password-modal")))
+        self.assertTrue(modal.is_displayed())
+
+    # Change password should show error when fields are empty.
+    def test_change_password_empty_fields(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.click_element_by_id("settings-btn")
+        self.click_element_by_id("change-password-btn")
+        self.wait.until(EC.visibility_of_element_located((By.ID, "change-password-modal")))
+        self.click_element_by_id("save-password-btn")
+        error = self.wait.until(EC.visibility_of_element_located((By.ID, "password-error")))
+        self.assertIn("fill out", error.text.lower())
+
+    # Change password should show error when wrong current password is entered.
+    def test_change_password_wrong_current_password(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.click_element_by_id("settings-btn")
+        self.click_element_by_id("change-password-btn")
+        self.wait.until(EC.visibility_of_element_located((By.ID, "change-password-modal")))
+        self.driver.find_element(By.ID, "current-password").send_keys("wrongpassword")
+        self.driver.find_element(By.ID, "new-password").send_keys("newpassword123")
+        self.driver.find_element(By.ID, "confirm-password").send_keys("newpassword123")
+        self.click_element_by_id("save-password-btn")
+        error = self.wait.until(EC.visibility_of_element_located((By.ID, "password-error")))
+        self.assertIn("incorrect", error.text.lower())
+
+    # Change password should show error when new password is same as current.
+    def test_change_password_same_password(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.click_element_by_id("settings-btn")
+        self.click_element_by_id("change-password-btn")
+        self.wait.until(EC.visibility_of_element_located((By.ID, "change-password-modal")))
+        self.driver.find_element(By.ID, "current-password").send_keys("password123")
+        self.driver.find_element(By.ID, "new-password").send_keys("password123")
+        self.driver.find_element(By.ID, "confirm-password").send_keys("password123")
+        self.click_element_by_id("save-password-btn")
+        error = self.wait.until(EC.visibility_of_element_located((By.ID, "password-error")))
+        self.assertIn("different", error.text.lower())
+
+    # Change password should succeed with correct inputs.
+    def test_change_password_success(self):
+        self.create_user()
+        self.login_through_ui()
+        self.driver.get(f"{self.base_url}/portfolio")
+        self.click_element_by_id("settings-btn")
+        self.click_element_by_id("change-password-btn")
+        self.wait.until(EC.visibility_of_element_located((By.ID, "change-password-modal")))
+        self.driver.find_element(By.ID, "current-password").send_keys("password123")
+        self.driver.find_element(By.ID, "new-password").send_keys("newpassword123")
+        self.driver.find_element(By.ID, "confirm-password").send_keys("newpassword123")
+        self.click_element_by_id("save-password-btn")
+        success = self.wait.until(EC.visibility_of_element_located((By.ID, "password-success")))
+        self.assertIn("successfully", success.text.lower())
