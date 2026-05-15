@@ -347,6 +347,13 @@ document.getElementById("save-password-btn").addEventListener("click", () => {
         return;
     }
 
+    // Same password validation
+    if (currentPassword === newPassword) {
+        errorEl.textContent = "New password must be different from your current password.";
+        errorEl.classList.remove("hidden");
+        return;
+    }
+
     fetch("/api/change-password", {
         method: "POST",
         headers: {
