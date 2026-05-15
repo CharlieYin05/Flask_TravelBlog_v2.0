@@ -91,3 +91,17 @@ class PortfolioTests(unittest.TestCase):
             db.session.add(it)
             db.session.commit()
             return it.id
+        
+    # Portfolio page should redirect guests to sign in.
+    def test_portfolio_requires_login(self):
+        response = self.client.get("/portfolio", follow_redirects=False)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/signin", response.headers["Location"])
+
+    # Portfolio page should load for a logged-in user.
+    def test_portfolio_loads_for_logged_in_user(self):
+        self.login_user()
+        response = self.client.get("/portfolio")
+
+        self.assertEqual(response.status_code, 200)
