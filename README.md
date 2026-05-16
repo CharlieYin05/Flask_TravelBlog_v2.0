@@ -120,8 +120,8 @@ python -m unittest discover -s tests/system -v
 If this is your first time setting up the project, clone the repository:
 
 ```bash
-git clone <repository-url>
-cd <repository-folder>
+git clone https://github.com/vyshm24/cits3403-project.git
+cd cits3403-project
 ```
 
 If you already have the repository, pull the latest version:
