@@ -167,13 +167,26 @@ GOOGLE_MAPS_API_KEY=Your_API_Here
 
 The Google Maps API key is required because the itinerary detail page loads the map key from environment variables instead of hardcoding it in `view-itinerary.html`.
 
-### 6. Run the application
+### 6. Create / update the database
+
+```bash
+python -m flask db upgrade
+```
+If the `migrations/` folder does not exist, initialise migrations first:
+
+```bash
+python -m flask db init
+python -m flask db migrate
+python -m flask db upgrade
+```
+
+### 7. Run the application
 
 ```bash
 python run.py
 ```
 
-### 7. Open the website
+### 8. Open the website
 
 Open your browser and go to:
 
