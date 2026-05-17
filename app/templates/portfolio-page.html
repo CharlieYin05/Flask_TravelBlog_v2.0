@@ -22,9 +22,9 @@
 
     <div class="px-4 sm:px-6 lg:px-8">
 
-    <!-- portfolio-page -->
+    <!-- PORTFOLIO PAGE -->
     <div class="relative -mt-36 mx-auto max-w-lg bg-white/25 backdrop-blur-md border border-white/50 rounded-xl px-10 py-6 pb-10 shadow-lg z-10 flex items-center gap-4 min-h-[140px]">
-        <!-- Settings button top right -->
+        <!-- SETTINGS BUTTON -->
         <div class="absolute top-3 right-3" id="settings-menu-wrapper">
             <button id="settings-btn" class="text-gray-800 hover:text-blue-600 transition-colors text-xl">
                 ☰
@@ -39,6 +39,7 @@
             </div>
         </div>
 
+        <!-- AVATAR -->
         <div class="avatar-wrapper relative flex-shrink-0">
             <div class="avatar rounded-full bg-transparent flex items-center justify-center text-3xl font-bold text-gray-700 overflow-hidden border-3 border-white shadow-md" id="avatar-display">
                 <span id="avatar-initials">{{ user.username[0].upper() if user else '?' }}</span>
@@ -56,7 +57,7 @@
     </div>
 
 
-            <!-- Stats Bar -->
+            <!-- STATS BAR -->
          <div class="flex bg-blue-900 rounded-xl shadow-sm -mt-8 mb-9 overflow-hidden max-w-2xl mx-auto z-20 relative">
             <div class="flex-1 py-4 text-center border-r border-blue-700">
                 <span class="block text-2xl font-bold text-white" id="stat-countries">0</span>
@@ -97,13 +98,13 @@
 
           <ul id="itineraries-grid" class="grid grid-cols-3 gap-4 list-none"></ul>
 
-          <a href="{{ url_for('main.submit_itinerary') }}" class="flex flex items-center justify-center gap-2 w-full py-4 mt-5 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 no-underline hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-150">
+          <a href="{{ url_for('main.submit_itinerary') }}" class="flex items-center justify-center gap-2 w-full py-4 mt-5 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 no-underline hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-150">
             + Write a new itinerary
         </a>
 
     </div>
 
-    <!-- Change Password Modal -->
+    <!-- CHANGE PASSWORD MODAL -->
     <div id="change-password-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
         <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
             <h2 class="text-lg font-bold text-blue-900 mb-4">Change Password</h2>
@@ -122,7 +123,7 @@
     </div>
 </main>
 
-<!-- Change Username Modal -->
+<!-- CHANGE USERNAME MODAL -->
 <div id="change-username-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
     <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
         <h2 class="text-lg font-bold text-blue-900 mb-4">Change Username</h2>
@@ -151,7 +152,8 @@
         countries: {
             {% set own = itineraries | selectattr('user_id', 'equalto', user.id) | list %}
             {% for it in own %}
-                "{{ it.country }}": { flag: ""}{% if not loop.last %}, {% endif %}
+                "{{ it.country }}": { flag: ""}
+                {% if not loop.last %},{% endif %}
             {% endfor %}
         },
         itineraries: [

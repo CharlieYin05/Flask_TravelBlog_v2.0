@@ -296,8 +296,9 @@ function renderItineraries(itineraries) {
             .then(data => {
                 if (data.success) {
                     li.remove();
+                    PORTFOLIO_DATA.own_itinerary_ids = PORTFOLIO_DATA.own_itinerary_ids.filter(x => x !== it.id);
                     PORTFOLIO_DATA.itineraries = PORTFOLIO_DATA.itineraries.filter(x => x.id !== it.id);
-                    const remaining = PORTFOLIO_DATA.itineraries;
+                    const remaining = PORTFOLIO_DATA.itineraries.filter(x => PORTFOLIO_DATA.own_itinerary_ids.includes(x.id));
                     const countries = {};
                     remaining.forEach(x => {
                          countries[x.location] = { flag: "🌍" }; 
