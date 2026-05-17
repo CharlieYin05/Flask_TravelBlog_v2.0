@@ -773,6 +773,7 @@ def get_itinerary(id):
          "state": day.state or "",
          "city": day.city or "",
          "transport": day.transport or [],
+         "transport_other_text": day.transport_other_text or "",
          "restaurants": day.restaurants or [],
          "restaurant_specific": day.restaurant_specific or "",
           "accommodations": day.accommodations or [],

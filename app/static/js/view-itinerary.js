@@ -122,6 +122,14 @@ function renderTimeline() {
 
     days.forEach((dayObj) => {
         const transport = dayObj.transport || [];
+        const transportOtherText = (dayObj.transport_other_text || "").trim();
+        const displayTransport = transport.map((item) => {
+            if (item === "other" && transportOtherText) {
+                return transportOtherText;
+            }
+
+            return item;
+        });
         const activities = dayObj.activities || [];
 
         const daySection = document.createElement("section");
@@ -132,8 +140,8 @@ function renderTimeline() {
         const safeDay = escapeHtml(dayObj.day || "");
         const safeState = escapeHtml(dayObj.state || "");
         const safeCity = escapeHtml(dayObj.city || "");
-        const safeTransport = transport.length
-            ? transport.map((item) => escapeHtml(item)).join(", ")
+        const safeTransport = displayTransport.length
+            ? displayTransport.map((item) => escapeHtml(item)).join(", ")
             : "Not specified";
 
         dayHeader.innerHTML = `
@@ -197,10 +205,10 @@ function renderTimeline() {
         transportBlock.className = "info-chip-group";
 
         transportBlock.innerHTML = `
-            <h3 class="font-semibold text-lg">Transport on this day</h3>
+            <h3 class="font-semibold text-lg">Logistics</h3>
             <div class="flex flex-wrap gap-2 mt-2">
-                ${transport.length
-                ? transport.map((item) => `
+                ${displayTransport.length
+                ? displayTransport.map((item) => `
                             <div class="transport-card">
                                 ${escapeHtml(item)}
                             </div>
@@ -218,20 +226,27 @@ function renderTimeline() {
         const accommodations = dayObj.accommodations || [];
         const restaurants = dayObj.restaurants || [];
 
+        const accommodationTagsText = accommodations.length
+            ? accommodations.join(", ")
+            : "";
+        const restaurantTagsText = restaurants.length
+            ? restaurants.join(", ")
+            : "";
+
         const accommodationText =
-            dayObj.accommodation_specific ||
-            (accommodations.length ? accommodations.join(", ") : "");
+            accommodationTagsText || dayObj.accommodation_specific || "";
 
         const restaurantText =
-            dayObj.restaurant_specific ||
-            (restaurants.length ? restaurants.join(", ") : "");
+            restaurantTagsText || dayObj.restaurant_specific || "";
 
         if (accommodationText) {
             const accommodationCard = createLocationCard({
                 label: "Accommodation",
                 title: accommodationText,
                 image: "",
-                description: "",
+                description: dayObj.accommodation_specific
+                    ? `Specific Accommodation Name: ${dayObj.accommodation_specific}`
+                    : "",
                 place: accommodationText,
                 time: "",
                 state: dayObj.state || "",
@@ -251,7 +266,9 @@ function renderTimeline() {
                 label: "Restaurant",
                 title: restaurantText,
                 image: "",
-                description: "",
+                description: dayObj.restaurant_specific
+                    ? `Specific Restaurant Name: ${dayObj.restaurant_specific}`
+                    : "",
                 place: restaurantText,
                 time: "",
                 state: dayObj.state || "",
@@ -267,6 +284,10 @@ function renderTimeline() {
         }
 
         if (stayFoodGrid.children.length > 0) {
+            const stayFoodTitle = document.createElement("h3");
+            stayFoodTitle.className = "font-semibold text-lg";
+            stayFoodTitle.textContent = "Food & Stays";
+            extras.appendChild(stayFoodTitle);
             extras.appendChild(stayFoodGrid);
         }
 
@@ -321,24 +342,24 @@ function createLocationCard({
     const safeDescription = escapeHtml(description || "");
     const safePlace = escapeHtml(place || "");
     const safeTime = escapeHtml(time || "");
-    const safeState = escapeHtml(state || "");
-    const safeCity = escapeHtml(city || "");
 
     content.innerHTML = `
         ${safeImage ? `<img src="${safeImage}" class="card-image" alt="${safeTitle}">` : ""}
 
         <div class="card-body">
-            <div class="flex justify-between items-center">
+            <div>
                 <span class="${typeBadgeClass}">${safeLabel}</span>
-                ${safeTime ? `<span class="text-sm text-gray-500">${safeTime}</span>` : ""}
             </div>
 
-            <h3 class="card-title">${safeTitle}</h3>
+            <div class="card-title-row">
+                <div class="card-title-meta">
+                    <h3 class="card-title">${safeTitle}</h3>
+                    ${type === "activity" && safePlace ? `<p class="card-meta"><b>Place:</b> ${safePlace}</p>` : ""}
+                </div>
+                ${safeTime ? `<span class="card-time">${safeTime}</span>` : ""}
+            </div>
 
             ${safeDescription ? `<p class="card-desc">${safeDescription}</p>` : ""}
-
-            ${safePlace ? `<p class="card-meta"><b>Place:</b> ${safePlace}</p>` : ""}
-            <p class="card-meta"><b>State + City:</b> ${safeState}, ${safeCity}</p>
         </div>
     `;
 
