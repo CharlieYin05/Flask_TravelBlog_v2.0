@@ -319,10 +319,7 @@ function createLocationCard({
     const safeTitle = escapeHtml(title || "Untitled");
     const safeImage = sanitizeUploadImageUrl(image || "");
     const safeDescription = escapeHtml(description || "");
-    const safePlace = escapeHtml(place || "");
     const safeTime = escapeHtml(time || "");
-    const safeState = escapeHtml(state || "");
-    const safeCity = escapeHtml(city || "");
 
     content.innerHTML = `
         ${safeImage ? `<img src="${safeImage}" class="card-image" alt="${safeTitle}">` : ""}
@@ -336,9 +333,6 @@ function createLocationCard({
             <h3 class="card-title">${safeTitle}</h3>
 
             ${safeDescription ? `<p class="card-desc">${safeDescription}</p>` : ""}
-
-            ${safePlace ? `<p class="card-meta"><b>Place:</b> ${safePlace}</p>` : ""}
-            <p class="card-meta"><b>State + City:</b> ${safeState}, ${safeCity}</p>
         </div>
     `;
 
