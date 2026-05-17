@@ -122,6 +122,14 @@ function renderTimeline() {
 
     days.forEach((dayObj) => {
         const transport = dayObj.transport || [];
+        const transportOtherText = (dayObj.transport_other_text || "").trim();
+        const displayTransport = transport.map((item) => {
+            if (item === "other" && transportOtherText) {
+                return transportOtherText;
+            }
+
+            return item;
+        });
         const activities = dayObj.activities || [];
 
         const daySection = document.createElement("section");
@@ -132,8 +140,8 @@ function renderTimeline() {
         const safeDay = escapeHtml(dayObj.day || "");
         const safeState = escapeHtml(dayObj.state || "");
         const safeCity = escapeHtml(dayObj.city || "");
-        const safeTransport = transport.length
-            ? transport.map((item) => escapeHtml(item)).join(", ")
+        const safeTransport = displayTransport.length
+            ? displayTransport.map((item) => escapeHtml(item)).join(", ")
             : "Not specified";
 
         dayHeader.innerHTML = `
@@ -199,8 +207,8 @@ function renderTimeline() {
         transportBlock.innerHTML = `
             <h3 class="font-semibold text-lg">Transport on this day</h3>
             <div class="flex flex-wrap gap-2 mt-2">
-                ${transport.length
-                ? transport.map((item) => `
+                ${displayTransport.length
+                ? displayTransport.map((item) => `
                             <div class="transport-card">
                                 ${escapeHtml(item)}
                             </div>
