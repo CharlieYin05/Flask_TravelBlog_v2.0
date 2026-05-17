@@ -205,7 +205,7 @@ function renderTimeline() {
         transportBlock.className = "info-chip-group";
 
         transportBlock.innerHTML = `
-            <h3 class="font-semibold text-lg">Transport on this day</h3>
+            <h3 class="font-semibold text-lg">Logistics</h3>
             <div class="flex flex-wrap gap-2 mt-2">
                 ${displayTransport.length
                 ? displayTransport.map((item) => `
@@ -284,6 +284,10 @@ function renderTimeline() {
         }
 
         if (stayFoodGrid.children.length > 0) {
+            const stayFoodTitle = document.createElement("h3");
+            stayFoodTitle.className = "font-semibold text-lg";
+            stayFoodTitle.textContent = "Food & Stays";
+            extras.appendChild(stayFoodTitle);
             extras.appendChild(stayFoodGrid);
         }
 
