@@ -145,15 +145,16 @@ function renderTimeline() {
             : "Not specified";
 
         dayHeader.innerHTML = `
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-            <h2 class="text-2xl font-bold">Day ${safeDay}</h2>
-            <p class="text-gray-600 mt-1">${safeState} · ${safeCity}</p>
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                <div>
+                    <h2 class="text-2xl font-bold">Day ${safeDay}</h2>
+                </div>
+
+                <div class="inline-flex items-center gap-2 self-start px-4 py-2 rounded-full bg-white/80 border border-blue-200 shadow-sm text-blue-700 font-semibold">
+                    <span>📍</span>
+                    <span>${safeState} · ${safeCity}</span>
+                </div>
             </div>
-            <div class="text-sm text-gray-600">
-            <span class="font-semibold">Transport:</span> ${safeTransport}
-            </div>
-        </div>
         `;
         daySection.appendChild(dayHeader);
 
@@ -205,7 +206,7 @@ function renderTimeline() {
         transportBlock.className = "info-chip-group";
 
         transportBlock.innerHTML = `
-            <h3 class="font-semibold text-lg">Logistics</h3>
+            <h3 class="font-semibold text-lg">Transportation</h3>
             <div class="flex flex-wrap gap-2 mt-2">
                 ${displayTransport.length
                 ? displayTransport.map((item) => `
@@ -286,7 +287,7 @@ function renderTimeline() {
         if (stayFoodGrid.children.length > 0) {
             const stayFoodTitle = document.createElement("h3");
             stayFoodTitle.className = "font-semibold text-lg";
-            stayFoodTitle.textContent = "Food & Stays";
+            stayFoodTitle.textContent = "Accommodation & Food";
             extras.appendChild(stayFoodTitle);
             extras.appendChild(stayFoodGrid);
         }
@@ -826,7 +827,7 @@ function renderComments(comments) {
         item.className = "comment-item";
 
         const author = escapeHtml(comment.author || "User");
-        const createdAt = escapeHtml(comment.created_at || "");
+        const createdAt = escapeHtml(formatCommentTime(comment.created_at));
         const content = escapeHtml(comment.content || "");
         const avatarUrl = sanitizeUploadImageUrl(comment.author_avatar_url || "");
         const initial = author.charAt(0).toUpperCase();
@@ -849,14 +850,14 @@ function renderComments(comments) {
                     </div>
 
                     ${canDelete
-                        ? `<button
+                ? `<button
                                 class="delete-comment-btn"
                                 data-comment-id="${commentId}"
                             >
                                 Delete
                             </button>`
-                        : ""
-                    }
+                : ""
+            }
                 </div>
 
                 <p class="comment-content">${content}</p>
@@ -936,4 +937,26 @@ function sanitizeUploadImageUrl(url) {
     }
 
     return "";
+}
+
+// For unified time zone and time display
+function formatCommentTime(value) {
+    if (!value) return "";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleString("en-AU", {
+        timeZone: "Australia/Perth",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZoneName: "short"
+    });
 }

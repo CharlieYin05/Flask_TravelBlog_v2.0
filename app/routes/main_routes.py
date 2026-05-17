@@ -2,6 +2,7 @@ import re
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from uuid import uuid4
+from datetime import timezone
 
 from flask_login import (
     current_user as flask_current_user,
@@ -845,7 +846,7 @@ def get_itinerary_interactions(id):
                     if comment.user and comment.user.avatar_url
                     else ""
                 ),
-                "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M"),
+                "created_at": comment.created_at.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z"),
                 "can_delete": bool(current_user and comment.user_id == current_user.id),
             }
             for comment in comments
@@ -949,7 +950,7 @@ def create_itinerary_comment(id):
                 if current_user.avatar_url
                 else ""
             ),
-            "created_at": comment.created_at.strftime("%Y-%m-%d %H:%M"),
+            "created_at": comment.created_at.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z"),
             "can_delete": True,
         },
     }), 201

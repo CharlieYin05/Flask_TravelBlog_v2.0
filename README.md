@@ -1,5 +1,10 @@
 # Travel Social Media Website
 
+> ## 🚀 Want to use the website directly?
+> You can visit the live deployed version here: **https://travelblog.cy-server.com**
+>
+> You only need to follow the local setup instructions below if you want to run or develop the project on your own machine.
+
 Travel Social Media Website is a Flask-based web application for sharing travel itineraries. Users can create an account, sign in, submit their own travel plans, browse itineraries from other users, view detailed day-by-day travel routes, like or favourite posts, and leave comments.
 
 The goal of this project is to create a web application where travel information can be uploaded, viewed, and shared. Users upload data by submitting itineraries with destinations, activities, transport options, accommodation, restaurants, and photos. Other users can then explore this data through browse, search, itinerary detail, map, like, favourite, and comment features.
