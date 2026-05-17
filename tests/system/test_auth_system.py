@@ -230,10 +230,14 @@ class AuthSystemTests(unittest.TestCase):
             )
         )
         sign_out_button.click()
-        self.wait.until(EC.url_to_be(f"{self.base_url}/"))
+        sign_in_link = self.wait.until(
+            EC.visibility_of_element_located(
+                (By.XPATH, "//a[normalize-space()='Sign in']")
+            )
+        )
 
         self.assertEqual(self.driver.current_url, f"{self.base_url}/")
-        self.assertIn("Sign in", self.driver.page_source)
+        self.assertEqual(sign_in_link.text, "Sign in")
 
 
 if __name__ == "__main__":
