@@ -343,15 +343,19 @@ function createLocationCard({
         ${safeImage ? `<img src="${safeImage}" class="card-image" alt="${safeTitle}">` : ""}
 
         <div class="card-body">
-            <div class="flex justify-between items-center">
+            <div>
                 <span class="${typeBadgeClass}">${safeLabel}</span>
-                ${safeTime ? `<span class="text-sm text-gray-500">${safeTime}</span>` : ""}
             </div>
 
-            <h3 class="card-title">${safeTitle}</h3>
+            <div class="card-title-row">
+                <div class="card-title-meta">
+                    <h3 class="card-title">${safeTitle}</h3>
+                    ${type === "activity" && safePlace ? `<p class="card-meta"><b>Place:</b> ${safePlace}</p>` : ""}
+                </div>
+                ${safeTime ? `<span class="card-time">${safeTime}</span>` : ""}
+            </div>
 
             ${safeDescription ? `<p class="card-desc">${safeDescription}</p>` : ""}
-            ${type === "activity" && safePlace ? `<p class="card-meta"><b>Place:</b> ${safePlace}</p>` : ""}
         </div>
     `;
 
