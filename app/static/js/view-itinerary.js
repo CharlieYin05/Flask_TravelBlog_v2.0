@@ -226,20 +226,27 @@ function renderTimeline() {
         const accommodations = dayObj.accommodations || [];
         const restaurants = dayObj.restaurants || [];
 
+        const accommodationTagsText = accommodations.length
+            ? accommodations.join(", ")
+            : "";
+        const restaurantTagsText = restaurants.length
+            ? restaurants.join(", ")
+            : "";
+
         const accommodationText =
-            dayObj.accommodation_specific ||
-            (accommodations.length ? accommodations.join(", ") : "");
+            accommodationTagsText || dayObj.accommodation_specific || "";
 
         const restaurantText =
-            dayObj.restaurant_specific ||
-            (restaurants.length ? restaurants.join(", ") : "");
+            restaurantTagsText || dayObj.restaurant_specific || "";
 
         if (accommodationText) {
             const accommodationCard = createLocationCard({
                 label: "Accommodation",
                 title: accommodationText,
                 image: "",
-                description: "",
+                description: dayObj.accommodation_specific
+                    ? `Specific Accommodation Name: ${dayObj.accommodation_specific}`
+                    : "",
                 place: accommodationText,
                 time: "",
                 state: dayObj.state || "",
@@ -259,7 +266,9 @@ function renderTimeline() {
                 label: "Restaurant",
                 title: restaurantText,
                 image: "",
-                description: "",
+                description: dayObj.restaurant_specific
+                    ? `Specific Restaurant Name: ${dayObj.restaurant_specific}`
+                    : "",
                 place: restaurantText,
                 time: "",
                 state: dayObj.state || "",
