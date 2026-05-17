@@ -336,6 +336,7 @@ function createLocationCard({
     const safeTitle = escapeHtml(title || "Untitled");
     const safeImage = sanitizeUploadImageUrl(image || "");
     const safeDescription = escapeHtml(description || "");
+    const safePlace = escapeHtml(place || "");
     const safeTime = escapeHtml(time || "");
 
     content.innerHTML = `
@@ -350,6 +351,7 @@ function createLocationCard({
             <h3 class="card-title">${safeTitle}</h3>
 
             ${safeDescription ? `<p class="card-desc">${safeDescription}</p>` : ""}
+            ${type === "activity" && safePlace ? `<p class="card-meta"><b>Place:</b> ${safePlace}</p>` : ""}
         </div>
     `;
 
