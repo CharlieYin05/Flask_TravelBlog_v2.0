@@ -21,12 +21,11 @@ function escapeHtml(str) {
 }
 
 const COUNTRY_CODES = {
-    "Australia": "au", "Canada": "ca", "China": "cn", "France": "fr",
-    "Germany": "de", "Indonesia": "id", "Italy": "it", "Japan": "jp",
-    "Malaysia": "my", "New Zealand": "nz", "Singapore": "sg",
-    "South Korea": "kr", "Spain": "es", "Switzerland": "ch",
-    "Thailand": "th", "United Kingdom": "gb", "United States": "us",
-    "Vietnam": "vn"
+    "Australia": "au", "Austria": "at", "Canada": "ca", "China": "cn", "France": "fr",
+    "Germany": "de", "Greece": "gr", "India": "in", "Indonesia": "id", "Ireland": "ie", "Italy": "it", "Japan": "jp",
+    "Malaysia": "my", "Mexico": "mx", "Netherlands": "nl", "New Zealand": "nz", "Philippines": "ph", "Portugal": "pt",
+    "Singapore": "sg", "South Korea": "kr", "Spain": "es", "Switzerland": "ch", "Thailand": "th", "Turkey": "tr", 
+    "United Arab Emirates": "ae", "United Kingdom": "gb", "United States": "us", "Vietnam": "vn"
 };
 
 function getInitials(n) { if (!n) return "?"; return n.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2); }
