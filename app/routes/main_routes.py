@@ -39,23 +39,34 @@ main_bp = Blueprint("main", __name__)
 def country_to_flag(country_name: str) -> str:
     FLAGS = {
         "australia": "🇦🇺",
+        "austria": "🇦🇹",
         "canada": "🇨🇦",
         "china": "🇨🇳",
         "france": "🇫🇷",
         "germany": "🇩🇪",
+        "greece": "🇬🇷",
+        "india": "🇮🇳",
         "indonesia": "🇮🇩",
+        "ireland": "🇮🇪",
         "italy": "🇮🇹",
         "japan": "🇯🇵",
         "malaysia": "🇲🇾",
+        "mexico": "🇲🇽",
+        "netherlands": "🇳🇱",
         "new zealand": "🇳🇿",
+        "philippines": "🇵🇭",
+        "portugal": "🇵🇹",
         "singapore": "🇸🇬",
         "south korea": "🇰🇷",
         "spain": "🇪🇸",
         "switzerland": "🇨🇭",
         "thailand": "🇹🇭",
+        "turkey": "🇹🇷",
+        "united arab emirates": "🇦🇪",
         "united kingdom": "🇬🇧",
         "united states": "🇺🇸",
         "vietnam": "🇻🇳",
+        
     }
     return FLAGS.get(country_name.lower().strip(), "🌍")
 

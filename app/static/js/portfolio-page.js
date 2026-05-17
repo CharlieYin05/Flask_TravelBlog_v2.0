@@ -1,8 +1,3 @@
-// portfolio-page.js
-// JavaScript for the Portfolio Page (your own profile)
-
-// ── DATA — comes from PORTFOLIO_DATA injected by Flask ──
-
 // ── HELPERS ──
 function getCsrfToken() {
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
@@ -21,15 +16,21 @@ function escapeHtml(str) {
 }
 
 const COUNTRY_CODES = {
-    "Australia": "au", "Canada": "ca", "China": "cn", "France": "fr",
-    "Germany": "de", "Indonesia": "id", "Italy": "it", "Japan": "jp",
-    "Malaysia": "my", "New Zealand": "nz", "Singapore": "sg",
-    "South Korea": "kr", "Spain": "es", "Switzerland": "ch",
-    "Thailand": "th", "United Kingdom": "gb", "United States": "us",
-    "Vietnam": "vn"
+    "Australia": "au", "Austria": "at", "Canada": "ca", "China": "cn", "France": "fr",
+    "Germany": "de", "Greece": "gr", "India": "in", "Indonesia": "id", "Ireland": "ie", "Italy": "it", "Japan": "jp",
+    "Malaysia": "my", "Mexico": "mx", "Netherlands": "nl", "New Zealand": "nz", "Philippines": "ph", "Portugal": "pt",
+    "Singapore": "sg", "South Korea": "kr", "Spain": "es", "Switzerland": "ch", "Thailand": "th", "Turkey": "tr", 
+    "United Arab Emirates": "ae", "United Kingdom": "gb", "United States": "us", "Vietnam": "vn"
 };
 
-function getInitials(n) { if (!n) return "?"; return n.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2); }
+function getInitials(name) { 
+    if (!name) return "?"; 
+    return name.split(" ")
+        .map(word => word[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2); 
+}
 
 // ── UPLOAD VALIDATION ──
 const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
@@ -49,7 +50,8 @@ function validateImageFile(file) {
 document.getElementById("avatar-display").addEventListener("click", () => document.getElementById("avatar-upload").click());
 document.getElementById("avatar-overlay-btn").addEventListener("click", () => document.getElementById("avatar-upload").click());
 document.getElementById("avatar-upload").addEventListener("change", e => {
-    const file = e.target.files[0]; if (!file) return;
+    const file = e.target.files[0]; 
+    if (!file) return;
 
     const error = validateImageFile(file);
     if (error) {
@@ -75,7 +77,11 @@ document.getElementById("avatar-upload").addEventListener("change", e => {
             const d = document.getElementById("avatar-display");
             document.getElementById("avatar-initials").style.display = "none";
             let img = d.querySelector("img");
-            if (!img) { img = document.createElement("img"); img.className = "w-full h-full object-cover"; d.appendChild(img); }
+            if (!img) { 
+                img = document.createElement("img"); 
+                img.className = "w-full h-full object-cover";
+                d.appendChild(img); 
+            }
             img.src = data.url;
             const nav = document.getElementById("nav-avatar-display");
             if (nav) nav.innerHTML = `<img src="${data.url}" class="w-full h-full object-cover rounded-full">`;
@@ -85,7 +91,8 @@ document.getElementById("avatar-upload").addEventListener("change", e => {
 // ── BANNER UPLOAD (saves to server) ──
 document.getElementById("banner-edit-btn").addEventListener("click", () => document.getElementById("banner-upload").click());
 document.getElementById("banner-upload").addEventListener("change", e => {
-    const file = e.target.files[0]; if (!file) return;
+    const file = e.target.files[0]; 
+    if (!file) return;
 
     const error = validateImageFile(file);
     if (error) {
@@ -181,8 +188,8 @@ document.getElementById("favourites-filter-btn").addEventListener("click", () =>
     } else {
         btn.classList.remove("active");
         document.querySelectorAll("#itineraries-grid li").forEach(li => {
-        const id = parseInt(li.dataset.itineraryId);
-        li.style.display = PORTFOLIO_DATA.own_itinerary_ids.includes(id) ? "" : "none";
+            const id = parseInt(li.dataset.itineraryId);
+            li.style.display = PORTFOLIO_DATA.own_itinerary_ids.includes(id) ? "" : "none";
         });
     }
 });
@@ -214,9 +221,17 @@ function renderCountries(countries) {
         const li = document.createElement("li");
         const btn = document.createElement("button");
         btn.className = "country-tag";
+        // Expand button width to fit the country name
         btn.style.setProperty("--expanded-width", (52 + 8 + (country.length * 8.5) + 14) + "px");
         const code = COUNTRY_CODES[country] || "un";
-        btn.innerHTML = `<span class="flag-circle"><img src="https://flagcdn.com/w40/${code}.png" alt="${escapeHtml(country)}" class="w-7 h-5 object-cover rounded-sm"></span><span class="country-name">${escapeHtml(country)}</span>`;
+        btn.innerHTML = `
+            <span class="flag-circle">
+                <img src="https://flagcdn.com/w40/${code}.png" 
+                    alt="${escapeHtml(country)}" 
+                    class="w-7 h-5 object-cover rounded-sm">
+            </span>
+            <span class="country-name">${escapeHtml(country)}</span>
+            `;
         btn.addEventListener("click", () => filterByCountry(country, btn));
         li.appendChild(btn);
         list.appendChild(li);
@@ -284,7 +299,9 @@ function renderItineraries(itineraries) {
                     PORTFOLIO_DATA.itineraries = PORTFOLIO_DATA.itineraries.filter(x => x.id !== it.id);
                     const remaining = PORTFOLIO_DATA.itineraries;
                     const countries = {};
-                    remaining.forEach(x => { countries[x.location] = { flag: "🌍" }; });
+                    remaining.forEach(x => {
+                         countries[x.location] = { flag: "🌍" }; 
+                        });
                     renderCountries(countries);
                     document.getElementById("stat-posts").textContent = remaining.length;
                     document.getElementById("stat-countries").textContent = Object.keys(countries).length;
