@@ -206,10 +206,17 @@ docker exec -i mysql-db mysql -uroot -p${MYSQL_ROOT_PASSWORD} travelblog < /tmp/
 
 ### 啊啊啊啊！好多兼容性问题，未来直接重构原生MySQL数据库吧。。。今天数据库迁移计划算是失败了。暂时用SQLite顶着。主要是迁移的过程全靠AI来修复兼容性问题我都不知道数据库结构有没有被破坏，里面的数据还在不在。
 
+## 当前结论
 
+直接使用 SQLite `.dump` 转换并导入 MySQL 的方案已停止。
+SQLite 和 MySQL 在建表语法、主键自增、JSON、约束和数据转义方面存在较多差异。继续通过批量 `sed` 修改 SQL 文件，无法可靠保证数据库结构和原始数据的完整性。
+原始SQLite数据库及备份都还保留着。
 
-
-    
-
-
-
+本次维护并非完全失败，已完成：
+- Flask 支持通过 DATABASE_URL 切换数据库；
+- 安装并验证 PyMySQL；
+- 部署 MySQL 容器；
+- 为低内存 VPS 增加 Swap；
+- 增加 MySQL 低内存配置；
+- 排查并解决 Nginx 端口冲突；
+- 确认直接转换 SQLite dump 的方案不可靠。
