@@ -138,9 +138,11 @@
 
 #### 问题2 启动无法登进我的MySQL服务器
   问题：输入 `docker exec -it mysql-db mysql -u travelblog -p` 和 `docker exec -it mysql-db mysql -u root -p`都无法登录，显示：
+    
     ```
     ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
     ```
+    
   怀疑：初次启动的时候还没有完成就被linux OOM Killer把进程杀了
   解决：准备妥当后重新启动MySQL，初始化时关闭Flask和NPM省内存和CPU占用。初始化后加载.env的文件（MySQL密码）。最后启动NPM和Flask
     ```
@@ -150,13 +152,13 @@
     ```
 
 #### 问题3 开启NPM时失败，显示端口80被占用Docker无法开启NPM
-  排查：哪个狗进程占我80端口：
+排查：哪个狗进程占我80端口：
     ```
     sudo ss -tlnp | grep :80
     LISTEN 0      511          0.0.0.0:80        0.0.0.0:*    users:(("nginx",pid=748,fd=5),("nginx",pid=746,fd=5),("nginx",pid=745,fd=5))
     LISTEN 0      511             [::]:80           [::]:*    users:(("nginx",pid=748,fd=6),("nginx",pid=746,fd=6),("nginx",pid=745,fd=6))
     ```
-  解决：关闭系统自带的Nginx进程，重新启动NPM
+解决：关闭系统自带的Nginx进程，重新启动NPM
     ```
     sudo systemctl stop nginx
 
@@ -170,15 +172,15 @@
 ### 3. 数据库迁移
 
 #### 3.1 导出SQLite数据库为SQL文件并备份
-  先安装SQLite3:
+先安装SQLite3:
     ```
     sudo apt install sqlite3
     ```
-  导出导出 SQLite 数据库为 SQL 文件：
+导出导出 SQLite 数据库为 SQL 文件：
     ```
     sqlite3 ~/cits3403-project/persistent-db/app.db .dump > /tmp/app.sql
     ```
-  备份原始文件:
+备份原始文件:
     ```
     cp /tmp/app.sql /tmp/app.sql.orig
     ```
