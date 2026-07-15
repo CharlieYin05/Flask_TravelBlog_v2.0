@@ -188,8 +188,7 @@
     ```
 
 #### 3.2 把原来的数据库导入到MySQL
-  先检查语法是否兼容：
-  
+先检查语法是否兼容：
     ```
     sed -i 's/AUTOINCREMENT/AUTO_INCREMENT/g' /tmp/app.sql
 
