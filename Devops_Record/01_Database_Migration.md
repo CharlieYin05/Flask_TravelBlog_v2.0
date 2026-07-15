@@ -189,6 +189,7 @@
 
 #### 3.2 把原来的数据库导入到MySQL
   先检查语法是否兼容：
+  
     ```
     sed -i 's/AUTOINCREMENT/AUTO_INCREMENT/g' /tmp/app.sql
 
@@ -196,10 +197,12 @@
 
     sed -i '/PRAGMA/d' /tmp/app.sql
     ```
+    
   再拷贝到MySQL容器：
     ```
     docker cp /tmp/app.sql mysql-db:/app.sql
     ```
+    
   导入到MySQL数据库:
     ```
     source ~/web-stack/.env
