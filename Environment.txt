@@ -1,0 +1,16 @@
+## Project operating environment
+
+OS: Ubuntu 24.04.4 LTS
+
+Docker: 29.5.0
+
+Docker Compose: v5.1.3
+
+Python: 3.12.13
+
+Database:
+    SQLite
+    MySQL
+
+Deployment:
+Docker + Gunicorn + Nginx Proxy Manager
