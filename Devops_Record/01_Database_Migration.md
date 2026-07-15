@@ -204,12 +204,11 @@
     ```
     
   导入到MySQL数据库:
-    
-    ```
-    source ~/web-stack/.env
+  ```
+  source ~/web-stack/.env
 
-    docker exec -i mysql-db mysql -uroot -p${MYSQL_ROOT_PASSWORD} travelblog < /tmp/app.sql
-    ```
+  docker exec -i mysql-db mysql -uroot -p${MYSQL_ROOT_PASSWORD} travelblog < /tmp/app.sql
+  ```
 
 ### 啊啊啊啊！好多兼容性问题，未来直接重构原生MySQL数据库吧。。今天数据库迁移计划算是失败了。暂时用SQLite顶着。主要是迁移的过程全靠AI来修复兼容性问题我都不知道数据库结构有没有被破坏，里面的数据还在不在。
 
