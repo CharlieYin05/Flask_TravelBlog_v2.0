@@ -170,21 +170,21 @@
 ### 3. 数据库迁移
 
 #### 3.1 导出SQLite数据库为SQL文件并备份
-    先安装SQLite3:
+  先安装SQLite3:
     ```
     sudo apt install sqlite3
     ```
-    导出导出 SQLite 数据库为 SQL 文件：
+  导出导出 SQLite 数据库为 SQL 文件：
     ```
     sqlite3 ~/cits3403-project/persistent-db/app.db .dump > /tmp/app.sql
     ```
-    备份原始文件:
+  备份原始文件:
     ```
     cp /tmp/app.sql /tmp/app.sql.orig
     ```
 
 #### 3.2 把原来的数据库导入到MySQL
-    先检查语法是否兼容：
+  先检查语法是否兼容：
     ```
     sed -i 's/AUTOINCREMENT/AUTO_INCREMENT/g' /tmp/app.sql
 
@@ -192,17 +192,19 @@
 
     sed -i '/PRAGMA/d' /tmp/app.sql
     ```
-    再拷贝到MySQL容器：
+  再拷贝到MySQL容器：
     ```
     docker cp /tmp/app.sql mysql-db:/app.sql
     ```
-    导入到MySQL数据库:
+  导入到MySQL数据库:
     ```
     source ~/web-stack/.env
 
     docker exec -i mysql-db mysql -uroot -p${MYSQL_ROOT_PASSWORD} travelblog < /tmp/app.sql
     ```
-    啊啊啊啊！好多兼容性问题，直接重构原生MySQL数据库吧。。。今天数据库迁移计划算是失败了。暂时用SQLite顶着。
+
+### 啊啊啊啊！好多兼容性问题，未来直接重构原生MySQL数据库吧。。今天数据库迁移计划算是失败了。暂时用SQLite顶着。主要是迁移的过程全靠AI来修复兼容性问题我都不知道数据库结构有没有被破坏，里面的数据还在不在。
+
 
 
 
