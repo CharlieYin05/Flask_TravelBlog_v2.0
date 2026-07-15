@@ -18,11 +18,11 @@
 #### 1.1 requirements.txt里添加PyMySQL
 
 #### 1.2 改Flask配置文件
-  进入 app/config.py，把写死的连接SQLite:
+进入 app/config.py，把写死的连接SQLite:
   ```
   SQLALCHEMY_DATABASE_URI = f"sqlite:///{BASE_DIR / 'app.db'}"
   ```
-  改成本地开发环境没有`DATABASE_URL` → 自动用 SQLite，服务器在`.env`设置了`DATABASEL_URL` → 自动用MySQL：
+改成本地开发环境没有`DATABASE_URL` → 自动用 SQLite，服务器在`.env`设置了`DATABASEL_URL` → 自动用MySQL：
   ```
   SQLALCHEMY_DATABASE_URI = os.environ.get(
     "DATABASE_URL",
@@ -60,22 +60,22 @@
     ```
 
 #### 2.3 启动MySQL并首次运行确认初始化
-    MySQl,启动！
+  MySQl,启动！
     ```
     cd ~/web-stack
     docker compose up -d mysql
     ```
     ---
-    确认容器运行
+  确认容器运行
     ```
     docker ps
     ```
     ---
-    看日志
+  看日志
     ```
     docker logs mysql-db
     ```
-    理论上第一次启动看到Initializing database，最后出现ready for connections
+  理论上第一次启动看到Initializing database，最后出现ready for connections
     ---
 #### 问题1 首次初始化MySQL时把我的VPS小水管1G内存给榨干了，反复触发OOM Killer，整台机器卡到连Console都没法连接
     拯救服务器：
@@ -137,12 +137,12 @@
 
 
 #### 问题2 启动无法登进我的MySQL服务器
-    问题：输入 `docker exec -it mysql-db mysql -u travelblog -p` 和 `docker exec -it mysql-db mysql -u root -p`都无法登录，显示：
+  问题：输入 `docker exec -it mysql-db mysql -u travelblog -p` 和 `docker exec -it mysql-db mysql -u root -p`都无法登录，显示：
     ```
     ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
     ```
-    怀疑：初次启动的时候还没有完成就被linux OOM Killer把进程杀了
-    解决：准备妥当后重新启动MySQL，初始化时关闭Flask和NPM省内存和CPU占用。初始化后加载.env的文件（MySQL密码）。最后启动NPM和Flask
+  怀疑：初次启动的时候还没有完成就被linux OOM Killer把进程杀了
+  解决：准备妥当后重新启动MySQL，初始化时关闭Flask和NPM省内存和CPU占用。初始化后加载.env的文件（MySQL密码）。最后启动NPM和Flask
     ```
     docker compose up -d mysql
 
@@ -150,13 +150,13 @@
     ```
 
 #### 问题3 开启NPM时失败，显示端口80被占用Docker无法开启NPM
-    排查：哪个狗进程占我80端口：
+  排查：哪个狗进程占我80端口：
     ```
     sudo ss -tlnp | grep :80
     LISTEN 0      511          0.0.0.0:80        0.0.0.0:*    users:(("nginx",pid=748,fd=5),("nginx",pid=746,fd=5),("nginx",pid=745,fd=5))
     LISTEN 0      511             [::]:80           [::]:*    users:(("nginx",pid=748,fd=6),("nginx",pid=746,fd=6),("nginx",pid=745,fd=6))
     ```
-    解决：关闭系统自带的Nginx进程，重新启动NPM
+  解决：关闭系统自带的Nginx进程，重新启动NPM
     ```
     sudo systemctl stop nginx
 
