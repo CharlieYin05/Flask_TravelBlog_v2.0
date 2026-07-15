@@ -152,12 +152,14 @@
     ```
 
 #### 问题3 开启NPM时失败，显示端口80被占用Docker无法开启NPM
-排查：哪个狗进程占我80端口：
+  排查：哪个狗进程占我80端口：
+  
     ```
     sudo ss -tlnp | grep :80
     LISTEN 0      511          0.0.0.0:80        0.0.0.0:*    users:(("nginx",pid=748,fd=5),("nginx",pid=746,fd=5),("nginx",pid=745,fd=5))
     LISTEN 0      511             [::]:80           [::]:*    users:(("nginx",pid=748,fd=6),("nginx",pid=746,fd=6),("nginx",pid=745,fd=6))
     ```
+    
 解决：关闭系统自带的Nginx进程，重新启动NPM
     ```
     sudo systemctl stop nginx
