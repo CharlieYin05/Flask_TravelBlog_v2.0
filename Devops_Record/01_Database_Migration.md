@@ -61,22 +61,22 @@
 
 #### 2.3 启动MySQL并首次运行确认初始化
   MySQl,启动！
-    ```
-    cd ~/web-stack
-    docker compose up -d mysql
-    ```
-    ---
+  ```
+  cd ~/web-stack
+  docker compose up -d mysql
+  ```
+  ---
   确认容器运行
-    ```
-    docker ps
-    ```
-    ---
+  ```
+  docker ps
+  ```
+  ---
   看日志
-    ```
-    docker logs mysql-db
-    ```
+  ```
+  docker logs mysql-db
+  ```
   理论上第一次启动看到Initializing database，最后出现ready for connections
-    ---
+  
 #### 问题1 首次初始化MySQL时把我的VPS小水管1G内存给榨干了，反复触发OOM Killer，整台机器卡到连Console都没法连接
     拯救服务器：
         1. Reboot重启主机
@@ -137,71 +137,67 @@
 
 
 #### 问题2 启动无法登进我的MySQL服务器
-  问题：输入 `docker exec -it mysql-db mysql -u travelblog -p` 和 `docker exec -it mysql-db mysql -u root -p`都无法登录，显示：
-    
-    ```
-    ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
-    ```
+  问题：输入 `docker exec -it mysql-db mysql -u travelblog -p` 和 `docker exec -it mysql-db mysql -u root -p`都无法登录，显示：  
+  ```
+  ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+  ```
     
   怀疑：初次启动的时候还没有完成就被linux OOM Killer把进程杀了
   解决：准备妥当后重新启动MySQL，初始化时关闭Flask和NPM省内存和CPU占用。初始化后加载.env的文件（MySQL密码）。最后启动NPM和Flask
-    ```
-    docker compose up -d mysql
+  ```
+  docker compose up -d mysql
 
-    source ~/web-stack/.env
-    ```
+  source ~/web-stack/.env
+  ```
 
 #### 问题3 开启NPM时失败，显示端口80被占用Docker无法开启NPM
   排查：哪个狗进程占我80端口：
-  
-    ```
-    sudo ss -tlnp | grep :80
-    LISTEN 0      511          0.0.0.0:80        0.0.0.0:*    users:(("nginx",pid=748,fd=5),("nginx",pid=746,fd=5),("nginx",pid=745,fd=5))
-    LISTEN 0      511             [::]:80           [::]:*    users:(("nginx",pid=748,fd=6),("nginx",pid=746,fd=6),("nginx",pid=745,fd=6))
-    ```
+  ```
+  sudo ss -tlnp | grep :80
+  LISTEN 0      511          0.0.0.0:80        0.0.0.0:*    users:(("nginx",pid=748,fd=5),("nginx",pid=746,fd=5),("nginx",pid=745,fd=5))
+  LISTEN 0      511             [::]:80           [::]:*    users:(("nginx",pid=748,fd=6),("nginx",pid=746,fd=6),("nginx",pid=745,fd=6))
+  ```
     
-解决：关闭系统自带的Nginx进程，重新启动NPM
-    ```
-    sudo systemctl stop nginx
+  解决：关闭系统自带的Nginx进程，重新启动NPM
+  ```
+  sudo systemctl stop nginx
 
-    sudo systemctl disable nginx   # 防止下次开机自动启动
+  sudo systemctl disable nginx   # 防止下次开机自动启动
 
-    docker rm npm
+  docker rm npm
 
-    docker compose up -d npm
-    ```
+  docker compose up -d npm
+  ```
 
 ### 3. 数据库迁移
 
 #### 3.1 导出SQLite数据库为SQL文件并备份
-先安装SQLite3:
-    ```
-    sudo apt install sqlite3
-    ```
-导出导出 SQLite 数据库为 SQL 文件：
-    ```
-    sqlite3 ~/cits3403-project/persistent-db/app.db .dump > /tmp/app.sql
-    ```
-备份原始文件:
-    ```
-    cp /tmp/app.sql /tmp/app.sql.orig
-    ```
+  先安装SQLite3:
+  ```
+  sudo apt install sqlite3
+  ```
+  导出导出 SQLite 数据库为 SQL 文件：
+  ```
+  sqlite3 ~/cits3403-project/persistent-db/app.db .dump > /tmp/app.sql
+  ```
+  备份原始文件:
+  ```
+  cp /tmp/app.sql /tmp/app.sql.orig
+  ```
 
 #### 3.2 把原来的数据库导入到MySQL
-    先检查语法是否兼容：
-    
-    ```
-    sed -i 's/AUTOINCREMENT/AUTO_INCREMENT/g' /tmp/app.sql
+  先检查语法是否兼容：
+  ```
+  sed -i 's/AUTOINCREMENT/AUTO_INCREMENT/g' /tmp/app.sql
 
-    sed -i 's/"\([^"]*\)"/`\1`/g' /tmp/app.sql
-
-    sed -i '/PRAGMA/d' /tmp/app.sql
-    ```
+  sed -i 's/"\([^"]*\)"/`\1`/g' /tmp/app.sql
+  sed -i '/PRAGMA/d' /tmp/app.sql
+  ```
     
   再拷贝到MySQL容器：
-    ```
-    docker cp /tmp/app.sql mysql-db:/app.sql
-    ```
+  ```
+  docker cp /tmp/app.sql mysql-db:/app.sql
+  ```
     
   导入到MySQL数据库:
   ```
