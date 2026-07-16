@@ -12,9 +12,8 @@
 ## 过程
 
 ### 1.Bug复现
-- Post一天一个Activity（正常）
-- Post一天四个Activity（正常）
-- Post两天六个Activuty，全写Description和每天选择食宿（正常）
-- 初步怀疑时Description和Other要全写，没写不让Post但是没有弹窗
-
-
+- 用Chrome浏览器，Post一天一个Activity（正常）
+- 用Chrome浏览器，Post一天四个Activity（正常）
+- 用Chrome浏览器，Post两天六个Activuty，全写Description和每天选择食宿（正常）
+- 用Chrome浏览器，初步怀疑时Description和Other要全写，没写不让Post但是没有弹窗提示（正常）
+- 用Chrome浏览器，Post两天六个Activity，不填写Description，不填写交通，Chrome会提示要填写（正常）
