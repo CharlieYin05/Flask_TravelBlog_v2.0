@@ -1,4 +1,4 @@
-<img width="1032" height="596" alt="dns" src="https://github.com/user-attachments/assets/2a503290-10b6-4b4e-a4cb-e4713ae73125" /># 电脑的Chrome和Safari经常连不上我的网站
+# Safari经常连不上我的网站
 
 ***2026-07-19***
 
@@ -61,11 +61,12 @@ AAAA travelblog.cy-server.com
 A    travelblog.cy-server.com
 HTTPS travelblog.cy-server.com
 ```
-A代表查询IPv4地址
-AAAA代表查询IPv4地址
-HTTPS是DNS HTTPS Resource Record (SVCB/HTTPS)，注意不是HTTPS TCP443流量。
+A代表查询IPv4地址\n
+AAAA代表查询IPv4地址\n
+HTTPS是DNS HTTPS Resource Record (SVCB/HTTPS)，注意不是HTTPS TCP443流量
 
-#### 异常点：
+#### 异常点1：
+![Show_router-ip](03_Image/L3_packet_show_router_ip.png)
 查看 `A    travelblog.cy-server.com` 的L3 Packet时发现了家里路由器IP地址。考虑到我之前对路由器设置过maqDNS用于解析cy-server.com的内部服务，而我mac又开启了tailscale，可能所有的cy-server.com流量加密回家，而不是走网站服务器。
 
 错误流量：
@@ -92,6 +93,32 @@ dig travelblog.cy-server.com @1.1.1.1
 
 dig travelblog.cy-server.com @8.8.8.8
 ```
+结果：
+1. 查询家里路由器 DNS：失败，符合Wireshark中显示只有query，没有response的结果
+2. 查询 Cloudflare DNS：正常（返回的不是服务器公网IP因为CF开了橙云）
+3. 查询查询 Google DNS：也正常（返回的不是服务器公网IP因为CF开了橙云）
+
+### 2. 查看Mac实际用了哪些DNS
+
+```
+scutil --dns | grep -E 'resolver|nameserver|domain|if_index'
+
+networksetup -getdnsservers Wi-Fi（看看WiFi有没有专门DNS）
+
+dig travelblog.cy-server.com
+```
+
+#### 异常点2 dig 居然完全不能工作
+```
+;; connection timed out; no servers could be reached
+```
+Mac 连配置的 DNS Server 都联系不上。
+
+#### 异常点3 DNS根本没工作
+无论是Tailscale的Magic DNS还是UWA DNS理论上都应该能解析道travelblog公网ip，但是全部超时。
+
+
+### 
 
 
 
