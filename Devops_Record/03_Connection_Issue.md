@@ -92,7 +92,7 @@ dig travelblog.cy-server.com @8.8.8.8
 2. 查询 Cloudflare DNS：正常（返回的不是服务器公网IP因为CF开了橙云）
 3. 查询查询 Google DNS：也正常（返回的不是服务器公网IP因为CF开了橙云）
 
-##### 结论
+##### 异常结论:
 初步怀疑本地 dnsmasq 劫持了 cy-server.com，但后续验证发现实际上路由器 DNS 服务未响应，因此暂时排除 dnsmasq 返回错误地址这一假设。
 
 ### 2. 查看Mac实际用了哪些DNS
@@ -109,14 +109,14 @@ dig travelblog.cy-server.com
 ```
 ;; connection timed out; no servers could be reached
 ```
-Mac 连配置的 DNS Server 都联系不上。
+Mac 连配置的 DNS Server 都联系不上！
 
 #### 异常点3 DNS根本没工作
-无论是Tailscale的Magic DNS还是UWA DNS理论上都应该能解析道travelblog公网ip，但是全部超时。初步怀疑 Tailscale 接管了 DNS（MagicDNS / Accept DNS），但由于 Tailnet 连接异常，导致 DNS 查询无法完成。
+无论是Tailscale的Magic DNS还是UWA DNS理论上都应该能解析道travelblog公网ip，但是全部超时。初步怀疑 Tailscale 接管了 DNS（MagicDNS / Accept DNS），但由于 Tailnet 连接异常，导致 DNS 查询无法完成
 
 #### 修复
 - 关闭Mac Tailscale后 `dig dig travelblog.cy-server.com` 和网站能正常打开。一打开就dig失败并且网页刷新不出来。
-- 但是发现了更大的问题，我搭建的Tailscale貌似挂了，记忆里是两天（7月17号）前手机探针失联开始，一开始没当一会儿事儿，可能那个时候Tailscale就出现了问题。未来需要排查修复。
+- 但是发现了更大的问题，我搭建的Tailscale VPN貌似挂了，记忆里是两天（7月17号）前手机探针失联开始，一开始没当一会儿事儿，可能那个时候Tailscale就出现了问题。未来需要排查修复。
 
 ## 当前结论
 - 网站本身没有故障。
