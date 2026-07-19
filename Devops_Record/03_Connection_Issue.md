@@ -118,6 +118,40 @@ Mac 连配置的 DNS Server 都联系不上。
 - 关闭Mac Tailscale后 `dig dig travelblog.cy-server.com` 和网站能正常打开。一打开就dig失败并且网页刷新不出来。
 - 但是发现了更大的问题，我搭建的Tailscale貌似挂了，记忆里是两天（7月17号）前手机探针失联开始，一开始没当一会儿事儿，可能那个时候Tailscale就出现了问题。未来需要排查修复。
 
-## 
+## 当前结论
+- 网站本身没有故障。
+  真正导致浏览器偶发打不开的是：
+  ```
+  Mac
+  ↓
+  
+  Tailscale 接管 DNS
+  
+  ↓
+  
+  DNS 查询超时
+  
+  ↓
+  
+  Chrome/Safari
+  
+  ↓
+  
+  ERR_NAME_NOT_RESOLVED
+  ```
+  验证：
+  ```
+  关闭 Tailscale
+
+  ↓
+
+  dig 恢复
+
+  ↓
+
+  travelblog 正常访问
+  ```
+- 网站故障实际上是 Tailscale DNS 故障引起的连锁现象
+
 
 
