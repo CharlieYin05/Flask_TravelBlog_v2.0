@@ -9,8 +9,8 @@ Docker Compose: v5.1.3
 Python: 3.12.13
 
 Database:
-    SQLite
-    MySQL
+    SQLite3
+    MySQL9.7 LTS
 
 Deployment:
 Docker + Gunicorn + Nginx Proxy Manager
