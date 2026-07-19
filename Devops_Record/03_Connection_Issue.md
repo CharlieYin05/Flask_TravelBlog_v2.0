@@ -19,4 +19,33 @@
 
 ## 过程
 
+### 正常访问网站流程
+```
+Chrome
+   │
+   │ ① DNS 查询
+   ▼
+DNS Server
+   │
+   │ 返回 IP
+   ▼
+你的电脑
+   │
+   │ ② TCP 三次握手
+   ▼
+OCI VPS (80/443)
+   │
+   │ ③ TLS 握手
+   ▼
+Nginx Proxy Manager
+   │
+   │ ④ HTTP GET /
+   ▼
+Flask
+   │
+   │ 返回 HTML
+   ▼
+浏览器
+```
+
 ### 
