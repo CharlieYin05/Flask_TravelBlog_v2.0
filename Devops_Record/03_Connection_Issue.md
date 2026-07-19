@@ -15,6 +15,7 @@
   ![Safari_Stuck](03_Image/safari_not_connect.png)
   
 - Chrome显示先是卡在界面，然后弹出`ERR_NAME_NOT_RESOLVED`
+  ![Chrome_Stuck](03_Image/chrome_not_connect.png)
 
 ## 过程
 
