@@ -61,8 +61,10 @@ AAAA travelblog.cy-server.com
 A    travelblog.cy-server.com
 HTTPS travelblog.cy-server.com
 ```
-A代表查询IPv4地址\n
-AAAA代表查询IPv4地址\n
+A代表查询IPv4地址
+
+AAAA代表查询IPv4地址
+
 HTTPS是DNS HTTPS Resource Record (SVCB/HTTPS)，注意不是HTTPS TCP443流量
 
 #### 异常点1：
@@ -115,10 +117,10 @@ dig travelblog.cy-server.com
 Mac 连配置的 DNS Server 都联系不上。
 
 #### 异常点3 DNS根本没工作
-无论是Tailscale的Magic DNS还是UWA DNS理论上都应该能解析道travelblog公网ip，但是全部超时。
+无论是Tailscale的Magic DNS还是UWA DNS理论上都应该能解析道travelblog公网ip，但是全部超时。很有可能Tailscale已经掉线导致的。
 
-
-### 
-
+#### 修复
+- 关闭Mac Tailscale后 `dig dig travelblog.cy-server.com` 和网站能正常打开。一打开就dig失败并且网页刷新不出来。
+- 但是发现了更大的问题，我搭建的Tailscale貌似挂了，记忆里是两天（7月17号）前手机探针失联开始，一开始没当一会儿事儿，需要排查修复。
 
 
