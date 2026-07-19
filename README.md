@@ -71,44 +71,6 @@ To relate these pages to the required project views:
 
 ---
 
-# Running Unit & Selenium Tests
-
-Run unit tests:
-
-```bash
-python -m unittest discover -s tests/unit -v
-```
-
-Run Selenium system tests:
-
-```bash
-python -m unittest discover -s tests/system -v
-```
-
-The Selenium tests run in a real browser in headless mode. The project supports Chrome, Edge, or Firefox depending on the browser installed on your machine.
-
-Recommended example:
-
-```bash
-SELENIUM_BROWSER=chrome python -m unittest discover -s tests/system -v
-```
-
-Other supported options:
-
-```bash
-SELENIUM_BROWSER=edge python -m unittest discover -s tests/system -v
-SELENIUM_BROWSER=firefox python -m unittest discover -s tests/system -v
-```
-
-Windows PowerShell example:
-
-```powershell
-$env:SELENIUM_BROWSER="edge"
-python -m unittest discover -s tests/system -v
-```
-
----
-
 # How to Run
 
 ## Prerequisites
