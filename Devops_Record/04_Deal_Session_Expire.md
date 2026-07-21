@@ -31,6 +31,6 @@ handle_csrf_error(error) (在_init_.py里面改)
 ```
 
 1. 修改init和base.html
-2. 本地进入网站，然后在Post界面删除当前Session Cookie然后Post
+2. 本地进入网站Post界面，然后在Application, Cookie里删除当前Session Cookie然后发布
 3. 失败了，依然没有触发用户友好提示词，明天再修
 ![Notice](04_Image/CSRF_Lost.png)
