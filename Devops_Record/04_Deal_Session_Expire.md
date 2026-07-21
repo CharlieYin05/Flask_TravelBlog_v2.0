@@ -17,7 +17,7 @@ CSFR_Expire
 ---
 ## 过程
 
-1. 修改Tocken过期提示词
+### 1. 修改Tocken过期提示词
 ```
 CSRF 校验失败
     ↓
@@ -29,3 +29,8 @@ handle_csrf_error(error) (在_init_.py里面改)
     ↓
 跳回来源页面
 ```
+
+1. 修改init和base.html
+2. 本地进入网站，然后在Post界面删除当前Session Cookie然后Post
+3. 失败了，依然没有触发用户友好提示词，明天再修
+![Notice](04_Image/CSRF_Lost.png)
